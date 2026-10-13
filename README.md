@@ -5,6 +5,31 @@ Core language engine for translating between human languages, programming langua
 **squirrelator** holds the shared language logic.  
 **LanguageStudentDesk** consumes it to provide learning tools.
 
+## Run (GUI is default)
+
+```bash
+cd ~/FU/squirrelator
+source .venv/bin/activate
+python3 squirrelator.py
+```
+
+Or:
+
+```bash
+python3 -m squirrelator
+```
+
+### CLI only if you ask for it
+
+```bash
+python3 squirrelator.py --cli english python "print hello"
+python3 -m squirrelator --cli quickbasic english 'PRINT "Hi"'
+```
+
+## Web demo
+
+Open `app/index.html` in a browser (self-contained, no install needed).
+
 ## What it does
 
 Rule-based translation for common patterns:
@@ -13,20 +38,13 @@ Rule-based translation for common patterns:
 - Code → English explanations
 - Simple code ↔ code via intermediate English
 
-## Quick start
+## Install
 
 ```bash
-git clone https://github.com/squirelworks/squirrelator
-cd squirrelator
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e .
-
-python -c "from squirrelator import translate; print(translate('print hello', 'english', 'python'))"
-python -c "from squirrelator import translate; print(translate('FOR i = 1 TO 5\\n  PRINT i\\nNEXT i', 'quickbasic', 'english'))"
 ```
-
-## Web app
-
-Open `app/index.html` in a browser. It contains a self-contained JavaScript version of the translator so it works without a server.
 
 ## Using from LanguageStudentDesk
 

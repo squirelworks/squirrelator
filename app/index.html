@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>squirrelator</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; background: #111; color: #eee; }
+  textarea, select, button { width: 100%; margin: 0.4rem 0; padding: 0.5rem; font: inherit; }
+  textarea { min-height: 120px; background: #1a1a1a; color: #eee; border: 1px solid #333; }
+  pre { background: #1a1a1a; padding: 1rem; border-radius: 6px; white-space: pre-wrap; }
+  button { background: #26a69a; color: #000; border: none; cursor: pointer; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>squirrelator</h1>
+<p>Core language translator demo. Real translation lives in the Python package.</p>
+
+<label>From</label>
+<select id="from">
+  <option>english</option>
+  <option>pseudocode</option>
+  <option>python</option>
+  <option>javascript</option>
+  <option>quickbasic</option>
+  <option>brainfood</option>
+  <option>lolcode</option>
+</select>
+
+<label>To</label>
+<select id="to">
+  <option>python</option>
+  <option>javascript</option>
+  <option>english</option>
+  <option>pseudocode</option>
+  <option>quickbasic</option>
+  <option>brainfood</option>
+  <option>lolcode</option>
+</select>
+
+<label>Source</label>
+<textarea id="source" placeholder="Enter text or code...">print hello</textarea>
+
+<button onclick="run()">Translate</button>
+
+<h2>Result</h2>
+<pre id="out">(demo only — connect to the Python package or an API later)</pre>
+
+<script>
+function run() {
+  const from = document.getElementById('from').value;
+  const to = document.getElementById('to').value;
+  const src = document.getElementById('source').value;
+  document.getElementById('out').textContent =
+    `# squirrelator demo\n# ${from} → ${to}\n\n# Source:\n${src}\n\n# (wire this UI to the Python package or a local API)`;
+}
+</script>
+</body>
+</html>

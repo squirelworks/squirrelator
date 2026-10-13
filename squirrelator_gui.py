@@ -9,7 +9,8 @@ from squirrelator import translate
 
 LANGUAGES = [
     "english", "pseudocode", "python", "javascript", "quickbasic",
-    "brainfood", "lolcode", "z80", "shell", "sql"
+    "brainfood", "lolcode", "z80", "shell", "sql",
+    "latin", "klingon"
 ]
 
 class SquirrelatorApp:

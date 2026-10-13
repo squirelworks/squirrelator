@@ -1,11 +1,18 @@
 from squirrelator import translate
 
-def test_unsupported():
-    result = translate("hello", "klingon", "python")
-    assert "Unsupported" in result
+def test_english_to_python():
+    r = translate("print hello", "english", "python")
+    assert "print" in r.lower()
 
-def test_scaffold_runs():
-    result = translate("print hello", "english", "python")
-    assert "squirrelator translation scaffold" in result
-    assert "english" in result
-    assert "python" in result
+def test_quickbasic_to_english():
+    src = 'PRINT "Hi"'
+    r = translate(src, "quickbasic", "english")
+    assert "Print" in r
+
+def test_unsupported():
+    r = translate("hello", "klingon", "python")
+    assert "Unsupported" in r
+
+def test_loop():
+    r = translate("count from 1 to 3", "english", "quickbasic")
+    assert "FOR" in r

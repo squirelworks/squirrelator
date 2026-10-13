@@ -5,30 +5,13 @@ Core language engine for translating between human languages, programming langua
 **squirrelator** holds the shared language logic.  
 **LanguageStudentDesk** consumes it to provide learning tools.
 
-## Purpose
+## What it does
 
-Take text in one form and produce it in another:
+Rule-based translation for common patterns:
 
-- Human language → programming language
-- Programming language → programming language
-- Programming language → human language
-- Pseudocode ↔ any of the above
-
-## Layout
-
-```
-squirrelator/
-├── squirrelator/          # Python package (importable core)
-│   ├── __init__.py
-│   ├── translator.py   # main translation interface
-│   ├── languages/      # language definitions / mappings
-│   └── examples.py     # built-in sample translations
-├── app/                  # simple web UI (optional)
-│   └── index.html
-├── tests/
-│   └── test_translator.py
-└── pyproject.toml
-```
+- English / pseudocode → Python, JavaScript, QuickBASIC, LOLCODE, brainFOOD, Z80, Shell, SQL
+- Code → English explanations
+- Simple code ↔ code via intermediate English
 
 ## Quick start
 
@@ -36,20 +19,22 @@ squirrelator/
 git clone https://github.com/squirelworks/squirrelator
 cd squirrelator
 pip install -e .
-python -c "from squirrelator import translate; print(translate('print hello', 'pseudocode', 'python'))"
+
+python -c "from squirrelator import translate; print(translate('print hello', 'english', 'python'))"
+python -c "from squirrelator import translate; print(translate('FOR i = 1 TO 5\\n  PRINT i\\nNEXT i', 'quickbasic', 'english'))"
 ```
+
+## Web app
+
+Open `app/index.html` in a browser. It contains a self-contained JavaScript version of the translator so it works without a server.
 
 ## Using from LanguageStudentDesk
 
 ```python
-# in LSDesk or any consumer
 from squirrelator import translate
-
-result = translate(
-    source="for each number from 1 to 5, print it",
-    from_lang="english",
-    to_lang="python"
-)
+result = translate("print hello", from_lang="english", to_lang="python")
 ```
 
-The web app under `app/` is a lightweight demo. The real value is the importable package.
+## Supported languages
+
+english, pseudocode, python, javascript, quickbasic, brainfood, lolcode, z80, shell, sql

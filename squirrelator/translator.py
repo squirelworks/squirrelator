@@ -8,7 +8,8 @@ from typing import Optional
 
 SUPPORTED = {
     "english", "pseudocode", "python", "javascript", "quickbasic",
-    "brainfood", "lolcode", "z80", "sql", "shell"
+    "brainfood", "lolcode", "z80", "sql", "shell",
+    "latin", "klingon"
 }
 
 def _norm(s: str) -> str:
@@ -62,6 +63,8 @@ def _from_natural(text: str, to_lang: str) -> str:
             "z80": f"    ; print \"{msg}\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"{msg}\"\n     DEFB 0",
             "shell": f'echo "{msg}"',
             "sql": f"SELECT '{msg}' AS message;",
+            "latin": f"# Latin: Salve / {msg}\nprint(\"{msg}\")  # or: dic \"{msg}\"",
+            "klingon": f"# Klingon: {msg}\n# tlhIngan Hol: jatlh \"{msg}\"\nprint(\"{msg}\")",
         }.get(to_lang, f"# no mapping for {to_lang}")
 
     # loop 1 to N / count to N
@@ -74,6 +77,8 @@ def _from_natural(text: str, to_lang: str) -> str:
             "quickbasic": f"FOR i = {start} TO {end}\n  PRINT i\nNEXT i",
             "lolcode": f"IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN {end}\n  VISIBLE i\nIM OUTTA YR loop",
             "shell": f"for i in $(seq {start} {end}); do echo $i; done",
+            "latin": f"# Latin loop {start} to {end}\nfor i in range({start}, {int(end)+1}):\n    print(i)  # numerus",
+            "klingon": f"# Klingon loop {start} to {end}\n# wej (or appropriate number) logh\nfor i in range({start}, {int(end)+1}):\n    print(i)",
         }.get(to_lang, f"# no loop mapping for {to_lang}")
 
     # variable assignment
@@ -86,6 +91,8 @@ def _from_natural(text: str, to_lang: str) -> str:
             "quickbasic": f"{var} = {val}",
             "lolcode": f"I HAS A {var} ITZ {val}",
             "shell": f"{var}={val}",
+            "latin": f"# Latin: {var} est {val}\n{var} = {val}",
+            "klingon": f"# Klingon: {var} {val} 'oH\n{var} = {val}",
         }.get(to_lang, f"# no assignment mapping for {to_lang}")
 
     return f"# Could not match a known pattern for {to_lang}\n# Source: {text}"
@@ -135,6 +142,22 @@ def _to_english(text: str, from_lang: str) -> str:
                 explanations.append(f"Print to console: {s}")
             elif "for (" in s:
                 explanations.append("Start a for loop")
+
+        elif from_lang == "latin":
+            if "print" in s.lower() or "dic" in s.lower():
+                explanations.append("Print / say something")
+            elif "=" in s:
+                explanations.append(f"Assign: {s}")
+            else:
+                explanations.append(f"Latin statement: {s}")
+
+        elif from_lang == "klingon":
+            if "jatlh" in s.lower() or "print" in s.lower():
+                explanations.append("Speak / print")
+            elif "=" in s:
+                explanations.append(f"Assign: {s}")
+            else:
+                explanations.append(f"Klingon statement: {s}")
 
         else:
             explanations.append(f"Execute: {s}")

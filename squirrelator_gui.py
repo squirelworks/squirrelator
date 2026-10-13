@@ -16,57 +16,62 @@ class SquirrelatorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("squirrelator")
-        self.root.geometry("900x700")
-        self.root.minsize(700, 500)
+        self.root.geometry("1400x1000")
+        self.root.minsize(1100, 800)
 
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure("TLabel", font=("Segoe UI", 11))
-        style.configure("TButton", font=("Segoe UI", 11), padding=6)
-        style.configure("TCombobox", font=("Segoe UI", 11))
+        style.configure("TLabel", font=("Segoe UI", 12))
+        style.configure("TButton", font=("Segoe UI", 12), padding=8)
+        style.configure("TCombobox", font=("Segoe UI", 12))
 
         # Header
         header = ttk.Frame(root)
-        header.pack(fill="x", padx=16, pady=12)
-        ttk.Label(header, text="squirrelator", font=("Segoe UI", 22, "bold")).pack()
+        header.pack(fill="x", padx=20, pady=16)
+        ttk.Label(header, text="squirrelator", font=("Segoe UI", 28, "bold")).pack()
         ttk.Label(header, text="Translate between human language, pseudocode, and code", foreground="gray").pack()
 
         # Language selectors
         lang_frame = ttk.Frame(root)
-        lang_frame.pack(fill="x", padx=16, pady=6)
+        lang_frame.pack(fill="x", padx=20, pady=8)
 
         ttk.Label(lang_frame, text="From:").pack(side="left")
         self.from_var = tk.StringVar(value="english")
-        from_combo = ttk.Combobox(lang_frame, textvariable=self.from_var, values=LANGUAGES, state="readonly", width=16)
-        from_combo.pack(side="left", padx=6)
+        from_combo = ttk.Combobox(lang_frame, textvariable=self.from_var, values=LANGUAGES, state="readonly", width=18)
+        from_combo.pack(side="left", padx=8)
 
-        ttk.Label(lang_frame, text="To:").pack(side="left", padx=(20, 0))
+        ttk.Label(lang_frame, text="To:").pack(side="left", padx=(24, 0))
         self.to_var = tk.StringVar(value="python")
-        to_combo = ttk.Combobox(lang_frame, textvariable=self.to_var, values=LANGUAGES, state="readonly", width=16)
-        to_combo.pack(side="left", padx=6)
+        to_combo = ttk.Combobox(lang_frame, textvariable=self.to_var, values=LANGUAGES, state="readonly", width=18)
+        to_combo.pack(side="left", padx=8)
 
-        # Source
-        ttk.Label(root, text="Source").pack(anchor="w", padx=16, pady=(10, 2))
-        self.source = scrolledtext.ScrolledText(root, height=10, font=("Consolas", 11))
-        self.source.pack(fill="both", expand=True, padx=16, pady=4)
+        # Main panes — source and result side by side for visibility
+        panes = ttk.PanedWindow(root, orient="horizontal")
+        panes.pack(fill="both", expand=True, padx=20, pady=8)
+
+        # Source side
+        source_frame = ttk.LabelFrame(panes, text="Source", padding=8)
+        self.source = scrolledtext.ScrolledText(source_frame, font=("Consolas", 13), wrap="word")
+        self.source.pack(fill="both", expand=True)
         self.source.insert("1.0", "print hello")
+        panes.add(source_frame, weight=1)
 
-        # Button
+        # Result side
+        result_frame = ttk.LabelFrame(panes, text="Result", padding=8)
+        self.result = scrolledtext.ScrolledText(result_frame, font=("Consolas", 13), wrap="word", state="disabled")
+        self.result.pack(fill="both", expand=True)
+        panes.add(result_frame, weight=1)
+
+        # Buttons
         btn_frame = ttk.Frame(root)
-        btn_frame.pack(fill="x", padx=16, pady=6)
-        ttk.Button(btn_frame, text="Translate", command=self.do_translate).pack(side="left")
-        ttk.Button(btn_frame, text="Clear", command=self.clear).pack(side="left", padx=8)
-
-        # Result
-        ttk.Label(root, text="Result").pack(anchor="w", padx=16, pady=(10, 2))
-        self.result = scrolledtext.ScrolledText(root, height=10, font=("Consolas", 11), state="disabled")
-        self.result.pack(fill="both", expand=True, padx=16, pady=4)
+        btn_frame.pack(fill="x", padx=20, pady=10)
+        ttk.Button(btn_frame, text="Translate", command=self.do_translate).pack(side="left", padx=4)
+        ttk.Button(btn_frame, text="Clear", command=self.clear).pack(side="left", padx=4)
 
         # Status
-        self.status = ttk.Label(root, text="Ready", relief="sunken", anchor="w")
+        self.status = ttk.Label(root, text="Ready — Source on left, Result on right", relief="sunken", anchor="w", font=("Segoe UI", 10))
         self.status.pack(fill="x", side="bottom")
 
-        # Bind Enter in source? optional
         self.root.bind("<Control-Return>", lambda e: self.do_translate())
 
     def do_translate(self):

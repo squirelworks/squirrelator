@@ -56,3 +56,22 @@ def test_ties_keep_generate_order():
     il = Interlingua((Unit("i", "I"),), (), (), ())
     first, second = Candidate("a", "", "words"), Candidate("b", "", "words")
     assert [r.candidate for r in rank([first, second], il, "english")] == [first, second]
+
+
+def test_a_word_the_row_writes_has_the_rows_grammar():
+    # The clause read います as "exist"; the row writes the same います as
+    # @ongoing. It is the same word, so no grammar differs.
+    from squirrelator.pipeline.rank import _grammar, _row_grammar
+    tokens = (("モスクワ", "", "moscow"), ("に", "", "@place"), ("住んで", "", "live"), ("います", "", "@ongoing"))
+    il = Interlingua((Unit("moscow", "モスクワ", ("@place",)), Unit("live", "住んで"), Unit("exist", "います")), (), (), ())
+    forms = {"います": frozenset({"@polite", "@present"})}
+    assert _grammar(il, tokens, forms) == _row_grammar(tokens, forms)
+
+
+def test_ongoing_rows_outrank_the_gloss(root):
+    from squirrelator.matrix import matrix
+    if "live-moscow" not in matrix(root).columns.get("japanese", {}):
+        pytest.skip("the Japanese live-moscow row arrives in squirrel-lang-data v0.1.3")
+    found = ranked("モスクワに住んでいます。", "japanese", "english", root)
+    assert found[0].text == "I live in Moscow."
+    assert found[0].score == 1.0

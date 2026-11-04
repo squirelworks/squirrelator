@@ -40,14 +40,22 @@ class Ranked:
 
 
 def _grammar(il: Interlingua, tokens, forms) -> set[str]:
-    """The clause's grammar, as the row could show it. What an inflected
-    word carries (行きました: @polite, @past) counts only when the row also
+    """The clause's grammar, as the row could show it. A word the row
+    itself writes has the row's grammar. What another inflected word
+    carries (行きました: @polite, @past) counts only when the row also
     writes that meaning as an inflected form (行きます), not as a stem with
     separate endings (分かり ません)."""
     out = set(il.features)
     for u in il.units:
         own = {f for f in forms.get(u.text, ()) if f.startswith("@")}
         out |= set(u.roles) - own
+        same = [ms for t, _, ms in tokens if t == u.text]
+        if same:
+            # The row writes this very word, so it carries the row's grammar,
+            # whichever reading the clause took (います after 住んで is the
+            # row's @ongoing, not "exist").
+            out |= {m for ms in same for m in ms.split("+") if m.startswith("@")} | own
+            continue
         row_forms = [forms.get(t, ()) for t, _, ms in tokens if u.meaning and u.meaning in ms.split("+")]
         if any(any(f.startswith("@") for f in fs) for fs in row_forms):
             out |= own

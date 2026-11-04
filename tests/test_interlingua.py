@@ -86,3 +86,45 @@ def test_every_matrix_row_round_trips_through_its_columns(root):
                 misses.append((lang, row["sentence"], text))
     allowed = {("japanese", "thank-you-very-much"), ("japanese", "hot-today"), ("chinese", "going-home")}
     assert {(lang, s) for lang, s, _ in misses} <= allowed, misses
+
+
+def test_english_be_is_part_of_the_rows_wording(root):
+    # "is" alone reads as exist, but "Where is the station?" is how English
+    # says the where-station row, so the row still matches.
+    [il] = meaning_of("Where is the station?", "english", root)
+    assert il.matches[0] == "where-station"
+    [il] = meaning_of("I am a student.", "english", root)
+    assert il.matches[0] == "i-am-student"
+    assert il.unknown == ()
+
+
+def test_a_word_outside_the_rows_wording_still_blocks_it(root):
+    [il] = meaning_of("I am xyzzy.", "english", root)
+    assert il.matches == ()
+    assert set(il.unknown) == {"am", "xyzzy"}
+
+
+def test_the_row_with_more_of_the_words_comes_first(root):
+    [il] = meaning_of("How much is it?", "english", root)
+    assert il.matches[0] == "how-much-is-it"
+
+
+def test_english_rows_round_trip(root):
+    """Every English wording of every row finds that row first, except the
+    ones that need more than the data has yet (contractions, "do" questions,
+    third-person verbs)."""
+    from squirrelator.matrix import matrix
+
+    misses = []
+    for row in matrix(root).rows.values():
+        for en in (row.en, *row.also):
+            found = [m for il in meaning_of(en, "english", root) for m in il.matches]
+            if not found or found[0] != row.id:
+                misses.append(row.id)
+    allowed = {
+        "dont-understand", "dont-know", "love-you", "we-are-klingons", "cold-today", "raining",
+        "have-cat", "house-big", "delicious", "head-hurts", "bus-school", "where-going",
+        "going-home", "we-going-home", "lets-go", "child-sleeps", "officer-sees-child",
+        "captain-sees-ship",
+    }
+    assert set(misses) <= allowed, sorted(set(misses) - allowed)

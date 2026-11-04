@@ -1,0 +1,2630 @@
+[
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "english",
+  "expected": "print hello"
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "javascript",
+  "expected": "console.log(\"hello\");"
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Klingon: hello\n# tlhIngan Hol: jatlh \"hello\"\nprint(\"hello\")"
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Latin: Salve / hello\nprint(\"hello\")  # or: dic \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "VISIBLE \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "python",
+  "expected": "print(\"hello\")"
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "PRINT \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "shell",
+  "expected": "echo \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "sql",
+  "expected": "SELECT 'hello' AS message;"
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "z80",
+  "expected": "    ; print \"hello\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"hello\"\n     DEFB 0"
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# no mapping for english"
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "console.log(\"hello\");"
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Klingon: hello\n# tlhIngan Hol: jatlh \"hello\"\nprint(\"hello\")"
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Latin: Salve / hello\nprint(\"hello\")  # or: dic \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "VISIBLE \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "print hello"
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "print(\"hello\")"
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "PRINT \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "echo \"hello\""
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "SELECT 'hello' AS message;"
+ },
+ {
+  "source": "print hello",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "    ; print \"hello\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"hello\"\n     DEFB 0"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "english",
+  "expected": "show 'Good morning'"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "javascript",
+  "expected": "console.log(\"good morning\");"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Klingon: good morning\n# tlhIngan Hol: jatlh \"good morning\"\nprint(\"good morning\")"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Latin: Salve / good morning\nprint(\"good morning\")  # or: dic \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "VISIBLE \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "python",
+  "expected": "print(\"good morning\")"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "PRINT \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "shell",
+  "expected": "echo \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "sql",
+  "expected": "SELECT 'good morning' AS message;"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "english",
+  "to": "z80",
+  "expected": "    ; print \"good morning\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"good morning\"\n     DEFB 0"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# no mapping for english"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "console.log(\"good morning\");"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Klingon: good morning\n# tlhIngan Hol: jatlh \"good morning\"\nprint(\"good morning\")"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Latin: Salve / good morning\nprint(\"good morning\")  # or: dic \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "VISIBLE \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "show 'Good morning'"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "print(\"good morning\")"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "PRINT \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "echo \"good morning\""
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "SELECT 'good morning' AS message;"
+ },
+ {
+  "source": "show 'Good morning'",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "    ; print \"good morning\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"good morning\"\n     DEFB 0"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "english",
+  "expected": "say hello to everyone"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "javascript",
+  "expected": "console.log(\"Hello\");"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Klingon: Hello\n# tlhIngan Hol: jatlh \"Hello\"\nprint(\"Hello\")"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Latin: Salve / Hello\nprint(\"Hello\")  # or: dic \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "VISIBLE \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "python",
+  "expected": "print(\"Hello\")"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "PRINT \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "shell",
+  "expected": "echo \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "sql",
+  "expected": "SELECT 'Hello' AS message;"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "english",
+  "to": "z80",
+  "expected": "    ; print \"Hello\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"Hello\"\n     DEFB 0"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# no mapping for english"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "console.log(\"Hello\");"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Klingon: Hello\n# tlhIngan Hol: jatlh \"Hello\"\nprint(\"Hello\")"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Latin: Salve / Hello\nprint(\"Hello\")  # or: dic \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "VISIBLE \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "say hello to everyone"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "print(\"Hello\")"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "PRINT \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "echo \"Hello\""
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "SELECT 'Hello' AS message;"
+ },
+ {
+  "source": "say hello to everyone",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "    ; print \"Hello\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"Hello\"\n     DEFB 0"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# no loop mapping for brainfood"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "english",
+  "expected": "count from 1 to 5"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "javascript",
+  "expected": "for (let i = 1; i <= 5; i++) {\n  console.log(i);\n}"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Klingon loop 1 to 5\n# wej (or appropriate number) logh\nfor i in range(1, 6):\n    print(i)"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Latin loop 1 to 5\nfor i in range(1, 6):\n    print(i)  # numerus"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN 5\n  VISIBLE i\nIM OUTTA YR loop"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# no loop mapping for pseudocode"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "python",
+  "expected": "for i in range(1, 6):\n    print(i)"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "FOR i = 1 TO 5\n  PRINT i\nNEXT i"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "shell",
+  "expected": "for i in $(seq 1 5); do echo $i; done"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "sql",
+  "expected": "# no loop mapping for sql"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "english",
+  "to": "z80",
+  "expected": "# no loop mapping for z80"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# no loop mapping for brainfood"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# no loop mapping for english"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "for (let i = 1; i <= 5; i++) {\n  console.log(i);\n}"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Klingon loop 1 to 5\n# wej (or appropriate number) logh\nfor i in range(1, 6):\n    print(i)"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Latin loop 1 to 5\nfor i in range(1, 6):\n    print(i)  # numerus"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN 5\n  VISIBLE i\nIM OUTTA YR loop"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "count from 1 to 5"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "for i in range(1, 6):\n    print(i)"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "FOR i = 1 TO 5\n  PRINT i\nNEXT i"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "for i in $(seq 1 5); do echo $i; done"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "# no loop mapping for sql"
+ },
+ {
+  "source": "count from 1 to 5",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "# no loop mapping for z80"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# no loop mapping for brainfood"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "english",
+  "expected": "loop 3 through 7"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "javascript",
+  "expected": "for (let i = 3; i <= 7; i++) {\n  console.log(i);\n}"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Klingon loop 3 to 7\n# wej (or appropriate number) logh\nfor i in range(3, 8):\n    print(i)"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Latin loop 3 to 7\nfor i in range(3, 8):\n    print(i)  # numerus"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN 7\n  VISIBLE i\nIM OUTTA YR loop"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# no loop mapping for pseudocode"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "python",
+  "expected": "for i in range(3, 8):\n    print(i)"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "FOR i = 3 TO 7\n  PRINT i\nNEXT i"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "shell",
+  "expected": "for i in $(seq 3 7); do echo $i; done"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "sql",
+  "expected": "# no loop mapping for sql"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "english",
+  "to": "z80",
+  "expected": "# no loop mapping for z80"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# no loop mapping for brainfood"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# no loop mapping for english"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "for (let i = 3; i <= 7; i++) {\n  console.log(i);\n}"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Klingon loop 3 to 7\n# wej (or appropriate number) logh\nfor i in range(3, 8):\n    print(i)"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Latin loop 3 to 7\nfor i in range(3, 8):\n    print(i)  # numerus"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN 7\n  VISIBLE i\nIM OUTTA YR loop"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "loop 3 through 7"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "for i in range(3, 8):\n    print(i)"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "FOR i = 3 TO 7\n  PRINT i\nNEXT i"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "for i in $(seq 3 7); do echo $i; done"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "# no loop mapping for sql"
+ },
+ {
+  "source": "loop 3 through 7",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "# no loop mapping for z80"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# no assignment mapping for brainfood"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "english",
+  "expected": "set total to 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "javascript",
+  "expected": "let total = 42;"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Klingon: total 42 'oH\ntotal = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Latin: total est 42\ntotal = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "I HAS A total ITZ 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# no assignment mapping for pseudocode"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "python",
+  "expected": "total = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "total = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "shell",
+  "expected": "total=42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "sql",
+  "expected": "# no assignment mapping for sql"
+ },
+ {
+  "source": "set total to 42",
+  "from": "english",
+  "to": "z80",
+  "expected": "# no assignment mapping for z80"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# no assignment mapping for brainfood"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# no assignment mapping for english"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "let total = 42;"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Klingon: total 42 'oH\ntotal = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Latin: total est 42\ntotal = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "I HAS A total ITZ 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "set total to 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "total = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "total = 42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "total=42"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "# no assignment mapping for sql"
+ },
+ {
+  "source": "set total to 42",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "# no assignment mapping for z80"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# no assignment mapping for brainfood"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "english",
+  "expected": "make name = 'Ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "javascript",
+  "expected": "let name = 'ada';"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Klingon: name 'ada' 'oH\nname = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Latin: name est 'ada'\nname = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "I HAS A name ITZ 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# no assignment mapping for pseudocode"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "python",
+  "expected": "name = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "name = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "shell",
+  "expected": "name='ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "sql",
+  "expected": "# no assignment mapping for sql"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "english",
+  "to": "z80",
+  "expected": "# no assignment mapping for z80"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# no assignment mapping for brainfood"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# no assignment mapping for english"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "let name = 'ada';"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Klingon: name 'ada' 'oH\nname = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Latin: name est 'ada'\nname = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "I HAS A name ITZ 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "make name = 'Ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "name = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "name = 'ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "name='ada'"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "# no assignment mapping for sql"
+ },
+ {
+  "source": "make name = 'Ada'",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "# no assignment mapping for z80"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "english",
+  "expected": "sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "english",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "english",
+  "expected": "# Could not match a known pattern for english\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "pseudocode",
+  "expected": "sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: sort the list"
+ },
+ {
+  "source": "sort the list",
+  "from": "pseudocode",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: sort the list"
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "english",
+  "expected": "Print \"hi\""
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "javascript",
+  "expected": "console.log(\"hi\");"
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "klingon",
+  "expected": "# Klingon: hi\n# tlhIngan Hol: jatlh \"hi\"\nprint(\"hi\")"
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "latin",
+  "expected": "# Latin: Salve / hi\nprint(\"hi\")  # or: dic \"hi\""
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "lolcode",
+  "expected": "VISIBLE \"hi\""
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "python",
+  "expected": "print(\"hi\")"
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "quickbasic",
+  "expected": "PRINT \"hi\""
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "shell",
+  "expected": "echo \"hi\""
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "sql",
+  "expected": "SELECT 'hi' AS message;"
+ },
+ {
+  "source": "print(\"hi\")",
+  "from": "python",
+  "to": "z80",
+  "expected": "    ; print \"hi\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"hi\"\n     DEFB 0"
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "english",
+  "expected": "Start a loop\nPrint i"
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "javascript",
+  "expected": "console.log(\"i\");"
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "klingon",
+  "expected": "# Klingon: i\n# tlhIngan Hol: jatlh \"i\"\nprint(\"i\")"
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "latin",
+  "expected": "# Latin: Salve / i\nprint(\"i\")  # or: dic \"i\""
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "lolcode",
+  "expected": "VISIBLE \"i\""
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "python",
+  "expected": "for i in range(1, 4):\n    print(i)"
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "quickbasic",
+  "expected": "PRINT \"i\""
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "shell",
+  "expected": "echo \"i\""
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "sql",
+  "expected": "SELECT 'i' AS message;"
+ },
+ {
+  "source": "for i in range(1, 4):\n    print(i)",
+  "from": "python",
+  "to": "z80",
+  "expected": "    ; print \"i\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"i\"\n     DEFB 0"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "english",
+  "expected": "Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "python",
+  "expected": "x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "python",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Assign a value: x = 5"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "brainfood",
+  "expected": "# Direct python → brainfood not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "english",
+  "expected": "(no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "javascript",
+  "expected": "# Direct python → javascript not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "klingon",
+  "expected": "# Direct python → klingon not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "latin",
+  "expected": "# Direct python → latin not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "lolcode",
+  "expected": "# Direct python → lolcode not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "pseudocode",
+  "expected": "# Direct python → pseudocode not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "python",
+  "expected": "# just a comment"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "quickbasic",
+  "expected": "# Direct python → quickbasic not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "shell",
+  "expected": "# Direct python → shell not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "sql",
+  "expected": "# Direct python → sql not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "# just a comment",
+  "from": "python",
+  "to": "z80",
+  "expected": "# Direct python → z80 not yet mapped\n# Intermediate: (no recognizable statements)"
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "english",
+  "expected": "Print to console: console.log(\"hi\");"
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "javascript",
+  "expected": "console.log(\"hi\");"
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "klingon",
+  "expected": "# Klingon: to console: console.log(\"hi\");\n# tlhIngan Hol: jatlh \"to console: console.log(\"hi\");\"\nprint(\"to console: console.log(\"hi\");\")"
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "latin",
+  "expected": "# Latin: Salve / to console: console.log(\"hi\");\nprint(\"to console: console.log(\"hi\");\")  # or: dic \"to console: console.log(\"hi\");\""
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "lolcode",
+  "expected": "VISIBLE \"to console: console.log(\"hi\");\""
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "python",
+  "expected": "print(\"to console: console.log(\"hi\");\")"
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "quickbasic",
+  "expected": "PRINT \"to console: console.log(\"hi\");\""
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "shell",
+  "expected": "echo \"to console: console.log(\"hi\");\""
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "sql",
+  "expected": "SELECT 'to console: console.log(\"hi\");' AS message;"
+ },
+ {
+  "source": "console.log(\"hi\");",
+  "from": "javascript",
+  "to": "z80",
+  "expected": "    ; print \"to console: console.log(\"hi\");\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"to console: console.log(\"hi\");\"\n     DEFB 0"
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "english",
+  "expected": "Start a for loop\nPrint to console: console.log(i);"
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "javascript",
+  "expected": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}"
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "klingon",
+  "expected": "# Klingon: to console: console.log(i);\n# tlhIngan Hol: jatlh \"to console: console.log(i);\"\nprint(\"to console: console.log(i);\")"
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "latin",
+  "expected": "# Latin: Salve / to console: console.log(i);\nprint(\"to console: console.log(i);\")  # or: dic \"to console: console.log(i);\""
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "lolcode",
+  "expected": "VISIBLE \"to console: console.log(i);\""
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "python",
+  "expected": "print(\"to console: console.log(i);\")"
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "quickbasic",
+  "expected": "PRINT \"to console: console.log(i);\""
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "shell",
+  "expected": "echo \"to console: console.log(i);\""
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "sql",
+  "expected": "SELECT 'to console: console.log(i);' AS message;"
+ },
+ {
+  "source": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+  "from": "javascript",
+  "to": "z80",
+  "expected": "    ; print \"to console: console.log(i);\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"to console: console.log(i);\"\n     DEFB 0"
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "english",
+  "expected": "Print \"Hi\""
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "javascript",
+  "expected": "console.log(\"hi\");"
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "klingon",
+  "expected": "# Klingon: hi\n# tlhIngan Hol: jatlh \"hi\"\nprint(\"hi\")"
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "latin",
+  "expected": "# Latin: Salve / hi\nprint(\"hi\")  # or: dic \"hi\""
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "lolcode",
+  "expected": "VISIBLE \"hi\""
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "python",
+  "expected": "print(\"hi\")"
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "quickbasic",
+  "expected": "PRINT \"Hi\""
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "shell",
+  "expected": "echo \"hi\""
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "sql",
+  "expected": "SELECT 'hi' AS message;"
+ },
+ {
+  "source": "PRINT \"Hi\"",
+  "from": "quickbasic",
+  "to": "z80",
+  "expected": "    ; print \"hi\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"hi\"\n     DEFB 0"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "brainfood",
+  "expected": "# no loop mapping for brainfood"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "english",
+  "expected": "Start a counted loop: FOR i = 1 TO 3\nPrint i\nEnd the loop"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "javascript",
+  "expected": "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "klingon",
+  "expected": "# Klingon loop 1 to 3\n# wej (or appropriate number) logh\nfor i in range(1, 4):\n    print(i)"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "latin",
+  "expected": "# Latin loop 1 to 3\nfor i in range(1, 4):\n    print(i)  # numerus"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "lolcode",
+  "expected": "IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN 3\n  VISIBLE i\nIM OUTTA YR loop"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "pseudocode",
+  "expected": "# no loop mapping for pseudocode"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "python",
+  "expected": "for i in range(1, 4):\n    print(i)"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "quickbasic",
+  "expected": "FOR i = 1 TO 3\n  PRINT i\nNEXT i"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "shell",
+  "expected": "for i in $(seq 1 3); do echo $i; done"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "sql",
+  "expected": "# no loop mapping for sql"
+ },
+ {
+  "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
+  "from": "quickbasic",
+  "to": "z80",
+  "expected": "# no loop mapping for z80"
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "english",
+  "expected": "Show \"Hi\""
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "javascript",
+  "expected": "console.log(\"hi\");"
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "klingon",
+  "expected": "# Klingon: hi\n# tlhIngan Hol: jatlh \"hi\"\nprint(\"hi\")"
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "latin",
+  "expected": "# Latin: Salve / hi\nprint(\"hi\")  # or: dic \"hi\""
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "lolcode",
+  "expected": "VISIBLE \"Hi\""
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "python",
+  "expected": "print(\"hi\")"
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "quickbasic",
+  "expected": "PRINT \"hi\""
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "shell",
+  "expected": "echo \"hi\""
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "sql",
+  "expected": "SELECT 'hi' AS message;"
+ },
+ {
+  "source": "VISIBLE \"Hi\"",
+  "from": "lolcode",
+  "to": "z80",
+  "expected": "    ; print \"hi\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"hi\"\n     DEFB 0"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "english",
+  "expected": "Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "lolcode",
+  "expected": "I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "I HAS A x ITZ 5",
+  "from": "lolcode",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Create a variable: I HAS A x ITZ 5"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "english",
+  "expected": "Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Load data: LD A, 5\nIncrement: INC A\nReturn from subroutine"
+ },
+ {
+  "source": "    LD A, 5\n    INC A\n    RET",
+  "from": "z80",
+  "to": "z80",
+  "expected": "LD A, 5\n    INC A\n    RET"
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "english",
+  "expected": "Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "shell",
+  "expected": "echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "echo \"hi\"",
+  "from": "shell",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Execute: echo \"hi\""
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "english",
+  "expected": "Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "sql",
+  "expected": "SELECT 1;"
+ },
+ {
+  "source": "SELECT 1;",
+  "from": "sql",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Execute: SELECT 1;"
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "brainfood",
+  "expected": "++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "english",
+  "expected": "Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "++++++++[>++++<-]>.",
+  "from": "brainfood",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Execute: ++++++++[>++++<-]>."
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "brainfood",
+  "expected": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++."
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "english",
+  "expected": "Print / say something"
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "javascript",
+  "expected": "console.log(\"/ say something\");"
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "klingon",
+  "expected": "# Klingon: / say something\n# tlhIngan Hol: jatlh \"/ say something\"\nprint(\"/ say something\")"
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "latin",
+  "expected": "dic \"salve\""
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "lolcode",
+  "expected": "VISIBLE \"/ say something\""
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "pseudocode",
+  "expected": "# no mapping for pseudocode"
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "python",
+  "expected": "print(\"/ say something\")"
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "quickbasic",
+  "expected": "PRINT \"/ say something\""
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "shell",
+  "expected": "echo \"/ say something\""
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "sql",
+  "expected": "SELECT '/ say something' AS message;"
+ },
+ {
+  "source": "dic \"salve\"",
+  "from": "latin",
+  "to": "z80",
+  "expected": "    ; print \"/ say something\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"/ say something\"\n     DEFB 0"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "english",
+  "expected": "Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "latin",
+  "expected": "x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "latin",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "english",
+  "expected": "Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "klingon",
+  "expected": "# Could not match a known pattern for klingon\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "latin",
+  "expected": "Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "Gallia est omnis divisa",
+  "from": "latin",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Latin statement: Gallia est omnis divisa"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "english",
+  "expected": "Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "klingon",
+  "expected": "jatlh \"nuqneH\""
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Speak / print"
+ },
+ {
+  "source": "jatlh \"nuqneH\"",
+  "from": "klingon",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Speak / print"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "english",
+  "expected": "Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "klingon",
+  "expected": "x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "x = 5",
+  "from": "klingon",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Assign: x = 5"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "brainfood",
+  "expected": "# Could not match a known pattern for brainfood\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "english",
+  "expected": "Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "javascript",
+  "expected": "# Could not match a known pattern for javascript\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "klingon",
+  "expected": "Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "latin",
+  "expected": "# Could not match a known pattern for latin\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "lolcode",
+  "expected": "# Could not match a known pattern for lolcode\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "pseudocode",
+  "expected": "# Could not match a known pattern for pseudocode\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "quickbasic",
+  "expected": "# Could not match a known pattern for quickbasic\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "shell",
+  "expected": "# Could not match a known pattern for shell\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "sql",
+  "expected": "# Could not match a known pattern for sql\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "Qapla'",
+  "from": "klingon",
+  "to": "z80",
+  "expected": "# Could not match a known pattern for z80\n# Source: Klingon statement: Qapla'"
+ },
+ {
+  "source": "print hello",
+  "from": "cobol",
+  "to": "python",
+  "expected": "Unsupported language pair: cobol → python\nSupported: brainfood, english, javascript, klingon, latin, lolcode, pseudocode, python, quickbasic, shell, sql, z80"
+ },
+ {
+  "source": "print hello",
+  "from": "english",
+  "to": "cobol",
+  "expected": "Unsupported language pair: english → cobol\nSupported: brainfood, english, javascript, klingon, latin, lolcode, pseudocode, python, quickbasic, shell, sql, z80"
+ },
+ {
+  "source": "print hello",
+  "from": "  English ",
+  "to": "PYTHON",
+  "expected": "print(\"hello\")"
+ },
+ {
+  "source": "   print hello   \n",
+  "from": "english",
+  "to": "python",
+  "expected": "print(\"hello\")"
+ },
+ {
+  "source": "",
+  "from": "english",
+  "to": "python",
+  "expected": "# Could not match a known pattern for python\n# Source: "
+ },
+ {
+  "source": "",
+  "from": "python",
+  "to": "english",
+  "expected": "(no recognizable statements)"
+ }
+]

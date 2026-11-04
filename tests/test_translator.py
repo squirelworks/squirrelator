@@ -10,7 +10,7 @@ def test_quickbasic_to_english():
     assert "Print" in r
 
 def test_unsupported():
-    r = translate("hello", "klingon", "python")
+    r = translate("hello", "cobol", "python")
     assert "Unsupported" in r
 
 def test_loop():

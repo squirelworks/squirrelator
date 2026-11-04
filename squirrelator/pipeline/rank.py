@@ -51,6 +51,12 @@ def _grammar(il: Interlingua, tokens, forms) -> set[str]:
         row_forms = [forms.get(t, ()) for t, _, ms in tokens if u.meaning and u.meaning in ms.split("+")]
         if any(any(f.startswith("@") for f in fs) for fs in row_forms):
             out |= own
+    # A marker the row writes (います as @ongoing) whose role the clause has
+    # too is the same marker, so it carries the same forms (@polite, @present).
+    for text, _, ms in tokens:
+        parts = set(ms.split("+"))
+        if all(m.startswith("@") for m in parts) and parts <= out:
+            out |= {f for f in forms.get(text, ()) if f.startswith("@")}
     return out
 
 

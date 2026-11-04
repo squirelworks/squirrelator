@@ -23,10 +23,25 @@ def translate(
     to_lang: str,
     *,
     style: Optional[str] = None,
+    engine: str = "rules",
 ) -> str:
+    """Translate source and return the text.
+
+    engine="rules" (the default) is the rule-based translator for code and
+    a few phrases. engine="pipeline" runs the data-driven pipeline between
+    squirrel-lang-data languages (squirrelator.pipeline.run); it is alpha.
+    """
     from_lang = _norm(from_lang)
     to_lang = _norm(to_lang)
     text = source.strip()
+
+    if engine == "pipeline":
+        from .pipeline import run
+        try:
+            return run(source, from_lang, to_lang).text
+        except UnsupportedLanguage as e:
+            return f"Unsupported language: {e.lang}\nSupported: {', '.join(e.supported)}"
+    _check_engine(engine)
 
     if from_lang not in SUPPORTED or to_lang not in SUPPORTED:
         return (
@@ -47,6 +62,11 @@ def translate(
 
     # Code → code (via simple pattern mapping)
     return _code_to_code(text, from_lang, to_lang)
+
+
+def _check_engine(engine: str) -> None:
+    if engine not in ("rules", "pipeline"):
+        raise ValueError(f'engine must be "rules" or "pipeline", not {engine!r}')
 
 
 def _from_natural(text: str, to_lang: str) -> str:
@@ -213,14 +233,20 @@ def translate_full(
     to_lang: str,
     *,
     style: Optional[str] = None,
+    engine: str = "rules",
 ) -> Translation:
     """Translate and return a Translation: the text plus its alternatives,
     breakdown, unknown parts, confidence and alpha label.
 
     Unlike translate(), an unknown language raises UnsupportedLanguage.
-    Every pair is alpha until it has a passing test set.
+    Every pair is alpha until it has a passing test set. engine works as
+    in translate().
     """
     frm, to = _norm(from_lang), _norm(to_lang)
+    if engine == "pipeline":
+        from .pipeline import run
+        return run(source, frm, to)
+    _check_engine(engine)
     for lang in (frm, to):
         if lang not in SUPPORTED:
             raise UnsupportedLanguage(lang, sorted(SUPPORTED))

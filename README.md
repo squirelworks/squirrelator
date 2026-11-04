@@ -65,6 +65,19 @@ step-by-step breakdown, the parts of the source it didn't understand, a
 confidence and an alpha flag. It raises `UnsupportedLanguage` for a language
 it doesn't know.
 
+Both take `engine="pipeline"` (alpha) to translate between human languages
+with the data-driven pipeline, which reads every word from
+squirrel-lang-data and marks what the data doesn't cover instead of
+guessing:
+
+```python
+translate("バスで学校に行きます。", "japanese", "english", engine="pipeline")
+# 'I go to school by bus.'
+```
+
+`squirrelator.pipeline.languages()` lists the languages it can read.
+The default, `engine="rules"`, is unchanged.
+
 ## Supported languages
 
 The **From** and **To** menus in the GUI and the web app list every language

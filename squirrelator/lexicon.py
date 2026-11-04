@@ -142,3 +142,16 @@ def _load(language: str, root: Path) -> Lexicon:
 def lexicon(language: str, root: Path | str | None = None) -> Lexicon:
     """The Lexicon for a squirrel-lang-data language id, loaded once."""
     return _load(language, data_dir(root).resolve())
+
+
+@lru_cache(maxsize=None)
+def _meta(language: str, root: Path) -> dict:
+    path = root / "languages" / language / "meta.json"
+    if not path.is_file():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def language_meta(language: str, root: Path | str | None = None) -> dict:
+    """A language's meta.json from the data, or {} when it has none."""
+    return _meta(language, data_dir(root).resolve())

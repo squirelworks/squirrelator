@@ -93,11 +93,14 @@ def _segment(text: str, offset: int, lex: Lexicon, *, whole_word: bool) -> list[
         has_stem = any(not p[3] for p in pieces)
         for j in range(min(n, i + lex.longest), i, -1):
             piece = text[i:j]
-            options = [(lex.lookup(piece), "")]
+            # Affixes first: after a stem, 은 is the topic suffix, not the
+            # word for silver, when both split the word equally well.
+            options = []
             if whole_word and i == 0 and j < n:
                 options.append((lex.prefix(piece), "prefix"))
             if whole_word and has_stem:
                 options.append((lex.suffix(piece), "suffix"))
+            options.append((lex.lookup(piece), ""))
             for entries, affix in options:
                 if entries and (best[j] is None or cost + 1 < best[j][0]):
                     best[j] = (cost + 1, pieces + [(i, j, entries, affix)])

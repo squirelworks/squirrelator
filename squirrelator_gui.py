@@ -96,7 +96,7 @@ class SquirrelatorApp:
 
 def main():
     root = tk.Tk()
-    app = SquirrelatorApp(root)
+    SquirrelatorApp(root)
     root.mainloop()
 
 if __name__ == "__main__":

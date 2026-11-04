@@ -3,7 +3,7 @@
 A Lexicon maps the written forms of one language's words to what the data
 says about them: the vocabulary decks (languages/<id>/vocab.jsonl) and the
 meaning-matrix column (meaning/columns/<id>.jsonl), whose tokens point at
-meaning units. English comes from the "en" lists of meaning/meanings.jsonl.
+meaning units, and the inflected forms in languages/<id>/inflections.jsonl. English comes from the "en" lists of meaning/meanings.jsonl.
 
 squirrelator never keeps its own copy of these words; see AGENTS.md.
 """
@@ -15,6 +15,7 @@ from functools import cached_property, lru_cache
 from pathlib import Path
 
 from .data import data_dir
+from .inflections import inflections
 
 
 @dataclass(frozen=True)
@@ -25,7 +26,7 @@ class Entry:
     reading: str = ""      # kana, pinyin, romanization, when the data has one
     gloss: str = ""        # English meaning, from the vocabulary
     meaning: str = ""      # meaning unit id from the meaning matrix, if any
-    source: str = ""       # "vocab", "column", "meanings" or "phrasings"
+    source: str = ""       # "vocab", "column", "meanings", "phrasings" or "inflections"
 
 
 def fold(text: str) -> str:
@@ -130,6 +131,14 @@ def _load(language: str, root: Path) -> Lexicon:
         for row in _jsonl(column):
             for text, reading, meaning in row.get("t", []):
                 add(text, Entry(text, reading, meaning=meaning, source="column"))
+        # Inflected forms the lists above don't have (行きました): the word's
+        # meaning joined with the meanings the form adds, as columns join
+        # them ("go+@polite+@past"), so later stages read both.
+        for word in inflections(language, root):
+            for form in word.forms:
+                if fold(form.text) not in found:
+                    meaning = "+".join([word.meaning, *sorted(form.features)])
+                    add(form.text, Entry(form.text, form.reading, meaning=meaning, source="inflections"))
 
     def freeze(table):
         return {k: tuple(v) for k, v in table.items()}

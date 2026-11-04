@@ -22,6 +22,7 @@ candidate only when the target has a word for them.
 
 from dataclasses import dataclass
 
+from ..inflections import inflections
 from ..lexicon import language_meta, lexicon
 from ..matrix import Matrix, matrix
 from .interlingua import Interlingua
@@ -72,6 +73,26 @@ def _english_uses(mx: Matrix, phrase: str) -> bool:
                for row in mx.rows.values() for text in (row.en, *row.also))
 
 
+def _inflect(found: tuple[str, str], meaning: str, wanted: set[str], target: str, root) -> tuple[str, str]:
+    """The form of found that carries the grammar the unit wants. The form
+    the column usually writes sets the register: 行きます is polite, so
+    @past gives 行きました, not 行った. Without a table, found stays."""
+    for word in inflections(target, root):
+        usual = next((f for f in word.forms if word.meaning == meaning and f.text == found[0]), None)
+        if not usual:
+            continue
+        wanted = wanted & {x for f in word.forms for x in f.features}
+        if not wanted:
+            return found
+
+        def fit(form):
+            return (len(form.features & wanted) * 2 + len(form.features & usual.features)
+                    - len(form.features - wanted - usual.features))
+        best = max(word.forms, key=fit)
+        return best.text, best.reading
+    return found
+
+
 def _end(mx: Matrix, target: str, question: bool) -> str:
     """Closing punctuation as the target column writes it for a question or
     a statement, taken from the rows whose English ends the same way."""
@@ -118,7 +139,7 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         for meaning in unit.meanings:
             found = _word(mx, target, meaning)
             if found:
-                words.append(found)
+                words.append(_inflect(found, meaning, set(unit.roles), target, root))
             elif not unit.implied:
                 words.append((f"[{unit.text}]", ""))
                 missing.append(unit.text)
@@ -128,7 +149,11 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         if not words:
             continue
         before, after = [], []
+        inflected = {r for r in unit.roles if words and any(
+            r in f.features for w in inflections(target, root) for f in w.forms if w.meaning in unit.meanings)}
         for role in unit.roles:
+            if role in inflected:
+                continue  # the verb form carries it
             found = _word(mx, target, role)
             if not found:
                 dropped.append(role)

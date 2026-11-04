@@ -81,12 +81,12 @@ def test_a_marker_with_no_word_to_join_is_a_clause_feature(root):
     assert "@question" in clause.features
 
 
-def test_without_marker_data_markers_stay_clause_features():
-    # The pinned data v0.1.0 has no "markers" yet: nothing is guessed.
+def test_pinned_data_attaches_markers_to_phrases():
+    # data v0.1.1 ships "markers" in meta.json, so に is no clause feature.
     [clause] = parse(analyze("学校に行きます", "japanese"), "japanese")
     assert [p.head.text for p in clause.phrases] == ["学校", "行きます"]
-    assert all(p.markers == () for p in clause.phrases)
-    assert clause.features == ("@place",)
+    assert [t.text for t in clause.phrases[0].markers] == ["に"]
+    assert "@place" not in clause.features
 
 
 def test_clauses_split_at_sentence_punctuation(root):

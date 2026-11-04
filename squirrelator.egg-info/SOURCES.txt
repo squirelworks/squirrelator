@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+squirrelator/__init__.py
+squirrelator/__main__.py
+squirrelator/examples.py
+squirrelator/translator.py
+squirrelator.egg-info/PKG-INFO
+squirrelator.egg-info/SOURCES.txt
+squirrelator.egg-info/dependency_links.txt
+squirrelator.egg-info/requires.txt
+squirrelator.egg-info/top_level.txt
+squirrelator/languages/__init__.py
+tests/test_translator.py

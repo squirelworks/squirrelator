@@ -72,8 +72,8 @@ After the guard is on main:
    Name it `Protect main` and set **Enforcement status** to **Active**.
 2. **Target branches → Add target → Include default branch**.
 3. Tick **Require status checks to pass**, then add **guard** and the CI
-   checks (**tests**, **lint**, **web**). Leave **Require branches to be up
-   to date before merging** unticked.
+   checks (**tests (3.10)**, **tests (3.12)**, **lint**, **web**). Leave
+   **Require branches to be up to date before merging** unticked.
 4. Keep **Block force pushes** and **Restrict deletions** ticked.
 5. Optional, in **Settings → General → Pull Requests**: untick **Allow merge
    commits** and **Allow rebase merging**, so only "Squash and merge" is

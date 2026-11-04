@@ -84,7 +84,9 @@ def test_every_matrix_row_round_trips_through_its_columns(root):
             found = [m for il in meaning_of(text, lang, root) for m in il.matches]
             if row["sentence"] not in found:
                 misses.append((lang, row["sentence"], text))
-    allowed = {("japanese", "thank-you-very-much"), ("japanese", "hot-today"), ("chinese", "going-home")}
+    # 我吃饭: the word list has 吃饭 (eat a meal) as one word, which the
+    # row writes as 吃 + 饭.
+    allowed = {("chinese", "eat-food")}
     assert {(lang, s) for lang, s, _ in misses} <= allowed, misses
 
 
@@ -128,3 +130,13 @@ def test_english_rows_round_trip(root):
         "captain-sees-ship",
     }
     assert set(misses) <= allowed, sorted(set(misses) - allowed)
+
+
+def test_a_word_the_column_writes_reads_as_the_row_reads_it(root):
+    # 有 is have first in the word list; the column writes it as exist in
+    # there-is-cat, so the row still matches.
+    from squirrelator.matrix import matrix
+    if "there-is-cat" not in matrix(root).columns.get("chinese", {}):
+        pytest.skip("the Chinese there-is-cat row arrives in squirrel-lang-data v0.1.3")
+    [il] = meaning_of("有一只猫。", "chinese", root)
+    assert il.matches[0] == "there-is-cat"

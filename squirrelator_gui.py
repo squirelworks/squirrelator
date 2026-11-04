@@ -6,7 +6,7 @@ squirrelator GUI — desktop translator
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from squirrelator import translate, translate_full
-from squirrelator.menus import ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, languages_for
+from squirrelator.menus import AUTO, ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, languages_for, runs_pipeline
 
 class SquirrelatorApp:
     def __init__(self, root):
@@ -32,19 +32,19 @@ class SquirrelatorApp:
         top.pack(fill="x", padx=20, pady=6)
 
         ttk.Label(top, text="Engine:").pack(side="left")
-        self.engine_var = tk.StringVar(value=RULES)
+        self.engine_var = tk.StringVar(value=AUTO)
         engine_combo = ttk.Combobox(top, textvariable=self.engine_var, values=ENGINES, state="readonly", width=16)
         engine_combo.pack(side="left", padx=(6, 16))
         engine_combo.bind("<<ComboboxSelected>>", lambda e: self.engine_changed())
 
         ttk.Label(top, text="From:").pack(side="left")
         self.from_var = tk.StringVar(value="english")
-        self.from_combo = ttk.Combobox(top, textvariable=self.from_var, values=languages_for(RULES), state="readonly", width=16)
+        self.from_combo = ttk.Combobox(top, textvariable=self.from_var, values=languages_for(AUTO), state="readonly", width=16)
         self.from_combo.pack(side="left", padx=6)
 
         ttk.Label(top, text="To:").pack(side="left", padx=(16, 0))
         self.to_var = tk.StringVar(value="python")
-        self.to_combo = ttk.Combobox(top, textvariable=self.to_var, values=languages_for(RULES), state="readonly", width=16)
+        self.to_combo = ttk.Combobox(top, textvariable=self.to_var, values=languages_for(AUTO), state="readonly", width=16)
         self.to_combo.pack(side="left", padx=6)
 
         ttk.Button(top, text="Translate", command=self.do_translate).pack(side="left", padx=20)
@@ -95,16 +95,18 @@ class SquirrelatorApp:
             return
         try:
             engine = self.engine_var.get()
-            if engine == PIPELINE:
-                out = format_result(translate_full(src, self.from_var.get(), self.to_var.get(),
-                                                   engine=ENGINE_IDS[engine]))
+            frm, to = self.from_var.get(), self.to_var.get()
+            pipeline = runs_pipeline(engine, frm, to)
+            if pipeline:
+                out = format_result(translate_full(src, frm, to, engine=ENGINE_IDS[engine]))
             else:
-                out = translate(src, self.from_var.get(), self.to_var.get())
+                out = translate(src, frm, to, engine=ENGINE_IDS[engine])
             self.result.config(state="normal")
             self.result.delete("1.0", "end")
             self.result.insert("1.0", out)
             self.result.config(state="disabled")
-            self.status.config(text=f"Translated {self.from_var.get()} → {self.to_var.get()}")
+            used = PIPELINE if pipeline else RULES
+            self.status.config(text=f"Translated {frm} → {to} with {used}")
         except Exception as e:
             self.status.config(text=f"Error: {e}")
 

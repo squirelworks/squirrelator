@@ -1,0 +1,64 @@
+name: Native apps
+
+# Compile and test only: proves the Compose screens, the desktop build and the
+# Android app still build on every PR and push to main. It uploads nothing,
+# signs nothing and needs no secrets. Releases are a separate, later step.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "native/**"
+      - "squirrelator/**"
+      - "data"
+      - ".gitmodules"
+      - ".github/workflows/native.yml"
+  pull_request:
+    paths:
+      - "native/**"
+      - "squirrelator/**"
+      - "data"
+      - ".gitmodules"
+      - ".github/workflows/native.yml"
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or PR supersedes the running build.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      # The desktop tests run the real engine with this Python.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # No wrapper jar is committed (the PR guard keeps .jar files out), so
+      # Gradle comes from here, at the version the build was made with.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
+      # The runner image ships the Android SDK; just make sure API 36 is there.
+      - name: Install Android SDK packages
+        run: |
+          SDKMANAGER=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)
+          yes | "$SDKMANAGER" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0" > /dev/null
+      - name: Test the screens and the desktop engine link
+        run: gradle --no-daemon :ui:desktopTest :desktop:test
+      - name: Build the Android app (debug, not uploaded)
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          gradle --no-daemon :android:assembleDebug

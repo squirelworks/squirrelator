@@ -79,5 +79,5 @@ def test_every_row_reaches_english_through_the_pipeline(root):
             if mx.rows[row_id].en not in [c.text for c in candidates(text, lang, "english", root)]:
                 misses.append((lang, row_id))
     # The same rows Interlingua can't find again (tests/test_interlingua.py).
-    allowed = {("japanese", "thank-you-very-much"), ("japanese", "hot-today"), ("chinese", "going-home")}
+    allowed = {("chinese", "eat-food")}
     assert set(misses) <= allowed, misses

@@ -26,6 +26,8 @@ JOINERS = set("'’-՛՜՞")
 MAX_PHRASE = 4
 # Segmenting cost of a character no word covers, against 1 per known word.
 UNKNOWN_COST = 3
+# Segmenting cost of a word only the vocab list has, with no meaning unit.
+VOCAB_ONLY_COST = 2.5
 
 
 @dataclass(frozen=True)
@@ -78,6 +80,14 @@ def _runs(text: str, letters: frozenset[str] = frozenset()) -> list[tuple[str, i
     return runs
 
 
+def _cost(entries) -> float:
+    """A word the data gives a meaning costs 1; a word only the vocab list
+    has (a gloss, no meaning) costs 2.5. So 今日は splits into 今日 + は,
+    which carry today and @topic, rather than staying the greeting, but a
+    vocab word still beats a split into three or more pieces."""
+    return 1 if any(e.meaning for e in entries) else VOCAB_ONLY_COST
+
+
 def _segment(text: str, offset: int, lex: Lexicon, *, whole_word: bool) -> list[Token] | None:
     """Split a run of letters into the fewest known pieces. With whole_word
     (a spaced language's word), a prefix may start it and suffixes may follow
@@ -103,8 +113,9 @@ def _segment(text: str, offset: int, lex: Lexicon, *, whole_word: bool) -> list[
                 options.append((lex.suffix(piece), "suffix"))
             options.append((lex.lookup(piece), ""))
             for entries, affix in options:
-                if entries and (best[j] is None or cost + 1 < best[j][0]):
-                    best[j] = (cost + 1, pieces + [(i, j, entries, affix)])
+                step = _cost(entries)
+                if entries and (best[j] is None or cost + step < best[j][0]):
+                    best[j] = (cost + step, pieces + [(i, j, entries, affix)])
         if not whole_word and (best[i + 1] is None or cost + UNKNOWN_COST < best[i + 1][0]):
             best[i + 1] = (cost + UNKNOWN_COST, pieces + [(i, i + 1, (), "")])
     if best[n] is None:

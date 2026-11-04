@@ -23,26 +23,27 @@ def translate(
     to_lang: str,
     *,
     style: Optional[str] = None,
-    engine: str = "rules",
+    engine: str = "auto",
 ) -> str:
     """Translate source and return the text.
 
-    engine="rules" (the default) is the rule-based translator for code and
-    a few phrases. engine="pipeline" runs the data-driven pipeline between
+    engine="rules" is the rule-based translator for code and a few phrases.
+    engine="pipeline" runs the data-driven pipeline between
     squirrel-lang-data languages (squirrelator.pipeline.run); it is alpha.
+    engine="auto" (the default) uses rules for every pair rules supports,
+    exactly as before, and the pipeline for a pair rules does not support
+    but the pipeline does (japanese to english).
     """
     from_lang = _norm(from_lang)
     to_lang = _norm(to_lang)
     text = source.strip()
 
-    if engine == "pipeline":
+    if _engine_for(engine, from_lang, to_lang) == "pipeline":
         from .pipeline import run
         try:
             return run(source, from_lang, to_lang).text
         except UnsupportedLanguage as e:
             return f"Unsupported language: {e.lang}\nSupported: {', '.join(e.supported)}"
-    _check_engine(engine)
-
     if from_lang not in SUPPORTED or to_lang not in SUPPORTED:
         return (
             f"Unsupported language pair: {from_lang} → {to_lang}\n"
@@ -64,9 +65,27 @@ def translate(
     return _code_to_code(text, from_lang, to_lang)
 
 
-def _check_engine(engine: str) -> None:
-    if engine not in ("rules", "pipeline"):
-        raise ValueError(f'engine must be "rules" or "pipeline", not {engine!r}')
+ENGINES = ("auto", "rules", "pipeline")
+
+
+def _engine_for(engine: str, from_lang: str, to_lang: str) -> str:
+    """The engine that translates this pair: "rules" or "pipeline". auto
+    keeps every pair rules supports on rules, so its results don't change,
+    and gives the pipeline only pairs rules would reject. Without the
+    language data, auto is rules."""
+    if engine not in ENGINES:
+        raise ValueError(f'engine must be one of {", ".join(ENGINES)}, not {engine!r}')
+    if engine != "auto":
+        return engine
+    if from_lang in SUPPORTED and to_lang in SUPPORTED:
+        return "rules"
+    from .data import DataNotFound
+    from .pipeline import languages
+    try:
+        known = set(languages())
+    except DataNotFound:
+        return "rules"
+    return "pipeline" if from_lang in known and to_lang in known else "rules"
 
 
 def _from_natural(text: str, to_lang: str) -> str:
@@ -233,7 +252,7 @@ def translate_full(
     to_lang: str,
     *,
     style: Optional[str] = None,
-    engine: str = "rules",
+    engine: str = "auto",
 ) -> Translation:
     """Translate and return a Translation: the text plus its alternatives,
     breakdown, unknown parts, confidence and alpha label.
@@ -243,10 +262,9 @@ def translate_full(
     in translate().
     """
     frm, to = _norm(from_lang), _norm(to_lang)
-    if engine == "pipeline":
+    if _engine_for(engine, frm, to) == "pipeline":
         from .pipeline import run
         return run(source, frm, to)
-    _check_engine(engine)
     for lang in (frm, to):
         if lang not in SUPPORTED:
             raise UnsupportedLanguage(lang, sorted(SUPPORTED))

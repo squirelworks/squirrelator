@@ -65,18 +65,21 @@ step-by-step breakdown, the parts of the source it didn't understand, a
 confidence and an alpha flag. It raises `UnsupportedLanguage` for a language
 it doesn't know.
 
-Both take `engine="pipeline"` (alpha) to translate between human languages
-with the data-driven pipeline, which reads every word from
-squirrel-lang-data and marks what the data doesn't cover instead of
-guessing:
+Both take an `engine`. The default, `engine="auto"`, uses the rule-based
+engine for every pair it supports, so those results are unchanged, and the
+data-driven pipeline (alpha) for a pair the rules don't support but the
+pipeline does. The pipeline reads every word from squirrel-lang-data and
+marks what the data doesn't cover instead of guessing:
 
 ```python
-translate("バスで学校に行きます。", "japanese", "english", engine="pipeline")
+translate("バスで学校に行きます。", "japanese", "english")
 # 'I go to school by bus.'
 ```
 
-`squirrelator.pipeline.languages()` lists the languages it can read.
-The default, `engine="rules"`, is unchanged.
+Pass `engine="rules"` or `engine="pipeline"` to choose one. Latin and
+Klingon stay on the rules engine under `auto`. Without the language data,
+`auto` is the rules engine. `squirrelator.pipeline.languages()` lists the
+languages the pipeline can read.
 
 ## Supported languages
 

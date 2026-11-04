@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Core language translation engine for human, programming, and pseudo languages"
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff==0.16.9"]

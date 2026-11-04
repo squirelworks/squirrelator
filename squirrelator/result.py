@@ -6,6 +6,7 @@ the UI's Alternatives and Breakdown views need.
 """
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,9 @@ class Translation:
     unknown       parts of the source no rule understood, shown, not guessed
     confidence    share of the source a rule understood, from 0.0 to 1.0
     alpha         True until this language pair's test set passes
+    second_opinion  the other engine's Translation, for a pair both engines
+                  know (english, latin and klingon under engine="auto"),
+                  or None
     """
 
     text: str
@@ -38,6 +42,7 @@ class Translation:
     alpha: bool = True
     from_lang: str = field(default="", compare=False)
     to_lang: str = field(default="", compare=False)
+    second_opinion: Optional["Translation"] = None
 
     def __str__(self) -> str:
         return self.text

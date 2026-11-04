@@ -69,4 +69,20 @@ def format_result(t: Translation) -> str:
         parts.append("Why:\n" + "\n".join(f"  {s.source}\n    {s.why}" for s in t.breakdown))
     if t.alpha:
         parts.append(f"Alpha. Confidence {round(t.confidence * 100)}%.")
+    if t.second_opinion:
+        parts.append(_second_opinion(t.second_opinion))
     return "\n\n".join(parts)
+
+
+def format_rules_result(t: Translation) -> str:
+    """The result pane's text for a rules result: the rules text as before,
+    plus the pipeline's second opinion when there is one (Latin, Klingon)."""
+    return "\n\n".join([t.text] + ([_second_opinion(t.second_opinion)] if t.second_opinion else []))
+
+
+def _second_opinion(o: Translation) -> str:
+    lines = [f"Second opinion from {PIPELINE}, confidence {round(o.confidence * 100)}%:", f"  {o.text}"]
+    lines += [f"  Also: {a}" for a in o.alternatives]
+    if o.unknown:
+        lines.append("  Not in the data yet: " + ", ".join(o.unknown))
+    return "\n".join(lines)

@@ -59,6 +59,12 @@ from squirrelator import translate
 result = translate("print hello", from_lang="english", to_lang="python")
 ```
 
+`translate()` returns the translated text. `translate_full()` takes the same
+arguments and returns a `Translation` with the text, its alternatives, a
+step-by-step breakdown, the parts of the source it didn't understand, a
+confidence and an alpha flag. It raises `UnsupportedLanguage` for a language
+it doesn't know.
+
 ## Supported languages
 
 The **From** and **To** menus in the GUI and the web app list every language

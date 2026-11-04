@@ -5,13 +5,8 @@ squirrelator GUI — desktop translator
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext
-from squirrelator import translate
-
-LANGUAGES = [
-    "english", "pseudocode", "python", "javascript", "quickbasic",
-    "brainfood", "lolcode", "z80", "shell", "sql",
-    "latin", "klingon"
-]
+from squirrelator import translate, translate_full
+from squirrelator.menus import ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, languages_for
 
 class SquirrelatorApp:
     def __init__(self, root):
@@ -36,15 +31,21 @@ class SquirrelatorApp:
         top = ttk.Frame(root)
         top.pack(fill="x", padx=20, pady=6)
 
+        ttk.Label(top, text="Engine:").pack(side="left")
+        self.engine_var = tk.StringVar(value=RULES)
+        engine_combo = ttk.Combobox(top, textvariable=self.engine_var, values=ENGINES, state="readonly", width=16)
+        engine_combo.pack(side="left", padx=(6, 16))
+        engine_combo.bind("<<ComboboxSelected>>", lambda e: self.engine_changed())
+
         ttk.Label(top, text="From:").pack(side="left")
         self.from_var = tk.StringVar(value="english")
-        from_combo = ttk.Combobox(top, textvariable=self.from_var, values=LANGUAGES, state="readonly", width=16)
-        from_combo.pack(side="left", padx=6)
+        self.from_combo = ttk.Combobox(top, textvariable=self.from_var, values=languages_for(RULES), state="readonly", width=16)
+        self.from_combo.pack(side="left", padx=6)
 
         ttk.Label(top, text="To:").pack(side="left", padx=(16, 0))
         self.to_var = tk.StringVar(value="python")
-        to_combo = ttk.Combobox(top, textvariable=self.to_var, values=LANGUAGES, state="readonly", width=16)
-        to_combo.pack(side="left", padx=6)
+        self.to_combo = ttk.Combobox(top, textvariable=self.to_var, values=languages_for(RULES), state="readonly", width=16)
+        self.to_combo.pack(side="left", padx=6)
 
         ttk.Button(top, text="Translate", command=self.do_translate).pack(side="left", padx=20)
         ttk.Button(top, text="Clear", command=self.clear).pack(side="left", padx=4)
@@ -72,13 +73,33 @@ class SquirrelatorApp:
 
         self.root.bind("<Control-Return>", lambda e: self.do_translate())
 
+    def engine_changed(self):
+        """Fill From and To with the chosen engine's languages and pick a
+        pair that shows what the engine does."""
+        engine = self.engine_var.get()
+        langs = languages_for(engine)
+        defaults = ("japanese", "english") if engine == PIPELINE else ("english", "python")
+        for combo, var, default in ((self.from_combo, self.from_var, defaults[0]),
+                                    (self.to_combo, self.to_var, defaults[1])):
+            combo.config(values=langs)
+            var.set(default if default in langs else (langs[0] if langs else ""))
+        if engine == PIPELINE and not langs:
+            self.status.config(text="Pipeline (alpha) has no languages: the language data is missing.")
+        else:
+            self.status.config(text=f"Engine: {engine}")
+
     def do_translate(self):
         src = self.source.get("1.0", "end").strip()
         if not src:
             self.status.config(text="Enter some source text")
             return
         try:
-            out = translate(src, self.from_var.get(), self.to_var.get())
+            engine = self.engine_var.get()
+            if engine == PIPELINE:
+                out = format_result(translate_full(src, self.from_var.get(), self.to_var.get(),
+                                                   engine=ENGINE_IDS[engine]))
+            else:
+                out = translate(src, self.from_var.get(), self.to_var.get())
             self.result.config(state="normal")
             self.result.delete("1.0", "end")
             self.result.insert("1.0", out)

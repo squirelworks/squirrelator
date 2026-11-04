@@ -118,6 +118,18 @@ def _capitalized(mx: Matrix, target: str) -> bool:
     return bool(cased) and all(t[0].isupper() for t in cased)
 
 
+def _uncapped(mx: Matrix, target: str, found: tuple[str, str]) -> tuple[str, str]:
+    """A word the column only ever writes first in a sentence (Ad scholam
+    eō) with its capital taken off, when the column capitalizes sentences."""
+    text = found[0]
+    if not text[:1].isupper() or not _capitalized(mx, target):
+        return found
+    places = [i for r in mx.columns.get(target, {}).values() for i, t in enumerate(r.tokens) if t[0] == text]
+    if places and all(i == 0 for i in places):
+        return text[0].lower() + text[1:], found[1]
+    return found
+
+
 def _from_matrix(il: Interlingua, target: str, mx: Matrix) -> list[Candidate]:
     out = []
     for row_id in il.matches:
@@ -163,7 +175,8 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
                 form = pick_form(plan.words[k], plan.wanted[k])
                 words.append((form.text, form.reading))
             elif found:
-                words.append(_inflect(found, meaning, set(unit.roles), target, root))
+                found = _inflect(found, meaning, set(unit.roles), target, root)
+                words.append(_uncapped(mx, target, found) if any(plan.words) else found)
             elif not unit.implied:
                 words.append((f"[{unit.text}]", ""))
                 missing.append(unit.text)
@@ -175,8 +188,10 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         before, after = [], []
         table = [plan.words[k]] if plan.words[k] is not None else [
             w for w in inflections(target, root) if w.meaning in unit.meanings]
-        inflected = {r for r in unit.roles if words and any(r in f.features for w in table for f in w.forms)}
-        for role in unit.roles:
+        roles = plan.roles[k] if plan.roles else unit.roles
+        inflected = {r for r in roles if words and k not in plan.unformed
+                     and any(r in f.features for w in table for f in w.forms)}
+        for role in roles:
             if role in inflected:
                 continue  # the verb form carries it
             found = _word(mx, target, role)
@@ -185,6 +200,7 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
             if not found:
                 dropped.append(role)
             else:
+                found = _uncapped(mx, target, found) if any(plan.words) else found
                 (before if placement(role) == "before" else after).append(found)
         pairs += before + words + after
     question = "@question" in il.features

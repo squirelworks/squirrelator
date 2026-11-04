@@ -37,7 +37,9 @@ def test_first_english_wording_comes_first(root):
 
 
 def test_grammar_the_row_lacks_lowers_the_score_and_says_why(root):
-    [r] = ranked("学校に行きました。", "japanese", "english", root)
+    # With English inflection tables the gloss ("I went to school.") is a
+    # second candidate; the matrix row still comes first, marked down.
+    r = ranked("学校に行きました。", "japanese", "english", root)[0]
     assert r.text == "I go to school."
     assert r.score < 1
     assert "@past" in r.note

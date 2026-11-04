@@ -69,30 +69,63 @@ def _sides(language: str, root) -> tuple[str | None, dict]:
     return markers.get("default"), markers
 
 
+def _role(token: Token) -> str:
+    """The grammar meaning a word carries as a marker: its first meaning, or
+    for a word that is first a content word (います), the grammar meaning
+    its column gives it."""
+    if is_marker(token):
+        return meaning_of(token)
+    return next(e.meaning for e in token.entries if e.meaning.startswith("@") and e.source == "column")
+
+
+def _acts_as_marker(t: Token, words: list[Token], i: int, default, sides: dict, last) -> bool:
+    """Whether a word is read as a grammar marker. A word the data gives only
+    grammar meanings always is. A word the language's matrix column writes
+    with both kinds (います is exist and
+    @ongoing, 坐 is sit and @means) is a marker only when a content word sits
+    right where the marker attaches: just before it for an "after" marker
+    (住んで います), just after it for a "before" one (坐 火车). After a
+    particle (猫が います) or with nothing to attach to (请坐) it is a word."""
+    ms = meanings_of(t)
+    if all(m.startswith("@") for m in ms) or not any(m.startswith("@") for m in ms):
+        return is_marker(t)
+    # Only the language's own matrix column shows a word working as a marker.
+    grammar = [e.meaning for e in t.entries if e.meaning.startswith("@") and e.source == "column"]
+    if not grammar:
+        return is_marker(t)
+    side = sides.get(grammar[0], default)
+    if side == "after":
+        return last is not None and i > 0 and words[i - 1] is last[0]
+    if side == "before":
+        nxt = words[i + 1] if i + 1 < len(words) else None
+        return nxt is not None and not nxt.affix and not is_marker(nxt)
+    return False
+
+
 def _clause(tokens: list[Token], default: str | None, sides: dict) -> Clause:
     phrases: list[tuple[Token, list[Token]]] = []
     features: list[str] = []
     waiting: list[Token] = []    # prefixes and "before" markers for the next head
     last = None                  # the phrase the previous word joined, if any
 
-    for t in tokens:
-        if t.kind not in ("word", "number"):
-            continue
+    words = [t for t in tokens if t.kind in ("word", "number")]
+    for i, t in enumerate(words):
         if t.affix == "prefix":
             waiting.append(t)
             last = None
         elif t.affix == "suffix" and phrases:
             phrases[-1][1].append(t)
             last = phrases[-1]
-        elif t.kind == "word" and is_marker(t):
-            side = sides.get(meaning_of(t), default)
+        elif t.kind == "word" and _acts_as_marker(t, words, i, default, sides, last):
+            role = _role(t)
+            side = sides.get(role, default)
             if side == "before":
                 waiting.append(t)
                 last = None
             elif side == "after" and last is not None:
                 last[1].append(t)
             else:
-                features.append(meaning_of(t))
+                features.append(role)
                 last = None
         else:
             phrases.append((t, waiting))

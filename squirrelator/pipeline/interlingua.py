@@ -85,6 +85,13 @@ def _wording(mx: Matrix, row_id: str, language: str) -> str:
     return " " + "".join(c if c.isalnum() or c in "'’" else " " for c in words) + " "
 
 
+def _row_reading(mx: Matrix, row_id: str, language: str, text: str) -> list[str]:
+    """The content meanings the language's column gives text in this row."""
+    rendering = mx.columns.get(language, {}).get(row_id) if language != "english" else None
+    return [m for t, _, ms in (rendering.tokens if rendering else ()) if t.strip("-") == text
+            for m in ms.split("+") if not m.startswith("@")]
+
+
 def _in(text: str, wording: str) -> bool:
     return f" {text.casefold()} " in wording
 
@@ -106,9 +113,14 @@ def interlingua(clause: Clause, language: str, *, root=None) -> Interlingua:
             needed = [m for u in units if u not in free for m in u.meanings]
             if any(not u.meaning for u in units if u not in free):
                 continue
-            if not set(needed) <= set(row.meanings) or not set(row.meanings) & set(have):
+            if not set(needed) <= set(row.meanings):
                 continue
-            extra = [m for m in row.meanings if m not in have]
+            # A word the row's column writes reads as the row reads it: 家 is
+            # home in going-home even when the word list gives house first.
+            read = have + [m for u in free for m in _row_reading(mx, row.id, language, u.text)]
+            if not set(row.meanings) & set(read):
+                continue
+            extra = [m for m in row.meanings if m not in read]
             unsaid = row.implied.get(language, ())
             if all(m in unsaid for m in extra):
                 ignored = {u.text for u in free if not set(u.meanings) & set(row.meanings)}

@@ -1,14 +1,38 @@
 import pytest
 
 from squirrelator import Step, Translation, data
-from squirrelator.menus import ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, languages_for
+from squirrelator.menus import AUTO, ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, languages_for, runs_pipeline
 from squirrelator.translator import SUPPORTED
 
 
-def test_both_engines_are_offered_and_alpha_is_labelled():
-    assert ENGINES == (RULES, PIPELINE)
+def test_auto_comes_first_and_alpha_is_labelled():
+    # The menu matches translate(): Auto is the default and comes first.
+    assert ENGINES == (AUTO, RULES, PIPELINE)
     assert "alpha" in PIPELINE.lower()
-    assert ENGINE_IDS == {RULES: "rules", PIPELINE: "pipeline"}
+    assert ENGINE_IDS == {AUTO: "auto", RULES: "rules", PIPELINE: "pipeline"}
+
+
+def test_auto_menu_lists_both_engines_languages():
+    langs = languages_for(AUTO)
+    assert len(langs) == len(set(langs))
+    assert set(languages_for(RULES)) <= set(langs)
+    assert set(languages_for(PIPELINE)) <= set(langs)
+    code = [lang for lang in languages_for(RULES) if lang not in ("english", "klingon", "latin")]
+    assert langs[-len(code):] == code          # pseudocode and code last, rules order
+    human = langs[:-len(code)]
+    assert human == sorted(human)               # human languages A to Z
+
+
+def test_auto_shows_the_pipeline_result_only_for_pipeline_pairs():
+    assert not runs_pipeline(AUTO, "english", "python")
+    assert not runs_pipeline(AUTO, "english", "latin")   # Latin stays on rules
+    assert not runs_pipeline(RULES, "japanese", "english")
+    assert runs_pipeline(PIPELINE, "english", "python")
+    try:
+        data.data_dir()
+    except data.DataNotFound:
+        return
+    assert runs_pipeline(AUTO, "japanese", "english")
 
 
 def test_rules_menu_lists_every_supported_language_once():

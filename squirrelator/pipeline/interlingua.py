@@ -9,7 +9,10 @@ others are kept as alternatives.
 The clause is then matched against the rows of the meaning matrix. A row
 matches when it has every content meaning the clause has, and the only
 meanings it adds are ones the source language leaves unsaid in that row
-(Japanese drops "I"). Those are returned as implied units, so a later stage
+(Japanese drops "I"). A word the row's own wording uses may carry none of
+the row's meanings: "is" in "Where is the station?" reads as exist on its
+own, and "am" in "I am a student." is no word in the data, but both are
+how English says those rows. Those are returned as implied units, so a later stage
 can say "I" in English without the engine inventing it.
 """
 
@@ -70,22 +73,51 @@ def _unit(phrase: Phrase, mx: Matrix) -> Unit:
                 also=tuple(content[1:]))
 
 
+def _wording(mx: Matrix, row_id: str, language: str) -> str:
+    """How the source language writes a row, as " "-padded folded text:
+    the English sentences for English, the column's tokens otherwise."""
+    if language == "english":
+        texts = (mx.rows[row_id].en, *mx.rows[row_id].also)
+    else:
+        rendering = mx.columns.get(language, {}).get(row_id)
+        texts = (" ".join(t.strip("-") for t, _, _ in rendering.tokens),) if rendering else ()
+    words = " ".join(texts).casefold()
+    return " " + "".join(c if c.isalnum() or c in "'’" else " " for c in words) + " "
+
+
+def _in(text: str, wording: str) -> bool:
+    return f" {text.casefold()} " in wording
+
+
 def interlingua(clause: Clause, language: str, *, root=None) -> Interlingua:
     """Meaning units, roles and matching matrix rows for one parsed clause."""
     mx = matrix(root)
     units = [_unit(p, mx) for p in clause.phrases]
     have = [m for u in units for m in u.meanings]
-    unknown = tuple(u.text for u in units if not u.meaning)
 
-    matches, implied = [], None
-    if have and not unknown:
+    found = []
+    if units:
         for row in mx.rows.values():
-            if sorted(have) == sorted(m for m in row.meanings if m in have) and set(have) <= set(row.meanings):
-                extra = [m for m in row.meanings if m not in have]
-                unsaid = row.implied.get(language, ())
-                if all(m in unsaid for m in extra):
-                    matches.append(row.id)
-                    if implied is None:
-                        implied = extra
+            wording = _wording(mx, row.id, language)
+            # A word the row's own wording has may carry no meaning of the
+            # row: English "is" in "Where is the station?" is not exist.
+            # Every other word must carry one of the row's meanings.
+            free = [u for u in units if _in(u.text, wording)]
+            needed = [m for u in units if u not in free for m in u.meanings]
+            if any(not u.meaning for u in units if u not in free):
+                continue
+            if not set(needed) <= set(row.meanings) or not set(row.meanings) & set(have):
+                continue
+            extra = [m for m in row.meanings if m not in have]
+            unsaid = row.implied.get(language, ())
+            if all(m in unsaid for m in extra):
+                ignored = {u.text for u in free if not set(u.meanings) & set(row.meanings)}
+                found.append((len(free), row.id, extra, ignored))
+    # Rows whose wording has more of the clause's words come first: "How
+    # much is it?" is how-much-is-it before how-much-this. Ties keep data order.
+    found.sort(key=lambda f: -f[0])
+    matches = tuple(f[1] for f in found)
+    implied, explained = (found[0][2], found[0][3]) if found else (None, set())
+    unknown = tuple(u.text for u in units if not u.meaning and u.text not in explained)
     implied_units = tuple(Unit(m, "", implied=True) for m in implied or ())
-    return Interlingua(implied_units + tuple(units), clause.features, tuple(matches), unknown)
+    return Interlingua(implied_units + tuple(units), clause.features, matches, unknown)

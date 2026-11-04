@@ -43,6 +43,7 @@ class Interlingua:
     features: tuple[str, ...]          # clause-wide grammar meanings
     matches: tuple[str, ...]           # matrix rows with exactly these meanings
     unknown: tuple[str, ...]           # source words with no meaning unit
+    language: str = ""                 # the source language
 
     @property
     def meanings(self) -> tuple[str, ...]:
@@ -132,4 +133,4 @@ def interlingua(clause: Clause, language: str, *, root=None) -> Interlingua:
     implied, explained = (found[0][2], found[0][3]) if found else (None, set())
     unknown = tuple(u.text for u in units if not u.meaning and u.text not in explained)
     implied_units = tuple(Unit(m, "", implied=True) for m in implied or ())
-    return Interlingua(implied_units + tuple(units), clause.features, matches, unknown)
+    return Interlingua(implied_units + tuple(units), clause.features, matches, unknown, language)

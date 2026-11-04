@@ -1,0 +1,215 @@
+"""Agree: the grammar each word needs in a language whose words change form
+by case, such as Latin.
+
+Generate calls this before it writes a word-by-word gloss. It reads three
+things from squirrel-lang-data and never guesses a form:
+
+- languages/<target>/inflections.jsonl gives each word's forms, tagged with
+  case (@accusative), number (@plural), gender (@feminine) and person
+  (@first-person). A noun's forms all carry its own gender, and a personal
+  pronoun's carry its person.
+- languages/<target>/meta.json "cases" gives the case a word takes for each
+  role (@object -> @accusative) and after a word with a content meaning
+  (from -> @ablative, for ab and ex).
+- languages/<source>/meta.json "order" (English SVO) tells the subject from
+  the object when the source marks neither. A word after a copula (the verb
+  the target's matrix column writes as @copula) is not an object: "This is
+  a book" keeps book in the nominative.
+
+Then nouns and pronouns take their case, adjectives take the case, number
+and gender of the noun beside them, and the verb takes the person and number
+of its subject. A target without "cases" is left as it was.
+"""
+
+from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
+
+from ..data import data_dir
+from ..inflections import Word, inflections
+from ..lexicon import language_meta
+from ..matrix import matrix
+from .interlingua import Interlingua, Unit
+
+TENSE = {"@present", "@past"}
+GENDERS = {"@masculine", "@feminine", "@neuter"}
+PERSONS = {"@first-person", "@second-person", "@third-person"}
+PLURAL = "@plural"
+SUBJECT, OBJECT = "@subject", "@object"
+
+
+@dataclass
+class Plan:
+    """What Agree decided for one clause, one entry per unit."""
+    wanted: list[set[str]]
+    words: list[Word | None]
+    carried: set[str] = field(default_factory=set)   # roles a case says, so no marker is missing
+    silent: set[int] = field(default_factory=set)    # subject pronouns the verb's ending says
+
+
+def _kind(word: Word | None, case_features: set[str]) -> str:
+    if word is None:
+        return ""
+    features = {x for f in word.forms for x in f.features}
+    if features & TENSE:
+        return "verb"
+    if len(features & GENDERS) > 1 and not features & PERSONS:
+        return "adjective"
+    if features & case_features:
+        return "nominal"
+    return ""
+
+
+def _inherent(word: Word) -> set[str]:
+    """Features every form of the word has: a noun's gender, a pronoun's person."""
+    sets = [set(f.features) for f in word.forms]
+    return set.intersection(*sets) if sets else set()
+
+
+def pick_form(word: Word, wanted: set[str]):
+    """The form carrying most of what is wanted and least that isn't."""
+    inherent = _inherent(word)
+
+    def fit(form):
+        return (len(form.features & wanted), -len(form.features - wanted - inherent), form.name == "dictionary")
+    return max(word.forms, key=fit)
+
+
+@lru_cache(maxsize=None)
+def _copulas(target: str, root: Path) -> frozenset[str]:
+    """Forms the target's matrix column writes as @copula (Latin est, sum)."""
+    out = set()
+    for rendering in matrix(root).columns.get(target, {}).values():
+        for text, _, meaning in rendering.tokens:
+            if "@copula" in meaning.split("+"):
+                out.add(text.casefold())
+    return frozenset(out)
+
+
+def table_word(unit: Unit, meaning: str, found: str, target: str, root) -> Word | None:
+    """The target's table entry for a meaning: the one with a form the unit's
+    roles name (meus for i with @possessive), else the one holding the word
+    the column uses (mihi is a form of ego), else the first."""
+    words = [w for w in inflections(target, root) if w.meaning == meaning]
+    if not words:
+        return None
+    for w in words:
+        if set(unit.roles) & {x for f in w.forms for x in f.features}:
+            return w
+    for w in words:
+        if any(f.text.casefold() == found.casefold() for f in w.forms):
+            return w
+    return words[0]
+
+
+def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
+    """found holds, per unit, the word the target column uses for its first
+    meaning ("" for none)."""
+    units = il.units
+    words = [table_word(u, u.meanings[0], f, target, root) if u.meanings else None
+             for u, f in zip(units, found)]
+    wanted = [set(u.roles) for u in units]
+    cases = language_meta(target, root).get("cases") or {}
+    if not cases:
+        return Plan(wanted, [None] * len(units))
+    case_features = set(cases.values())
+    kinds = [_kind(w, case_features) for w in words]
+    source = language_meta(il.language, root) if il.language else {}
+    side = (source.get("markers") or {}).get("default", "before")
+    case: list[str | None] = [None] * len(units)
+    carried = set()
+
+    def has(word, feature):
+        return word is not None and any(feature in f.features for f in word.forms)
+
+    # A role the word's own form carries (domī is at home) needs no case.
+    for i, u in enumerate(units):
+        for role in u.roles:
+            if role in cases and not has(words[i], role):
+                case[i] = case[i] or cases[role]
+                carried.add(role)
+
+    nominals = [i for i, k in enumerate(kinds) if k == "nominal"]
+    # A content meaning that takes a case (from) gives it to the next word,
+    # on the side the source writes its markers.
+    for i, u in enumerate(units):
+        for m in u.meanings:
+            if m in cases:
+                near = [j for j in nominals if (j > i if side == "before" else j < i)]
+                if near:
+                    j = near[0] if side == "before" else near[-1]
+                    case[j] = case[j] or cases[m]
+
+    verbs = [i for i, k in enumerate(kinds) if k == "verb"]
+    order = source.get("order", "")
+    subject = next((i for i, u in enumerate(units) if SUBJECT in u.roles), None)
+    if verbs and order and SUBJECT in cases:
+        v = verbs[0]
+        copula = "@copula" in units[v].roles or any(
+            f.text.casefold() in _copulas(target, data_dir(root)) for f in words[v].forms)
+        open_ = [i for i in nominals if case[i] is None and not units[i].implied]
+        s_before, o_before = order.index("S") < order.index("V"), order.index("O") < order.index("V")
+        for i in open_:
+            before = i < v
+            if copula:
+                role = SUBJECT
+            elif s_before != o_before:
+                role = SUBJECT if before == s_before else OBJECT
+            else:
+                same_side = [j for j in open_ if (j < v) == before]
+                first_is_s = order.index("S") < order.index("O")
+                role = SUBJECT if (i == same_side[0]) == first_is_s else OBJECT
+            if role in cases:
+                case[i] = cases[role]
+                if role == SUBJECT and subject is None:
+                    subject = i
+    if subject is None:
+        # A topic nothing else gives a case is the subject (友達は).
+        subject = next((i for i in nominals if case[i] is None and "@topic" in units[i].roles), None)
+        if subject is not None and SUBJECT in cases:
+            case[subject] = cases[SUBJECT]
+    if subject is None:
+        # The source marks no subject, but the target's matrix leaves one
+        # unsaid (Japanese drops I): it is the implied unit.
+        subject = next((i for i, u in enumerate(units) if u.implied and kinds[i] == "nominal"), None)
+    for i in nominals:
+        if case[i]:
+            wanted[i].add(case[i])
+
+    # Adjectives take the case, number and gender of the noun beside them;
+    # after a copula, of the subject.
+    for i, k in enumerate(kinds):
+        if k != "adjective":
+            continue
+        after_copula = verbs and i > verbs[0] and subject is not None and subject < verbs[0]
+        near = [j for j in nominals if j > i][:1] or [j for j in nominals if j < i][-1:]
+        j = subject if after_copula and not [n for n in nominals if n > i] else (near[0] if near else None)
+        if j is None:
+            continue
+        noun = words[j]
+        wanted[i] |= {x for x in wanted[j] if x in case_features or x == PLURAL}
+        wanted[i] |= _inherent(noun) & GENDERS
+        if not wanted[j] & case_features and SUBJECT in cases:
+            wanted[i].add(cases[SUBJECT])
+
+    # The verb takes its subject's person and number. With no subject it
+    # keeps the person of its dictionary form, as the column writes it
+    # (Japanese leaves "I" unsaid: 飲みました is bibī).
+    silent = set()
+    for v in verbs[:1]:
+        if not wanted[v] & TENSE and "@command" not in wanted[v]:
+            wanted[v].add("@present")
+        if subject is None:
+            dictionary = words[v].form("dictionary")
+            wanted[v] |= (dictionary.features - TENSE) if dictionary else set()
+    if verbs and subject is not None:
+        v, s = verbs[0], subject
+        person = _inherent(words[s]) & PERSONS if words[s] else set()
+        wanted[v] |= person or {"@third-person"}
+        if PLURAL in wanted[s] or (words[s] and PLURAL in _inherent(words[s])):
+            wanted[v].add(PLURAL)
+        mx = matrix(root)
+        unsaid = {m for row in mx.rows.values() for m in row.implied.get(target, ())}
+        if person and set(units[s].meanings) & unsaid:
+            silent.add(s)
+    return Plan(wanted, words, carried, silent)

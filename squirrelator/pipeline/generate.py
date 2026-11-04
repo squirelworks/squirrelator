@@ -16,6 +16,10 @@ Two ways, both read from the data and neither invents a word:
   in brackets and is listed under missing. A role the target has no marker
   for (English has no topic particle) is left out and listed under dropped.
 
+For a target whose nouns change form by case (Latin), Agree picks each
+word's form first: the case its role takes, the agreement of adjectives
+and the person of the verb (see agree.py).
+
 Implied units (the "I" Japanese leaves unsaid) are written in the words
 candidate only when the target has a word for them.
 """
@@ -25,6 +29,7 @@ from dataclasses import dataclass
 from ..inflections import inflections
 from ..lexicon import language_meta, lexicon
 from ..matrix import Matrix, matrix
+from .agree import agree, pick_form
 from .interlingua import Interlingua
 
 ENGLISH = "english"
@@ -105,6 +110,14 @@ def _end(mx: Matrix, target: str, question: bool) -> str:
     return ""
 
 
+def _capitalized(mx: Matrix, target: str) -> bool:
+    """Whether the target's matrix column starts every sentence with a
+    capital letter (Latin Discipulus sum.)."""
+    firsts = [r.tokens[0][0] for r in mx.columns.get(target, {}).values() if r.tokens]
+    cased = [t for t in firsts if t[:1].lower() != t[:1].upper()]
+    return bool(cased) and all(t[0].isupper() for t in cased)
+
+
 def _from_matrix(il: Interlingua, target: str, mx: Matrix) -> list[Candidate]:
     out = []
     for row_id in il.matches:
@@ -133,12 +146,23 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         positions.append(last)
     units = [u for _, u in sorted(zip(positions, il.units), key=lambda p: p[0])]
 
+    # Case, agreement and person, for a target whose words change by case.
+    firsts = [(_word(mx, target, u.meanings[0]) or ("", ""))[0] if u.meanings else "" for u in il.units]
+    plan = agree(il, target, firsts, root=root)
+    by_unit = {id(u): i for i, u in enumerate(il.units)}
+
     pairs, missing, dropped = [], [], []
     for unit in units:
+        k = by_unit[id(unit)]
+        if k in plan.silent:
+            continue  # the verb's ending says it (Dormiō, not Ego dormiō)
         words = []
-        for meaning in unit.meanings:
+        for n, meaning in enumerate(unit.meanings):
             found = _word(mx, target, meaning)
-            if found:
+            if found and n == 0 and plan.words[k] is not None:
+                form = pick_form(plan.words[k], plan.wanted[k])
+                words.append((form.text, form.reading))
+            elif found:
                 words.append(_inflect(found, meaning, set(unit.roles), target, root))
             elif not unit.implied:
                 words.append((f"[{unit.text}]", ""))
@@ -149,12 +173,15 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         if not words:
             continue
         before, after = [], []
-        inflected = {r for r in unit.roles if words and any(
-            r in f.features for w in inflections(target, root) for f in w.forms if w.meaning in unit.meanings)}
+        table = [plan.words[k]] if plan.words[k] is not None else [
+            w for w in inflections(target, root) if w.meaning in unit.meanings]
+        inflected = {r for r in unit.roles if words and any(r in f.features for w in table for f in w.forms)}
         for role in unit.roles:
             if role in inflected:
                 continue  # the verb form carries it
             found = _word(mx, target, role)
+            if not found and role in plan.carried:
+                continue  # the case ending says it (aquam is the object)
             if not found:
                 dropped.append(role)
             else:
@@ -167,7 +194,7 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
             pairs = [found] + pairs if placement(feature) == "before" else pairs + [found]
     spaced = target == ENGLISH or lexicon(target, root).spaced
     text = render([t for t, _ in pairs], " " if spaced else "", _end(mx, target, question))
-    if target == ENGLISH and text:
+    if text and (target == ENGLISH or (plan.words and any(plan.words) and _capitalized(mx, target))):
         text = text[0].upper() + text[1:]
     reading = "" if target == ENGLISH else _reading(pairs)
     return Candidate(text, reading, "words", missing=tuple(missing), dropped=tuple(dict.fromkeys(dropped)))

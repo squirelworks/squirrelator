@@ -1,0 +1,75 @@
+name: PR guard
+
+# Fails a PR that targets anything but main, whose diff would delete or
+# revert work already on main (e.g. a conflict resolved to the branch's side),
+# that changes files outside its Scope: line, or that commits binaries or
+# large files. See .github/MERGING.md. Make "PR guard / guard" a required check.
+
+on:
+  # Every base branch, so a stacked PR fails instead of skipping the check.
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      # Full history, but no file contents: the guard only compares trees.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          sparse-checkout: .github
+      - name: Check the PR
+        id: guard
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          git fetch -q --filter=blob:none origin "$BASE_SHA" main
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/body.txt"
+          # Run main's copy of the guard so a PR cannot loosen its own check.
+          git show "origin/main:.github/scripts/pr_guard.py" > "$RUNNER_TEMP/pr_guard.py" 2>/dev/null \
+            || cp .github/scripts/pr_guard.py "$RUNNER_TEMP/pr_guard.py"
+          python3 "$RUNNER_TEMP/pr_guard.py" --base "$BASE_SHA" --head "$HEAD_SHA" --base-ref "$BASE_REF" \
+            --body-file "$RUNNER_TEMP/body.txt" --labels "$PR_LABELS" | tee "$RUNNER_TEMP/guard.txt"
+          exit "${PIPESTATUS[0]}"
+      # One sticky comment with a plain verdict, for whoever (or whatever) merges.
+      - name: Post the merge verdict
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v7
+        env:
+          OUTCOME: ${{ steps.guard.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const sha = context.payload.pull_request.head.sha.slice(0, 7);
+            const ok = process.env.OUTCOME === 'success';
+            let log = '';
+            try { log = fs.readFileSync(`${process.env.RUNNER_TEMP}/guard.txt`, 'utf8'); } catch {}
+            const body = [
+              '<!-- pr-guard-verdict -->',
+              ok ? `**Merge verdict: SAFE TO MERGE** (PR guard passed on ${sha}). Use "Squash and merge".`
+                 : `**Merge verdict: DO NOT MERGE** (PR guard failed on ${sha}). The owning Claude thread must fix the branch; do not resolve anything on GitHub.`,
+              '',
+              '<details><summary>PR guard output</summary>',
+              '',
+              '```',
+              log.slice(-60000),
+              '```',
+              '</details>',
+            ].join('\n');
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number, per_page: 100 });
+            const mine = comments.find(c => c.body.startsWith('<!-- pr-guard-verdict -->'));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });

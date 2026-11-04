@@ -148,7 +148,9 @@ def _clause(tokens: list[Token], default: str | None, sides: dict, near: dict) -
         if t.affix == "prefix":
             waiting.append(t)
             last = None
-        elif t.affix == "suffix" and phrases:
+        elif t.affix == "suffix" and phrases and (is_marker(t) or not meaning_of(t)):
+            # A suffix with a content meaning (Korean -부터, from) falls
+            # through and heads its own phrase instead.
             phrases[-1][1].append(t)
             last = phrases[-1]
         elif t.kind == "word" and _acts_as_marker(t, words, i, default, sides, last, near):

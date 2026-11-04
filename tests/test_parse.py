@@ -143,3 +143,12 @@ def test_a_word_that_is_also_a_marker_follows_the_columns_neighbours(root):
     # 一 before a measure word is @one; before a verb it is the number one.
     assert heads("桌子上有一本书。") == ["桌子", "上", "有", "书"]
     assert heads("从一数到十。") == ["从", "一", "数", "十"]
+
+
+def test_a_suffix_with_a_content_meaning_is_its_own_phrase(root):
+    from squirrelator.lexicon import lexicon
+    from squirrelator.matrix import matrix
+    if "count-to-ten" not in matrix(root).columns.get("hangul", {}):
+        pytest.skip("the Korean code pack arrives in squirrel-lang-data v0.1.4")
+    [c] = parse(analyze("하나부터 열까지 센다.", "hangul", lex=lexicon("hangul", root)), "hangul", root=root)
+    assert [p.head.text for p in c.phrases] == ["하나", "부터", "열", "센다"]

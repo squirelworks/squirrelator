@@ -9,6 +9,17 @@ interface Engine {
     /** Language ids translate() accepts with its default settings, in menu order. */
     fun languages(): List<String>
 
-    /** The engine's translate() with its defaults. */
-    fun translate(text: String, from: String, to: String): String
+    /**
+     * What the screen shows for a translation under the Auto engine, the same
+     * as the desktop GUI (squirrelator.menus.display): the text, with the
+     * pipeline's alternatives and alpha label, or the second opinion for
+     * Latin and Klingon.
+     */
+    fun translate(text: String, from: String, to: String): Translated
 }
+
+/**
+ * A translation as shown: [text], the [engine] that made it ("Rules" or
+ * "Pipeline (alpha)"), and the [mode] chosen, "Auto" on every app for now.
+ */
+data class Translated(val text: String, val engine: String, val mode: String = "Auto")

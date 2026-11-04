@@ -109,6 +109,11 @@ fun TranslateScreen(model: TranslateModel) {
                 SelectionContainer {
                     Text(model.output, style = MaterialTheme.typography.bodyLarge)
                 }
+                Text(
+                    model.engineNote,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

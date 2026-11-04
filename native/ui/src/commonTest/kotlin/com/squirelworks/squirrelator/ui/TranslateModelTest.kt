@@ -14,9 +14,9 @@ private class FakeEngine(
 ) : Engine {
     val calls = mutableListOf<Triple<String, String, String>>()
     override fun languages() = if (fail) error("no python") else langs
-    override fun translate(text: String, from: String, to: String): String {
+    override fun translate(text: String, from: String, to: String): Translated {
         calls += Triple(text, from, to)
-        return "[$from>$to] $text"
+        return Translated("[$from>$to] $text", if (to == "python") "Rules" else "Pipeline (alpha)")
     }
 }
 
@@ -41,6 +41,7 @@ class TranslateModelTest {
         model.translate()
         assertEquals(listOf(Triple("print hello", "english", "python")), engine.calls)
         assertEquals("[english>python] print hello", model.output)
+        assertEquals("Auto: translated with Rules", model.engineNote)
         assertFalse(model.busy)
     }
 

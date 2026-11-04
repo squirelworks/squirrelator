@@ -9,7 +9,7 @@ always in the menu: alpha labels a feature, it never hides one.
 """
 
 from .result import Translation
-from .translator import SUPPORTED, _engine_for
+from .translator import SUPPORTED, _engine_for, translate, translate_full
 
 AUTO = "Auto"
 RULES = "Rules"
@@ -86,3 +86,16 @@ def _second_opinion(o: Translation) -> str:
     if o.unknown:
         lines.append("  Not in the data yet: " + ", ".join(o.unknown))
     return "\n".join(lines)
+
+
+def display(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> tuple[str, str]:
+    """What an app shows for a translation, and which engine (a label from
+    ENGINES) made it. Every app calls this, so the desktop GUI and the
+    phone show the same thing: a pipeline pair's full result, a rules pair's
+    plain text, and under Auto the pipeline's second opinion for Latin and
+    Klingon."""
+    if runs_pipeline(engine, from_lang, to_lang):
+        return format_result(translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])), PIPELINE
+    if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
+        return format_rules_result(translate_full(source, from_lang, to_lang)), RULES
+    return translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine]), RULES

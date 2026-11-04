@@ -17,7 +17,7 @@ import sys
 
 from squirrelator import translate as _translate
 from squirrelator.data import ENV_VAR
-from squirrelator.menus import RULES, languages_for
+from squirrelator.menus import AUTO, RULES, display, languages_for
 
 
 def setup(data_path: str) -> None:
@@ -55,12 +55,24 @@ def translate(text: str, from_lang: str, to_lang: str) -> str:
     return _translate(text, from_lang, to_lang)
 
 
+def show(text: str, from_lang: str, to_lang: str) -> list[str]:
+    """What the screen shows, the same as the desktop GUI under Auto (see
+    squirrelator.menus.display): the text, with the pipeline's alternatives
+    and alpha label or the second opinion for Latin and Klingon, and which
+    engine made it. A list, so Chaquopy hands Kotlin a plain sequence."""
+    shown, used = display(text, from_lang, to_lang, AUTO)
+    return [shown, used]
+
+
 def _handle(request: dict) -> dict:
     op = request.get("op")
     if op == "languages":
         return {"ok": True, "languages": languages()}
     if op == "translate":
         return {"ok": True, "text": translate(request["text"], request["from"], request["to"])}
+    if op == "show":
+        shown, used = show(request["text"], request["from"], request["to"])
+        return {"ok": True, "text": shown, "engine": used, "mode": AUTO}
     return {"ok": False, "error": f"unknown op {op!r}"}
 
 

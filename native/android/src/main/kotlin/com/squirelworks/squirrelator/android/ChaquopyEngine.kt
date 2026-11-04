@@ -5,6 +5,7 @@ import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.squirelworks.squirrelator.ui.Engine
+import com.squirelworks.squirrelator.ui.Translated
 import java.io.File
 import java.util.zip.ZipInputStream
 
@@ -24,8 +25,10 @@ class ChaquopyEngine(private val context: Context) : Engine {
     override fun languages(): List<String> =
         bridge.callAttr("languages").asList().map { it.toString() }
 
-    override fun translate(text: String, from: String, to: String): String =
-        bridge.callAttr("translate", text, from, to).toString()
+    override fun translate(text: String, from: String, to: String): Translated {
+        val (shown, engine) = bridge.callAttr("show", text, from, to).asList().map { it.toString() }
+        return Translated(shown, engine)
+    }
 
     /** Unpack lang-data.zip once per installed version of the app. */
     private fun unpackData(): File {

@@ -51,10 +51,22 @@ def test_translate_is_the_engines_translate_with_defaults():
     assert bridge.translate("print hello", "english", "python") == translate("print hello", "english", "python")
 
 
+def test_show_is_what_the_desktop_gui_shows_under_auto():
+    from squirrelator.menus import AUTO, PIPELINE, display
+
+    assert bridge.show("print hello", "english", "python") == ['print("hello")', RULES]
+    text, used = bridge.show("バスで学校に行きます。", "japanese", "english")
+    assert used == PIPELINE and text.startswith("I go to school by bus.") and "Alpha." in text
+    shown = bridge.show("I drink water.", "english", "latin")
+    assert shown == list(display("I drink water.", "english", "latin", AUTO))
+    assert "Second opinion from Pipeline (alpha)" in shown[0] and "Aquam bibō." in shown[0]
+
+
 def test_serve_answers_one_json_line_per_request():
     requests = [
         {"op": "languages"},
         {"op": "translate", "text": "print hello", "from": "english", "to": "python"},
+        {"op": "show", "text": "print hello", "from": "english", "to": "python"},
         {"op": "nope"},
         {"op": "translate"},
     ]
@@ -63,8 +75,9 @@ def test_serve_answers_one_json_line_per_request():
     replies = [json.loads(line) for line in out.getvalue().splitlines()]
     assert replies[0] == {"ok": True, "languages": bridge.languages()}
     assert replies[1] == {"ok": True, "text": 'print("hello")'}
-    assert replies[2]["ok"] is False and "nope" in replies[2]["error"]
-    assert replies[3]["ok"] is False and "KeyError" in replies[3]["error"]
+    assert replies[2] == {"ok": True, "text": 'print("hello")', "engine": RULES, "mode": "Auto"}
+    assert replies[3]["ok"] is False and "nope" in replies[3]["error"]
+    assert replies[4]["ok"] is False and "KeyError" in replies[4]["error"]
 
 
 def test_setup_points_the_engine_at_the_apps_data(tmp_path, monkeypatch):

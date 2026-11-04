@@ -1,0 +1,52 @@
+name: PR conflicts
+
+# After every push to main, find open PRs that now conflict with main, label
+# them "merge-conflict" and leave one comment asking the Claude thread that
+# owns the branch to merge main and resolve it. Clears the label once fixed.
+# See .github/MERGING.md.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  conflicts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const LABEL = 'merge-conflict';
+            const sleep = ms => new Promise(r => setTimeout(r, ms));
+            const prs = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', base: 'main', per_page: 100 });
+            for (const p of prs) {
+              // GitHub computes mergeability in the background; ask until it answers.
+              let pr;
+              for (let i = 0; i < 6; i++) {
+                pr = (await github.rest.pulls.get({ owner, repo, pull_number: p.number })).data;
+                if (pr.mergeable !== null) break;
+                await sleep(5000);
+              }
+              const labelled = pr.labels.some(l => l.name === LABEL);
+              core.info(`#${pr.number} mergeable=${pr.mergeable} labelled=${labelled}`);
+              if (pr.mergeable === false && !labelled) {
+                await github.rest.issues.addLabels({ owner, repo, issue_number: pr.number, labels: [LABEL] });
+                await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body: [
+                  `This PR now conflicts with \`main\` (most likely from another PR that just merged).`,
+                  ``,
+                  `**Claude thread that owns \`${pr.head.ref}\`:** please resolve it yourself, following \`.github/MERGING.md\`:`,
+                  '`git fetch origin main && git merge origin/main`, combine both sides of every conflict (never take "ours" or "theirs" wholesale), ',
+                  'run `python3 .github/scripts/pr_guard.py --base origin/main --head HEAD`, and push.',
+                  ``,
+                  `**Squirrel:** nothing to do here. Please don't use GitHub's "Resolve conflicts" button; the thread will fix it and the label will clear.`,
+                ].join('\n') });
+              } else if (pr.mergeable === true && labelled) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: pr.number, name: LABEL });
+              }
+            }

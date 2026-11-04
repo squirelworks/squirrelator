@@ -8,7 +8,7 @@ Core language engine for translating between human languages, programming langua
 ## Run (GUI is default)
 
 ```bash
-cd ~/FU/squirrelator
+cd squirrelator
 source .venv/bin/activate
 python3 squirrelator.py
 ```
@@ -34,9 +34,9 @@ Open `app/index.html` in a browser (self-contained, no install needed).
 
 Rule-based translation for common patterns:
 
-- English / pseudocode → Python, JavaScript, QuickBASIC, LOLCODE, brainFOOD, Z80, Shell, SQL
-- Code → English explanations
-- Simple code ↔ code via intermediate English
+- English or pseudocode → code in a programming language
+- Code → plain-English explanations
+- Simple code ↔ code, through an English intermediate
 
 ## Install
 
@@ -44,7 +44,13 @@ Rule-based translation for common patterns:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
+git submodule update --init   # the language data, at data/
 ```
+
+The language data comes from
+[squirrel-lang-data](https://github.com/squirelworks/squirrel-lang-data),
+pinned as a submodule at `data/`. To use another checkout instead (LSD hands
+squirrelator its own), set `SQUIRREL_LANG_DATA` to its path.
 
 ## Using from LanguageStudentDesk
 
@@ -55,4 +61,6 @@ result = translate("print hello", from_lang="english", to_lang="python")
 
 ## Supported languages
 
-english, pseudocode, python, javascript, quickbasic, brainfood, lolcode, z80, shell, sql
+The **From** and **To** menus in the GUI and the web app list every language
+squirrelator can translate today. Calling `translate()` with a language it
+doesn't know returns the current list.

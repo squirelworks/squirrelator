@@ -40,3 +40,10 @@ def test_result_text_shows_alternatives_unknown_words_and_alpha():
 
 def test_plain_result_is_just_the_text():
     assert format_result(Translation("hi", alpha=False)) == "hi"
+
+
+def test_result_text_shows_the_second_opinion():
+    other = Translation("Aquam bibō.", (), (), (), 1.0, True)
+    out = format_result(Translation("# Could not match", alpha=False, second_opinion=other))
+    assert out.startswith("# Could not match")
+    assert out.endswith("Second opinion from Pipeline (alpha), confidence 100%:\n  Aquam bibō.")

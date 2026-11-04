@@ -4,6 +4,7 @@ Supports human ↔ code and code ↔ code for a focused set of languages.
 """
 
 import re
+from dataclasses import replace
 from typing import Optional
 
 from .result import Step, Translation, UnsupportedLanguage
@@ -79,13 +80,7 @@ def _engine_for(engine: str, from_lang: str, to_lang: str) -> str:
         return engine
     if from_lang in SUPPORTED and to_lang in SUPPORTED:
         return "rules"
-    from .data import DataNotFound
-    from .pipeline import languages
-    try:
-        known = set(languages())
-    except DataNotFound:
-        return "rules"
-    return "pipeline" if from_lang in known and to_lang in known else "rules"
+    return "pipeline" if _pipeline_knows(from_lang, to_lang) else "rules"
 
 
 def _from_natural(text: str, to_lang: str) -> str:
@@ -259,12 +254,36 @@ def translate_full(
 
     Unlike translate(), an unknown language raises UnsupportedLanguage.
     Every pair is alpha until it has a passing test set. engine works as
-    in translate().
+    in translate(). Under engine="auto", a pair both engines know (english,
+    latin and klingon) keeps the rules result and adds the pipeline's as
+    second_opinion, when the pipeline understood any of the source.
     """
     frm, to = _norm(from_lang), _norm(to_lang)
     if _engine_for(engine, frm, to) == "pipeline":
         from .pipeline import run
         return run(source, frm, to)
+    result = _rules_full(source, from_lang, to_lang, style=style)
+    if engine == "auto" and frm != to and _pipeline_knows(frm, to):
+        from .pipeline import run
+        other = run(source, frm, to)
+        if other.confidence > 0:
+            return replace(result, second_opinion=other)
+    return result
+
+
+def _pipeline_knows(*langs: str) -> bool:
+    from .data import DataNotFound
+    from .pipeline import languages
+    try:
+        known = set(languages())
+    except DataNotFound:
+        return False
+    return all(lang in known for lang in langs)
+
+
+def _rules_full(source: str, from_lang: str, to_lang: str, *, style: Optional[str]) -> Translation:
+    """translate_full() for the rules engine."""
+    frm, to = _norm(from_lang), _norm(to_lang)
     for lang in (frm, to):
         if lang not in SUPPORTED:
             raise UnsupportedLanguage(lang, sorted(SUPPORTED))

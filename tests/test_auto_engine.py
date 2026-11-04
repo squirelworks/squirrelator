@@ -2,6 +2,7 @@
 those results don't change, and the pipeline only for pairs rules rejects."""
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -20,9 +21,32 @@ def test_default_gives_what_rules_gave(case):
 
 
 def test_rules_pairs_stay_on_rules_full():
+    """Every rules pair keeps the rules result; only second_opinion is added."""
     for frm in ("english", "latin", "klingon"):
         for to in ("english", "latin", "klingon", "python"):
-            assert translate_full("print hello", frm, to) == translate_full("print hello", frm, to, engine="rules")
+            auto = translate_full("print hello", frm, to)
+            assert replace(auto, second_opinion=None) == translate_full("print hello", frm, to, engine="rules")
+
+
+def test_latin_and_klingon_get_the_pipelines_second_opinion():
+    try:
+        data.data_dir()
+    except data.DataNotFound:
+        pytest.skip("squirrel-lang-data not checked out")
+    r = translate_full("I drink water.", "english", "latin")
+    assert r.text == translate("I drink water.", "english", "latin", engine="rules")
+    assert r.second_opinion == translate_full("I drink water.", "english", "latin", engine="pipeline")
+    assert r.second_opinion.text == "Aquam bibō." and r.second_opinion.alpha
+    # translate() and the other engines are unchanged.
+    assert translate("I drink water.", "english", "latin") == r.text
+    assert translate_full("I drink water.", "english", "latin", engine="rules").second_opinion is None
+    assert translate_full("I drink water.", "english", "latin", engine="pipeline").second_opinion is None
+
+
+def test_no_second_opinion_outside_the_overlap_or_when_the_pipeline_understood_nothing():
+    assert translate_full("print hello", "english", "python").second_opinion is None
+    assert translate_full("print hello", "latin", "latin").second_opinion is None
+    assert translate_full("xyzzy plugh", "klingon", "english").second_opinion is None
 
 
 def test_pair_rules_rejects_goes_to_the_pipeline():

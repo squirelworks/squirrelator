@@ -51,4 +51,11 @@ def format_result(t: Translation) -> str:
         parts.append("Why:\n" + "\n".join(f"  {s.source}\n    {s.why}" for s in t.breakdown))
     if t.alpha:
         parts.append(f"Alpha. Confidence {round(t.confidence * 100)}%.")
+    if t.second_opinion:
+        o = t.second_opinion
+        lines = [f"Second opinion from {PIPELINE}, confidence {round(o.confidence * 100)}%:", f"  {o.text}"]
+        lines += [f"  Also: {a}" for a in o.alternatives]
+        if o.unknown:
+            lines.append("  Not in the data yet: " + ", ".join(o.unknown))
+        parts.append("\n".join(lines))
     return "\n\n".join(parts)

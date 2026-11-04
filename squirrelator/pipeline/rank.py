@@ -17,6 +17,7 @@ Ties keep Generate's order.
 
 from dataclasses import dataclass
 
+from ..inflections import inflections
 from ..matrix import matrix
 from .generate import Candidate
 from .interlingua import Interlingua
@@ -38,12 +39,29 @@ class Ranked:
         return self.candidate.text
 
 
-def _grammar(il: Interlingua) -> set[str]:
-    return {r for u in il.units for r in u.roles} | set(il.features)
+def _grammar(il: Interlingua, tokens, forms) -> set[str]:
+    """The clause's grammar, as the row could show it. What an inflected
+    word carries (行きました: @polite, @past) counts only when the row also
+    writes that meaning as an inflected form (行きます), not as a stem with
+    separate endings (分かり ません)."""
+    out = set(il.features)
+    for u in il.units:
+        own = {f for f in forms.get(u.text, ()) if f.startswith("@")}
+        out |= set(u.roles) - own
+        row_forms = [forms.get(t, ()) for t, _, ms in tokens if u.meaning and u.meaning in ms.split("+")]
+        if any(any(f.startswith("@") for f in fs) for fs in row_forms):
+            out |= own
+    return out
 
 
-def _row_grammar(tokens) -> set[str]:
-    return {m for _, _, ms in tokens for m in ms.split("+") if m.startswith("@")}
+def _row_grammar(tokens, forms=None) -> set[str]:
+    """Grammar meanings a column row writes: its "@" tokens, plus what an
+    inflected form in the row carries (行きます is @polite and @present)."""
+    out = set()
+    for text, _, ms in tokens:
+        out |= {m for m in ms.split("+") if m.startswith("@")}
+        out |= {f for f in (forms or {}).get(text, ()) if f.startswith("@")}
+    return out
 
 
 def _plural(n: int, word: str) -> str:
@@ -53,7 +71,9 @@ def _plural(n: int, word: str) -> str:
 def rank(candidates, il: Interlingua, source: str, *, root=None) -> tuple[Ranked, ...]:
     """Candidates for one clause, best first."""
     mx = matrix(root)
-    have = _grammar(il)
+    forms = {f.text: f.features for w in inflections(source, root) for f in w.forms}
+    # Only grammar the source column writes somewhere can differ.
+    marked = {m for r in mx.columns.get(source, {}).values() for m in _row_grammar(r.tokens, forms)}
     words = sum(1 for u in il.units if not u.implied) or 1
     out, wordings = [], {}
     for c in candidates:
@@ -62,7 +82,8 @@ def rank(candidates, il: Interlingua, source: str, *, root=None) -> tuple[Ranked
             score, note = 1.0 - n * WORDING, "A sentence from the meaning matrix."
             rendering = mx.columns.get(source, {}).get(c.row)
             if rendering:
-                off = sorted(have ^ _row_grammar(rendering.tokens))
+                have = _grammar(il, rendering.tokens, forms)
+                off = sorted((have ^ _row_grammar(rendering.tokens, forms)) & marked)
                 if off:
                     score -= MISMATCH * len(off)
                     note = f"A sentence from the meaning matrix, but its grammar differs: {', '.join(off)}."

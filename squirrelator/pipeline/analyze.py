@@ -9,8 +9,9 @@
   only when every part is known.
 
 Every token says whether the data knows it, so later stages mark unknown
-words instead of guessing. Dictionary forms of inflected words come in a
-later PR, once squirrel-lang-data has inflection tables.
+words instead of guessing. Inflected forms listed in the language's
+inflection tables are known words too: 行きました carries go, @polite and
+@past (see squirrelator/inflections.py).
 """
 
 import unicodedata

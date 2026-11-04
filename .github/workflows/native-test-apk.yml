@@ -1,0 +1,51 @@
+name: Native test APK
+
+# The only way to get a squirrelator APK for now. Started by hand
+# (Actions -> Native test APK -> Run workflow). It builds a debug APK and
+# keeps it as a run artifact that expires after 14 days. It never creates a
+# release, a tag or a commit, and uses no signing key or secret: the APK is
+# signed with a throwaway debug key made on the runner, which Android needs
+# before it will install anything. See native/README.md, "Try it on a phone".
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      # Same Gradle as native.yml; no wrapper jar is committed.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
+      # The runner image ships the Android SDK; just make sure API 36 is there.
+      - name: Install Android SDK packages
+        run: |
+          SDKMANAGER=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)
+          yes | "$SDKMANAGER" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0" > /dev/null
+      - name: Build the test APK
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          gradle --no-daemon :android:assembleDebug
+          SHA=$(git rev-parse --short HEAD)
+          mkdir -p "$RUNNER_TEMP/apk"
+          cp android/build/outputs/apk/debug/android-debug.apk "$RUNNER_TEMP/apk/Squirrelator-test-$SHA.apk"
+          echo "APK_NAME=Squirrelator-test-$SHA" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: ${{ runner.temp }}/apk/${{ env.APK_NAME }}.apk
+          retention-days: 14
+          if-no-files-found: error

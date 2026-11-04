@@ -54,5 +54,30 @@ For Android, put `sdk.dir=/path/to/Android/sdk` in `native/local.properties`
 or set `ANDROID_HOME`.
 
 CI (`.github/workflows/native.yml`) runs the same commands on every PR and
-uploads nothing. Release signing (APKs signed in GitHub Actions with the upload
+uploads nothing.
+
+## Try it on a phone
+
+A test APK is built by hand on GitHub, so you don't need any of the tools above.
+
+1. Open [Actions, Native test APK](https://github.com/squirelworks/squirrelator/actions/workflows/native-test-apk.yml)
+   and press **Run workflow** (leave the branch on `main`), then **Run workflow** again.
+2. Wait for the run to get a green tick, about 5 to 10 minutes. Open the run.
+3. Under **Artifacts** at the bottom, download `Squirrelator-test-…`. GitHub
+   hands it over as a zip; unzip it to get the `.apk`. The download lasts
+   14 days.
+4. Copy the `.apk` to the phone (or download it there directly), tap it, and
+   allow installing from that app when Android asks. It needs Android 7.0
+   or newer.
+
+The app is called **squirrelator** and installs next to any release build
+(its id ends in `.debug`). The first translation takes a few seconds while
+it starts Python and unpacks the language data; after that it's quick, and it
+never needs the internet.
+
+Each test APK is signed with a new throwaway key, because no key is kept for
+test builds. So to install a newer test APK, uninstall the old one first.
+
+This isn't a release: nothing goes to Releases or Play, and the upload key
+isn't used. Release signing (APKs signed in GitHub Actions with the upload
 key from GitHub secrets, AABs never on GitHub) comes with the first release.

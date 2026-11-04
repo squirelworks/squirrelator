@@ -14,7 +14,10 @@ clause's features.
 """
 
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 
+from ..data import data_dir
 from ..lexicon import language_meta
 from .analyze import Token
 
@@ -78,14 +81,40 @@ def _role(token: Token) -> str:
     return next(e.meaning for e in token.entries if e.meaning.startswith("@") and e.source == "column")
 
 
-def _acts_as_marker(t: Token, words: list[Token], i: int, default, sides: dict, last) -> bool:
+@lru_cache(maxsize=None)
+def _neighbours_in(language: str, root: Path) -> dict:
+    return _neighbours(language, root)
+
+
+def _neighbours(language: str, root) -> dict:
+    """For each word the language's matrix column writes as a marker, the
+    neighbours it attaches to there: (text, role, side) -> set of
+    "content" (any content word) or a marker's own text. 住んで います and
+    降って います give ("います", "@ongoing", "after") -> {"content", "降って"}."""
+    from ..matrix import matrix
+    out: dict = {}
+    for rendering in matrix(root).columns.get(language, {}).values():
+        toks = [(t.strip("-") if len(t) > 1 else t, ms.split("+")) for t, _, ms in rendering.tokens]
+        for k, (text, parts) in enumerate(toks):
+            if not all(m.startswith("@") for m in parts):
+                continue
+            for side, j in (("after", k - 1), ("before", k + 1)):
+                if 0 <= j < len(toks):
+                    other, other_parts = toks[j]
+                    key = "content" if any(not m.startswith("@") for m in other_parts) else other
+                    for role in parts:
+                        out.setdefault((text, role, side), set()).add(key)
+    return out
+
+
+def _acts_as_marker(t: Token, words: list[Token], i: int, default, sides: dict, last, near: dict) -> bool:
     """Whether a word is read as a grammar marker. A word the data gives only
     grammar meanings always is. A word the language's matrix column writes
-    with both kinds (います is exist and
-    @ongoing, 坐 is sit and @means) is a marker only when a content word sits
-    right where the marker attaches: just before it for an "after" marker
-    (住んで います), just after it for a "before" one (坐 火车). After a
-    particle (猫が います) or with nothing to attach to (请坐) it is a word."""
+    with both kinds (います is exist and @ongoing, 一 is one and @one) is a
+    marker only next to the kind of word the column writes it beside: a
+    content word (住んで います, 坐 火车) or the same marker (降って います,
+    一 本). After a particle (猫が います), before a verb (一 数) or with
+    nothing to attach to (请坐, 加一) it is a word."""
     ms = meanings_of(t)
     if all(m.startswith("@") for m in ms) or not any(m.startswith("@") for m in ms):
         return is_marker(t)
@@ -93,16 +122,22 @@ def _acts_as_marker(t: Token, words: list[Token], i: int, default, sides: dict, 
     grammar = [e.meaning for e in t.entries if e.meaning.startswith("@") and e.source == "column"]
     if not grammar:
         return is_marker(t)
-    side = sides.get(grammar[0], default)
+    role = grammar[0]
+    side = sides.get(role, default)
     if side == "after":
-        return last is not None and i > 0 and words[i - 1] is last[0]
-    if side == "before":
-        nxt = words[i + 1] if i + 1 < len(words) else None
-        return nxt is not None and not nxt.affix and not is_marker(nxt)
-    return False
+        other = words[i - 1] if i > 0 else None
+        content = other is not None and last is not None and other is last[0]
+    elif side == "before":
+        other = words[i + 1] if i + 1 < len(words) else None
+        content = other is not None and not other.affix and not is_marker(other)
+    else:
+        return False
+    if other is None:
+        return False
+    return ("content" if content else other.text) in near.get((t.text, role, side), ())
 
 
-def _clause(tokens: list[Token], default: str | None, sides: dict) -> Clause:
+def _clause(tokens: list[Token], default: str | None, sides: dict, near: dict) -> Clause:
     phrases: list[tuple[Token, list[Token]]] = []
     features: list[str] = []
     waiting: list[Token] = []    # prefixes and "before" markers for the next head
@@ -116,7 +151,7 @@ def _clause(tokens: list[Token], default: str | None, sides: dict) -> Clause:
         elif t.affix == "suffix" and phrases:
             phrases[-1][1].append(t)
             last = phrases[-1]
-        elif t.kind == "word" and _acts_as_marker(t, words, i, default, sides, last):
+        elif t.kind == "word" and _acts_as_marker(t, words, i, default, sides, last, near):
             role = _role(t)
             side = sides.get(role, default)
             if side == "before":
@@ -144,14 +179,15 @@ def _clause(tokens: list[Token], default: str | None, sides: dict) -> Clause:
 def parse(tokens: list[Token], language: str, *, root=None) -> list[Clause]:
     """Clauses for Analyze's tokens of a squirrel-lang-data language."""
     default, sides = _sides(language, root)
+    near = _neighbours_in(language, data_dir(root))
     clauses, current = [], []
     for t in tokens:
         current.append(t)
         if t.kind == "punct" and t.text in CLAUSE_END:
-            clauses.append(_clause(current, default, sides))
+            clauses.append(_clause(current, default, sides, near))
             current = []
     if any(t.kind in ("word", "number") for t in current):
-        clauses.append(_clause(current, default, sides))
+        clauses.append(_clause(current, default, sides, near))
     elif current and clauses:
         last = clauses.pop()
         clauses.append(Clause(last.tokens + tuple(current), last.phrases, last.features))

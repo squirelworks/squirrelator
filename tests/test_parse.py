@@ -6,7 +6,7 @@ from squirrelator import data
 from squirrelator.pipeline.analyze import analyze
 from squirrelator.pipeline.parse import parse
 
-from conftest import MARKERS  # noqa: E402
+from conftest import LANGUAGES  # noqa: E402
 
 try:
     data.data_dir()
@@ -87,7 +87,7 @@ def test_every_matrix_sentence_has_one_phrase_per_content_meaning(root):
     from squirrelator.lexicon import lexicon
     from squirrelator.pipeline.parse import meanings_of
     problems = []
-    for lang in MARKERS:
+    for lang in LANGUAGES:
         path = root / "meaning" / "columns" / f"{lang}.jsonl"
         if not path.is_file():
             continue

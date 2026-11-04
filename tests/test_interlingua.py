@@ -66,10 +66,10 @@ def test_every_matrix_row_round_trips_through_its_columns(root):
     dictionary word swallowed a listed token."""
     import json
 
-    from conftest import MARKERS
+    from conftest import LANGUAGES
 
     misses = []
-    for lang in MARKERS:
+    for lang in LANGUAGES:
         path = root / "meaning" / "columns" / f"{lang}.jsonl"
         if not path.is_file():
             continue

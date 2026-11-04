@@ -1,7 +1,7 @@
 import pytest
 
 from squirrelator import Step, Translation, data
-from squirrelator.menus import AUTO, ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, languages_for, runs_pipeline
+from squirrelator.menus import AUTO, ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, format_rules_result, languages_for, runs_pipeline
 from squirrelator.translator import SUPPORTED
 
 
@@ -71,3 +71,11 @@ def test_result_text_shows_the_second_opinion():
     out = format_result(Translation("# Could not match", alpha=False, second_opinion=other))
     assert out.startswith("# Could not match")
     assert out.endswith("Second opinion from Pipeline (alpha), confidence 100%:\n  Aquam bibō.")
+
+
+def test_rules_result_text_is_unchanged_without_a_second_opinion():
+    assert format_rules_result(Translation('print("hello")')) == 'print("hello")'
+    other = Translation("Aquam bibō.", (), (), ("x",), 0.5, True)
+    out = format_rules_result(Translation("# Could not match", second_opinion=other))
+    assert out == ("# Could not match\n\nSecond opinion from Pipeline (alpha), confidence 50%:\n"
+                   "  Aquam bibō.\n  Not in the data yet: x")

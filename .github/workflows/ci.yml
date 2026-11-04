@@ -31,6 +31,28 @@ jobs:
       - run: python -m pip install -q -e ".[dev]"
       - run: python -m pytest -q
 
+  data-pin:
+    # data/ may only point at a commit on squirrel-lang-data's main.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the data/ submodule is pinned to a commit on main
+        run: |
+          PIN=$(git ls-tree HEAD data | awk '$2 == "commit" {print $3}')
+          [ -n "$PIN" ] || { echo "no data/ submodule"; exit 1; }
+          URL=$(git config -f .gitmodules submodule.data.url)
+          git init -q "$RUNNER_TEMP/data" && cd "$RUNNER_TEMP/data"
+          git fetch -q --filter=blob:none "$URL" main
+          if git merge-base --is-ancestor "$PIN" FETCH_HEAD 2>/dev/null; then
+            echo "data/ is pinned to $PIN, on squirrel-lang-data main."
+            TAG=$(git ls-remote --tags "$URL" | awk -v p="$PIN" '$1 == p {sub("refs/tags/", "", $2); print $2}')
+            echo "Tag at that commit: ${TAG:-none}"
+          else
+            echo "data/ is pinned to $PIN, which isn't on squirrel-lang-data main."
+            echo "Pin it to a commit on main, preferably a release tag (see RELEASE_PLAN.md)."
+            exit 1
+          fi
+
   lint:
     runs-on: ubuntu-latest
     steps:

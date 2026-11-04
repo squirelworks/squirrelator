@@ -44,7 +44,13 @@ Rule-based translation for common patterns:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
+git submodule update --init   # the language data, at data/
 ```
+
+The language data comes from
+[squirrel-lang-data](https://github.com/squirelworks/squirrel-lang-data),
+pinned as a submodule at `data/`. To use another checkout instead (LSD hands
+squirrelator its own), set `SQUIRREL_LANG_DATA` to its path.
 
 ## Using from LanguageStudentDesk
 

@@ -45,6 +45,8 @@ class Plan:
     words: list[Word | None]
     carried: set[str] = field(default_factory=set)   # roles a case says, so no marker is missing
     silent: set[int] = field(default_factory=set)    # subject pronouns the verb's ending says
+    roles: list[tuple[str, ...]] | None = None       # each unit's roles, after moving
+    unformed: set[int] = field(default_factory=set)  # nouns whose role a case and marker say, not a form
 
 
 def _kind(word: Word | None, case_features: set[str]) -> str:
@@ -111,7 +113,7 @@ def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
     wanted = [set(u.roles) for u in units]
     cases = language_meta(target, root).get("cases") or {}
     if not cases:
-        return Plan(wanted, [None] * len(units))
+        return Plan(wanted, [None] * len(units), roles=[u.roles for u in units])
     case_features = set(cases.values())
     kinds = [_kind(w, case_features) for w in words]
     source = language_meta(il.language, root) if il.language else {}
@@ -122,32 +124,65 @@ def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
     def has(word, feature):
         return word is not None and any(feature in f.features for f in word.forms)
 
+    # English puts a preposition before the adjective ("in a big house"),
+    # but the role belongs to the noun the adjective describes.
+    roles = [list(u.roles) for u in units]
+    described: set[int] = set()   # nouns an adjective describes
+    unformed: set[int] = set()
+    for i, k in enumerate(kinds):
+        if k != "adjective":
+            continue
+        j = next((j for j in range(i + 1, len(units)) if kinds[j] in ("nominal", "verb")), None)
+        if j is None or kinds[j] != "nominal":
+            continue
+        described.add(j)
+        moving = [r for r in roles[i] if r in cases]
+        roles[i] = [r for r in roles[i] if r not in moving]
+        roles[j] = moving + [r for r in roles[j] if r not in moving]
+    wanted = [set(r) for r in roles]
+
     # A role the word's own form carries (domī is at home) needs no case.
     for i, u in enumerate(units):
-        for role in u.roles:
-            if role in cases and not has(words[i], role):
+        for role in roles[i]:
+            if role in cases and has(words[i], role) and i in described:
+                # domī alone is at home, but an adjective needs a case to
+                # agree with: in magnā domō.
+                unformed.add(i)
+                wanted[i].discard(role)
+            if role in cases and (not has(words[i], role) or i in unformed):
                 case[i] = case[i] or cases[role]
                 carried.add(role)
 
     nominals = [i for i, k in enumerate(kinds) if k == "nominal"]
+    alone: set[int] = set()   # adjectives a preposition governs directly
     # A content meaning that takes a case (from) gives it to the next word,
     # on the side the source writes its markers.
     for i, u in enumerate(units):
         for m in u.meanings:
             if m in cases:
-                near = [j for j in nominals if (j > i if side == "before" else j < i)]
+                # A numeral or adjective standing alone (ab ūnō) takes it too.
+                takers = [j for j, k in enumerate(kinds) if k in ("nominal", "adjective")]
+                near = [j for j in takers if (j > i if side == "before" else j < i)]
                 if near:
                     j = near[0] if side == "before" else near[-1]
+                    if kinds[j] == "adjective":
+                        # ex magnā domō: the case goes to the noun after it.
+                        noun = next((n for n in range(j + 1, len(units)) if kinds[n] in ("nominal", "verb")), None)
+                        if noun is not None and kinds[noun] == "nominal":
+                            j = noun
+                        else:
+                            alone.add(j)
                     case[j] = case[j] or cases[m]
 
     verbs = [i for i, k in enumerate(kinds) if k == "verb"]
     order = source.get("order", "")
-    subject = next((i for i, u in enumerate(units) if SUBJECT in u.roles), None)
+    subject = next((i for i in range(len(units)) if SUBJECT in roles[i]), None)
     if verbs and order and SUBJECT in cases:
         v = verbs[0]
         copula = "@copula" in units[v].roles or any(
             f.text.casefold() in _copulas(target, data_dir(root)) for f in words[v].forms)
-        open_ = [i for i in nominals if case[i] is None and not units[i].implied]
+        open_ = [i for i in nominals if case[i] is None and not units[i].implied
+                 and not set(roles[i]) & set(cases)]
         s_before, o_before = order.index("S") < order.index("V"), order.index("O") < order.index("V")
         for i in open_:
             before = i < v
@@ -181,6 +216,9 @@ def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
     for i, k in enumerate(kinds):
         if k != "adjective":
             continue
+        if i in alone:
+            wanted[i].add(case[i])
+            continue
         after_copula = verbs and i > verbs[0] and subject is not None and subject < verbs[0]
         near = [j for j in nominals if j > i][:1] or [j for j in nominals if j < i][-1:]
         j = subject if after_copula and not [n for n in nominals if n > i] else (near[0] if near else None)
@@ -212,4 +250,4 @@ def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
         unsaid = {m for row in mx.rows.values() for m in row.implied.get(target, ())}
         if person and set(units[s].meanings) & unsaid:
             silent.add(s)
-    return Plan(wanted, words, carried, silent)
+    return Plan(wanted, words, carried, silent, [tuple(r) for r in roles], unformed)

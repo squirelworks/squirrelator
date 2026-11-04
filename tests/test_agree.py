@@ -70,3 +70,24 @@ def test_a_place_takes_the_ablative_and_its_adjective_agrees(latin):
 def test_english_word_order_tells_subject_from_object_but_not_after_a_copula(latin):
     out = run("This is a book.", "english", "latin", root=latin)
     assert all("librum" not in t for t in (out.text, *out.alternatives))
+
+
+@pytest.fixture
+def english_forms(latin):
+    from squirrelator.lexicon import lexicon
+    if "reads" not in lexicon("english", latin).entries:
+        pytest.skip("English inflection tables arrive in squirrel-lang-data v0.1.4")
+    return latin
+
+
+def test_english_verb_and_noun_forms_lead_to_latin_agreement(english_forms):
+    root = english_forms
+    assert run("The child drinks water.", "english", "latin", root=root).text == "Puer aquam bibit."
+    assert run("The children read books.", "english", "latin", root=root).text == "Puerī librōs legunt."
+
+
+def test_a_preposition_before_an_adjective_governs_its_noun(english_forms):
+    out = run("We drink water from the big house.", "english", "latin", root=english_forms).text
+    assert "domō" in out and "magnā" in out
+    out = run("The friends live in a big house.", "english", "latin", root=english_forms).text
+    assert "In domō magnā" in out and "habitant" in out

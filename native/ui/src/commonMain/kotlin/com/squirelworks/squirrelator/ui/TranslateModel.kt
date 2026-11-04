@@ -22,6 +22,9 @@ class TranslateModel(
     var input by mutableStateOf("")
     var output by mutableStateOf("")
         private set
+    /** "Auto: translated with Rules", or "" before the first translation. */
+    var engineNote by mutableStateOf("")
+        private set
     var problem by mutableStateOf<String?>(null)
         private set
     var busy by mutableStateOf(false)
@@ -57,7 +60,9 @@ class TranslateModel(
         busy = true
         problem = null
         try {
-            output = withContext(worker) { engine.translate(input, from, to) }
+            val done = withContext(worker) { engine.translate(input, from, to) }
+            output = done.text
+            engineNote = "${done.mode}: translated with ${done.engine}"
         } catch (e: Exception) {
             problem = "The translation failed: ${e.message ?: e::class.simpleName}"
         } finally {

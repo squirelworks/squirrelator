@@ -79,3 +79,19 @@ def test_rules_result_text_is_unchanged_without_a_second_opinion():
     out = format_rules_result(Translation("# Could not match", second_opinion=other))
     assert out == ("# Could not match\n\nSecond opinion from Pipeline (alpha), confidence 50%:\n"
                    "  Aquam bibō.\n  Not in the data yet: x")
+
+
+def test_display_is_what_every_app_shows():
+    from squirrelator import translate
+    from squirrelator.menus import display
+    assert display("print hello", "english", "python") == ('print("hello")', RULES)
+    assert display("print hello", "english", "python", RULES) == ('print("hello")', RULES)
+    assert display("hi", "python", "japanese")[0] == translate("hi", "python", "japanese")
+    try:
+        data.data_dir()
+    except data.DataNotFound:
+        return
+    text, used = display("バスで学校に行きます。", "japanese", "english")
+    assert used == PIPELINE and text.endswith("Alpha. Confidence 100%.")
+    text, used = display("I drink water.", "english", "latin")
+    assert used == RULES and "Second opinion from Pipeline (alpha)" in text

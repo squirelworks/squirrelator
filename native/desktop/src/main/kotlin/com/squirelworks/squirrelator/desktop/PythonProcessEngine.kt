@@ -1,6 +1,7 @@
 package com.squirelworks.squirrelator.desktop
 
 import com.squirelworks.squirrelator.ui.Engine
+import com.squirelworks.squirrelator.ui.Translated
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -29,8 +30,14 @@ class PythonProcessEngine(
     override fun languages(): List<String> =
         call(mapOf("op" to "languages"))["languages"]!!.jsonArray.map { it.jsonPrimitive.content }
 
-    override fun translate(text: String, from: String, to: String): String =
-        call(mapOf("op" to "translate", "text" to text, "from" to from, "to" to to))["text"]!!.jsonPrimitive.content
+    override fun translate(text: String, from: String, to: String): Translated {
+        val reply = call(mapOf("op" to "show", "text" to text, "from" to from, "to" to to))
+        return Translated(
+            reply["text"]!!.jsonPrimitive.content,
+            reply["engine"]!!.jsonPrimitive.content,
+            reply["mode"]!!.jsonPrimitive.content,
+        )
+    }
 
     @Synchronized
     private fun call(request: Map<String, String>): JsonObject {

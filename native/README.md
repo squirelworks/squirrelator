@@ -26,8 +26,10 @@ root. Nothing here copies or rewrites it.
   one JSON line per request. For now that's the `python3` on the computer;
   installers that carry their own Python come later.
 
-The screens call `translate()` with its default settings, the same call
-LanguageStudentDesk makes. If the default engine changes, the apps follow.
+The screens show what the desktop GUI shows under its Auto engine
+(`squirrelator.menus.display`): `translate()`'s default routing, with a
+pipeline pair's alternatives and alpha label, the second opinion for Latin
+and Klingon, and a note saying which engine translated.
 
 ## Language data
 

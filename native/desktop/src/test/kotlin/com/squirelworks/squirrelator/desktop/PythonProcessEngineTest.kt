@@ -1,5 +1,6 @@
 package com.squirelworks.squirrelator.desktop
 
+import com.squirelworks.squirrelator.ui.Translated
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,14 +27,24 @@ class PythonProcessEngineTest {
             .also { it.environment()["PYTHONPATH"] = System.getProperty("squirrelator.root") }
             .also { it.environment()["SQUIRREL_LANG_DATA"] = System.getProperty("squirrelator.data") }
             .start().inputStream.bufferedReader().readText()
-        assertEquals(expected, engine.translate("print hello", "english", "python"))
+        assertEquals(Translated(expected, "Rules", "Auto"), engine.translate("print hello", "english", "python"))
         // A second call reuses the same process.
-        assertEquals(expected, engine.translate("print hello", "english", "python"))
+        assertEquals(expected, engine.translate("print hello", "english", "python").text)
+    }
+
+    @Test
+    fun showsThePipelinesAnswerAndTheSecondOpinion() {
+        val ja = engine.translate("バスで学校に行きます。", "japanese", "english")
+        assertEquals("Pipeline (alpha)", ja.engine)
+        assertTrue(ja.text.startsWith("I go to school by bus."), ja.text)
+        val la = engine.translate("I drink water.", "english", "latin")
+        assertEquals("Rules", la.engine)
+        assertTrue("Second opinion from Pipeline (alpha)" in la.text && "Aquam bibō." in la.text, la.text)
     }
 
     @Test
     fun keepsUnicode() {
-        val out = engine.translate("Grüße, 世界", "english", "english")
+        val out = engine.translate("Grüße, 世界", "english", "english").text
         assertEquals("Grüße, 世界", out)
     }
 }

@@ -5,9 +5,7 @@ squirrelator GUI — desktop translator
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext
-from squirrelator import translate, translate_full
-from squirrelator.translator import SUPPORTED
-from squirrelator.menus import AUTO, ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, format_rules_result, languages_for, runs_pipeline
+from squirrelator.menus import AUTO, ENGINES, PIPELINE, display, languages_for
 
 class SquirrelatorApp:
     def __init__(self, root):
@@ -97,20 +95,11 @@ class SquirrelatorApp:
         try:
             engine = self.engine_var.get()
             frm, to = self.from_var.get(), self.to_var.get()
-            pipeline = runs_pipeline(engine, frm, to)
-            if pipeline:
-                out = format_result(translate_full(src, frm, to, engine=ENGINE_IDS[engine]))
-            elif engine == AUTO and frm in SUPPORTED and to in SUPPORTED:
-                # The rules text as before, plus the pipeline's second
-                # opinion for Latin and Klingon.
-                out = format_rules_result(translate_full(src, frm, to))
-            else:
-                out = translate(src, frm, to, engine=ENGINE_IDS[engine])
+            out, used = display(src, frm, to, engine)
             self.result.config(state="normal")
             self.result.delete("1.0", "end")
             self.result.insert("1.0", out)
             self.result.config(state="disabled")
-            used = PIPELINE if pipeline else RULES
             self.status.config(text=f"Translated {frm} → {to} with {used}")
         except Exception as e:
             self.status.config(text=f"Error: {e}")

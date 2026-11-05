@@ -62,3 +62,7 @@ jobs:
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           gradle --no-daemon :android:assembleDebug
+      # The Play bundle builds too. Without the upload key (never on PRs) it's
+      # debug-signed, which Play refuses, and it isn't uploaded anywhere.
+      - name: Build the Play bundle (not signed for Play, not uploaded)
+        run: gradle --no-daemon :android:bundleRelease

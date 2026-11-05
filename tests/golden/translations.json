@@ -1035,7 +1035,7 @@
   "source": "sort the list",
   "from": "english",
   "to": "latin",
-  "expected": "# Could not match a known pattern for latin\n# Source: sort the list"
+  "expected": "Indicem ōrdinā."
  },
  {
   "source": "sort the list",
@@ -2403,7 +2403,7 @@
   "source": "jatlh \"nuqneH\"",
   "from": "klingon",
   "to": "latin",
-  "expected": "Loqueris Salvē."
+  "expected": "Loquor salvē."
  },
  {
   "source": "jatlh \"nuqneH\"",

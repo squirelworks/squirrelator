@@ -28,8 +28,9 @@ root. Nothing here copies or rewrites it.
 
 The screens show what the desktop GUI shows under its Auto engine
 (`squirrelator.menus.display`): `translate()`'s default routing, with a
-pipeline pair's alternatives and alpha label, the second opinion for Latin
-and Klingon, and a note saying which engine translated.
+pipeline pair's alternatives and alpha label, the other engine's second
+opinion for English, Latin and Klingon, and a note saying which engine
+translated.
 
 ## Language data
 

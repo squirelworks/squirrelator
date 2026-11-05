@@ -61,7 +61,7 @@ def _reading(pairs) -> str:
     return " ".join(r or t.strip("-") for t, r in pairs)
 
 
-def _word(mx: Matrix, target: str, meaning: str) -> tuple[str, str] | None:
+def _word(mx: Matrix, target: str, meaning: str, root=None) -> tuple[str, str] | None:
     if target == ENGLISH:
         words = mx.english.get(meaning, ())
         if meaning.startswith("@"):
@@ -69,7 +69,20 @@ def _word(mx: Matrix, target: str, meaning: str) -> tuple[str, str] | None:
             # "by", but not the "as for" that glosses a topic particle.
             words = tuple(w for w in words if _english_uses(mx, w))
         return (words[0], "") if words else None
-    return mx.word(target, meaning)
+    return mx.word(target, meaning) or _table_word(target, meaning, root)
+
+
+def _table_word(target: str, meaning: str, root) -> tuple[str, str] | None:
+    """A word the target's column never uses, from its inflection tables:
+    the dictionary form of the first word carrying the meaning (Latin nāvis
+    for ship, though no Latin matrix row has a ship)."""
+    if meaning.startswith("@"):
+        return None
+    for word in inflections(target, root):
+        form = word.form("dictionary")
+        if word.meaning == meaning and form:
+            return form.text, form.reading
+    return None
 
 
 def _english_uses(mx: Matrix, phrase: str) -> bool:
@@ -159,9 +172,11 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
     units = [u for _, u in sorted(zip(positions, il.units), key=lambda p: p[0])]
 
     # Case, agreement and person, for a target whose words change by case.
-    firsts = [(_word(mx, target, u.meanings[0]) or ("", ""))[0] if u.meanings else "" for u in il.units]
+    firsts = [(_word(mx, target, u.meanings[0], root) or ("", ""))[0] if u.meanings else "" for u in il.units]
     plan = agree(il, target, firsts, root=root)
     by_unit = {id(u): i for i, u in enumerate(il.units)}
+
+    units = _in_target_order(units, il, plan, target, root)
 
     pairs, missing, dropped = [], [], []
     for unit in units:
@@ -169,8 +184,8 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         if k in plan.silent:
             continue  # the verb's ending says it (Dormiō, not Ego dormiō)
         words = []
-        for n, meaning in enumerate(unit.meanings):
-            found = _word(mx, target, meaning)
+        for n, meaning in enumerate(_meanings_for(unit, mx, target, root)):
+            found = _word(mx, target, meaning, root)
             if found and n == 0 and plan.words[k] is not None:
                 form = pick_form(plan.words[k], plan.wanted[k])
                 words.append((form.text, form.reading))
@@ -194,7 +209,7 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         for role in roles:
             if role in inflected:
                 continue  # the verb form carries it
-            found = _word(mx, target, role)
+            found = _word(mx, target, role, root)
             if not found and role in plan.carried:
                 continue  # the case ending says it (aquam is the object)
             if not found:
@@ -205,7 +220,7 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         pairs += before + words + after
     question = "@question" in il.features
     for feature in il.features:
-        found = _word(mx, target, feature)
+        found = _word(mx, target, feature, root)
         if found:
             pairs = [found] + pairs if placement(feature) == "before" else pairs + [found]
     spaced = target == ENGLISH or lexicon(target, root).spaced
@@ -214,6 +229,36 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
         text = text[0].upper() + text[1:]
     reading = "" if target == ENGLISH else _reading(pairs)
     return Candidate(text, reading, "words", missing=tuple(missing), dropped=tuple(dict.fromkeys(dropped)))
+
+
+def _meanings_for(unit, mx: Matrix, target: str, root) -> tuple[str, ...]:
+    """The unit's meanings, but when the target has no word for the first
+    and has one for another meaning the source word can carry, that one
+    (English not is none or not; Klingon has -be' for not)."""
+    meanings = unit.meanings
+    if not meanings or _word(mx, target, meanings[0], root):
+        return meanings
+    for alt in unit.alternatives:
+        content = [m for m in alt.split("+") if not m.startswith("@")]
+        if content and _word(mx, target, content[0], root):
+            return (content[0],) + meanings[1:]
+    return meanings
+
+
+def _in_target_order(units, il: Interlingua, plan, target: str, root) -> list:
+    """For a target whose words don't show subject and object by case,
+    the subject, object and verb in the order its meta.json "order" gives
+    (Klingon OVS: Duj legh HoD). Other words keep their places."""
+    order = language_meta(target, root).get("order", "")
+    if not plan.slots or not order:
+        return units
+    placed = {id(il.units[i]): slot for slot, i in plan.slots.items()}
+    where = [n for n, u in enumerate(units) if id(u) in placed]
+    wanted = sorted((units[n] for n in where), key=lambda u: order.index(placed[id(u)]))
+    out = list(units)
+    for n, u in zip(where, wanted):
+        out[n] = u
+    return out
 
 
 def generate(il: Interlingua, target: str, *, root=None) -> tuple[Candidate, ...]:

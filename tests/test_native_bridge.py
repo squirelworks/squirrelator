@@ -59,7 +59,7 @@ def test_show_is_what_the_desktop_gui_shows_under_auto():
     assert used == PIPELINE and text.startswith("I go to school by bus.") and "Alpha." in text
     shown = bridge.show("I drink water.", "english", "latin")
     assert shown == list(display("I drink water.", "english", "latin", AUTO))
-    assert "Second opinion from Pipeline (alpha)" in shown[0] and "Aquam bibō." in shown[0]
+    assert shown[1] == PIPELINE and shown[0].startswith("Aquam bibō.")
 
 
 def test_serve_answers_one_json_line_per_request():

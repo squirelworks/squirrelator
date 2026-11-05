@@ -25,7 +25,7 @@ def test_auto_menu_lists_both_engines_languages():
 
 def test_auto_shows_the_pipeline_result_only_for_pipeline_pairs():
     assert not runs_pipeline(AUTO, "english", "python")
-    assert not runs_pipeline(AUTO, "english", "latin")   # Latin stays on rules
+    assert not runs_pipeline(AUTO, "latin", "python")    # code stays on rules
     assert not runs_pipeline(RULES, "japanese", "english")
     assert runs_pipeline(PIPELINE, "english", "python")
     try:
@@ -33,6 +33,8 @@ def test_auto_shows_the_pipeline_result_only_for_pipeline_pairs():
     except data.DataNotFound:
         return
     assert runs_pipeline(AUTO, "japanese", "english")
+    assert runs_pipeline(AUTO, "english", "latin")       # sentences go to the pipeline
+    assert runs_pipeline(AUTO, "klingon", "english")
 
 
 def test_rules_menu_lists_every_supported_language_once():
@@ -73,6 +75,12 @@ def test_result_text_shows_the_second_opinion():
     assert out.endswith("Second opinion from Pipeline (alpha), confidence 100%:\n  Aquam bibō.")
 
 
+def test_second_opinion_names_the_engine_that_made_it():
+    rules = Translation("# Latin: Salve / hello", (), (), (), 1.0, True, engine="rules")
+    out = format_result(Translation("Salvē.", (), (), (), 1.0, True, second_opinion=rules))
+    assert out.endswith("Second opinion from Rules, confidence 100%:\n  # Latin: Salve / hello")
+
+
 def test_rules_result_text_is_unchanged_without_a_second_opinion():
     assert format_rules_result(Translation('print("hello")')) == 'print("hello")'
     other = Translation("Aquam bibō.", (), (), ("x",), 0.5, True)
@@ -94,4 +102,7 @@ def test_display_is_what_every_app_shows():
     text, used = display("バスで学校に行きます。", "japanese", "english")
     assert used == PIPELINE and text.endswith("Alpha. Confidence 100%.")
     text, used = display("I drink water.", "english", "latin")
-    assert used == RULES and "Second opinion from Pipeline (alpha)" in text
+    assert used == PIPELINE and text.startswith("Aquam bibō.") and "Alpha." in text
+    text, used = display("print hello", "english", "latin")
+    assert used == RULES and text.startswith("# Latin: Salve / hello")
+    assert "Second opinion from Pipeline (alpha)" in text

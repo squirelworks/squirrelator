@@ -29,7 +29,7 @@ def test_tables_load_with_forms_and_features(root):
 
 
 def test_no_table_means_no_words(root):
-    assert inflections("klingon", root) == ()
+    assert inflections("thai", root) == ()
 
 
 def test_analyze_knows_inflected_forms(root):

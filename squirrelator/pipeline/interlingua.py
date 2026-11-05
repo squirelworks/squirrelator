@@ -97,10 +97,43 @@ def _in(text: str, wording: str) -> bool:
     return f" {text.casefold()} " in wording
 
 
+PERSONS = ("@first-person", "@second-person")
+
+
+def _with_subjects(units: list[Unit], language: str, root) -> list[Unit]:
+    """A verb whose form says I, we or you (Latin pugnāmus, Klingon
+    vIlegh) gets that pronoun as an implied unit before it, when no word
+    in the clause says it. The pronoun is the source table's word whose
+    every form carries that person and number (nōs, maH); with none, the
+    verb stays as it is. Third person is left alone: the subject is
+    usually a noun the clause has."""
+    out = list(units)
+    for unit in units:
+        person = [r for r in unit.roles if r in PERSONS]
+        if len(person) != 1:
+            continue
+        wanted = {person[0]} | ({"@plural"} & set(unit.roles))
+        meaning = _pronoun(language, frozenset(wanted), root) or _pronoun(language, frozenset(person), root)
+        if meaning and all(meaning not in u.meanings for u in out):
+            out.insert(out.index(unit), Unit(meaning, "", implied=True))
+    return out
+
+
+def _pronoun(language: str, wanted: frozenset[str], root) -> str:
+    from ..inflections import inflections
+    for word in inflections(language, root):
+        sets = [f.features for f in word.forms]
+        every = frozenset.intersection(*sets) if sets else frozenset()
+        if every & {*PERSONS, "@third-person", "@plural"} == wanted:
+            return word.meaning
+    return ""
+
+
 def interlingua(clause: Clause, language: str, *, root=None) -> Interlingua:
     """Meaning units, roles and matching matrix rows for one parsed clause."""
     mx = matrix(root)
     units = [_unit(p, mx) for p in clause.phrases]
+    units = _with_subjects(units, language, root)
     have = [m for u in units for m in u.meanings]
 
     found = []

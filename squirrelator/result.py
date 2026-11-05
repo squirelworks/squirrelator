@@ -32,6 +32,7 @@ class Translation:
     second_opinion  the other engine's Translation, for a pair both engines
                   know (english, latin and klingon under engine="auto"),
                   or None
+    engine        "rules" or "pipeline": the engine that made this result
     """
 
     text: str
@@ -43,6 +44,7 @@ class Translation:
     from_lang: str = field(default="", compare=False)
     to_lang: str = field(default="", compare=False)
     second_opinion: Optional["Translation"] = None
+    engine: str = field(default="", compare=False)
 
     def __str__(self) -> str:
         return self.text

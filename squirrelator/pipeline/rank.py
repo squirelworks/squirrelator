@@ -26,6 +26,7 @@ MISMATCH = 0.25
 WORDING = 0.01
 GLOSS = 0.5
 DROPPED = 0.05
+PERSONS = {"@first-person", "@second-person", "@third-person"}
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,7 @@ def _grammar(il: Interlingua, tokens, forms) -> set[str]:
     for u in il.units:
         own = {f for f in forms.get(u.text, ()) if f.startswith("@")}
         out |= set(u.roles) - own
+        out |= own & {"@plural"}  # number belongs to the noun, however the row writes it
         same = [ms for t, _, ms in tokens if t == u.text]
         if same:
             # The row writes this very word, so it carries the row's grammar,
@@ -85,9 +87,20 @@ def _plural(n: int, word: str) -> str:
 def rank(candidates, il: Interlingua, source: str, *, root=None) -> tuple[Ranked, ...]:
     """Candidates for one clause, best first."""
     mx = matrix(root)
-    forms = {f.text: f.features for w in inflections(source, root) for f in w.forms}
+    # A text several forms share (Klingon Qong is he sleeps and they sleep)
+    # carries only what they all say.
+    forms: dict = {}
+    for w in inflections(source, root):
+        for f in w.forms:
+            forms[f.text] = forms[f.text] & f.features if f.text in forms else f.features
     # Only grammar the source column writes somewhere can differ.
     marked = {m for r in mx.columns.get(source, {}).values() for m in _row_grammar(r.tokens, forms)}
+    # So can number and the past, when the source's tables list them
+    # (Klingon puqpu', jIQongpu').
+    marked |= {f for fs in forms.values() for f in fs if f in ("@plural", "@past")}
+    # Person is agreement: the pronoun the clause has, or the one it
+    # leaves unsaid, already carries it (vIlegh is I see).
+    marked -= PERSONS
     words = sum(1 for u in il.units if not u.implied) or 1
     out, wordings = [], {}
     for c in candidates:

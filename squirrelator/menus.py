@@ -3,13 +3,14 @@ tkinter so it can be tested anywhere.
 
 There are two engines. "Rules" is the rule-based translator for code and a
 few phrases. "Pipeline (alpha)" translates between human languages from
-squirrel-lang-data. "Auto", the default as in translate(), uses Rules for
-every pair Rules supports and the pipeline for the rest. All three are
+squirrel-lang-data. "Auto", the default as in translate(), uses the
+pipeline for sentences between English, Latin and Klingon, Rules for the
+other pairs Rules supports, and the pipeline for the rest. All three are
 always in the menu: alpha labels a feature, it never hides one.
 """
 
 from .result import Translation
-from .translator import SUPPORTED, _engine_for, translate, translate_full
+from .translator import SUPPORTED, _engine_for, _pipeline_first, translate, translate_full
 
 AUTO = "Auto"
 RULES = "Rules"
@@ -76,12 +77,14 @@ def format_result(t: Translation) -> str:
 
 def format_rules_result(t: Translation) -> str:
     """The result pane's text for a rules result: the rules text as before,
-    plus the pipeline's second opinion when there is one (Latin, Klingon)."""
+    plus the pipeline's second opinion when there is one (a code
+    instruction such as "print hello" to Latin or Klingon)."""
     return "\n\n".join([t.text] + ([_second_opinion(t.second_opinion)] if t.second_opinion else []))
 
 
 def _second_opinion(o: Translation) -> str:
-    lines = [f"Second opinion from {PIPELINE}, confidence {round(o.confidence * 100)}%:", f"  {o.text}"]
+    name = RULES if o.engine == "rules" else PIPELINE
+    lines = [f"Second opinion from {name}, confidence {round(o.confidence * 100)}%:", f"  {o.text}"]
     lines += [f"  Also: {a}" for a in o.alternatives]
     if o.unknown:
         lines.append("  Not in the data yet: " + ", ".join(o.unknown))
@@ -92,8 +95,13 @@ def display(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> tu
     """What an app shows for a translation, and which engine (a label from
     ENGINES) made it. Every app calls this, so the desktop GUI and the
     phone show the same thing: a pipeline pair's full result, a rules pair's
-    plain text, and under Auto the pipeline's second opinion for Latin and
-    Klingon."""
+    plain text, and under Auto, for English, Latin and Klingon, whichever
+    engine understood the source better, with the other's second opinion."""
+    if engine == AUTO and _pipeline_first(from_lang, to_lang):
+        t = translate_full(source, from_lang, to_lang)
+        if t.engine == "pipeline":
+            return format_result(t), PIPELINE
+        return format_rules_result(t), RULES
     if runs_pipeline(engine, from_lang, to_lang):
         return format_result(translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])), PIPELINE
     if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:

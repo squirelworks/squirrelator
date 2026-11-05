@@ -40,7 +40,7 @@ Open issues: #25 (phone app) and #26 (Pipeline vs Rules coverage).
 - [ ] For each pair: dropped subjects and objects, tense and aspect, particles and case, counters and measure words, politeness level, word order
 - [ ] **Test sets for each pair:** every accepted translation and some rejected ones, from the matrix plus Tatoeba (CC BY 2.0 FR) with attribution. A pair's alpha label comes off only when its set passes (bar proposed in #26: 90% of column rows both ways).
 - [ ] Detect the source language from its script and word list, with a user override
-- [ ] Decide whether english↔latin and english↔klingon sentences move from Rules to the Pipeline (the owner's call, #26); until then the Pipeline's answer shows as a second opinion (#32)
+- [x] english↔latin and english↔klingon sentences move from Rules to the Pipeline under Auto (the owner's call, #26); a code instruction keeps Rules first, and the other engine's answer shows as a second opinion (#32)
 
 ## Phase 2b: Varieties and character forms (follows LanguageStudentDesk#200)
 

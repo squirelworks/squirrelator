@@ -47,6 +47,7 @@ class Plan:
     silent: set[int] = field(default_factory=set)    # subject pronouns the verb's ending says
     roles: list[tuple[str, ...]] | None = None       # each unit's roles, after moving
     unformed: set[int] = field(default_factory=set)  # nouns whose role a case and marker say, not a form
+    slots: dict[str, int] = field(default_factory=dict)  # "S", "O", "V" -> unit, for a target without cases
 
 
 def _kind(word: Word | None, case_features: set[str]) -> str:
@@ -104,6 +105,89 @@ def table_word(unit: Unit, meaning: str, found: str, target: str, root) -> Word 
     return words[0]
 
 
+def _features(word: Word | None) -> set[str]:
+    return {x for f in word.forms for x in f.features} if word else set()
+
+
+def _marked(roles, word: Word | None, target: str, root) -> bool:
+    """Whether a role the target says, by a marker or by the word's form,
+    gives a word its part in the clause (DujDaq is in the ship). A role the
+    target has no way to say (English the, for Klingon) doesn't."""
+    mx = matrix(root)
+    return any(r != PLURAL and (r in _features(word) or mx.word(target, r)) for r in roles)
+
+
+def _by_person(il: Interlingua, target: str, words: list[Word | None], root) -> Plan | None:
+    """Agreement for a target whose verbs show their subject and object in
+    the verb's own form rather than by case (Klingon jIQong is I sleep,
+    vIlegh is I see him). None when the target's verbs don't: its words
+    then keep the forms the column writes.
+
+    The subject and object come from the source's "order" (English SVO) or
+    from the roles its markers give. The verb takes the subject's person
+    and number, and @object when a third-person object is there. A subject
+    pronoun the verb's form says is left out (jIQong, not jIH jIQong), and
+    nouns take the number and roles their forms carry (puqpu', DujDaq).
+    "slots" names the subject, object and verb for Generate to order."""
+    units = il.units
+    kinds = ["verb" if _features(w) & TENSE else ("nominal" if w is not None else "") for w in words]
+    # Only verbs with a form for every person say who acts (Klingon jI-,
+    # bI-, ma-); English marks only he, she and it (sees), so it keeps its
+    # pronouns and the column's forms.
+    verbs = [i for i, k in enumerate(kinds) if k == "verb" and PERSONS <= _features(words[i])]
+    if not verbs:
+        return None
+    v = verbs[0]
+    roles = [tuple(u.roles) for u in units]
+    wanted = [set(r) for r in roles]
+    nominals = [i for i, k in enumerate(kinds) if k == "nominal" and not units[i].implied]
+    subject = next((i for i in nominals if SUBJECT in roles[i]), None)
+    obj = next((i for i in nominals if OBJECT in roles[i]), None)
+    source = language_meta(il.language, root) if il.language else {}
+    order = source.get("order", "")
+    if order:
+        s_before, o_before = order.index("S") < order.index("V"), order.index("O") < order.index("V")
+        for i in nominals:
+            if i in (subject, obj) or _marked(roles[i], words[i], target, root):
+                continue  # a word with a marker (in the ship) is neither
+            before = i < v
+            if s_before != o_before:
+                role = SUBJECT if before == s_before else OBJECT
+            else:
+                same = [j for j in nominals if (j < v) == before]
+                role = SUBJECT if (i == same[0]) == (order.index("S") < order.index("O")) else OBJECT
+            if role == SUBJECT and subject is None:
+                subject = i
+            elif role == OBJECT and obj is None:
+                obj = i
+    if subject is None:
+        # No word says the subject: an implied one (Japanese drops I) does.
+        subject = next((i for i, u in enumerate(units) if u.implied and kinds[i] == "nominal"), None)
+
+    verb_features = _features(words[v])
+    if not wanted[v] & TENSE and "@command" not in wanted[v]:
+        wanted[v].add("@present")
+    silent = set()
+    if subject is not None and "@command" not in wanted[v]:
+        person = _inherent(words[subject]) & PERSONS
+        wanted[v] |= person or {"@third-person"}
+        if PLURAL in wanted[subject] or PLURAL in _inherent(words[subject]):
+            wanted[v].add(PLURAL)
+        if person:
+            silent.add(subject)  # the verb's form says it
+    elif subject is None and "@command" not in wanted[v]:
+        dictionary = words[v].form("dictionary")
+        wanted[v] |= (dictionary.features - TENSE) if dictionary else set()
+    if obj is not None and OBJECT in verb_features:
+        # The forms with @object take a third-person object (vIlegh).
+        if not _inherent(words[obj]) & (PERSONS - {"@third-person"}):
+            wanted[v].add(OBJECT)
+    if "@command" in wanted[v] and obj is not None and OBJECT in verb_features:
+        wanted[v].add(OBJECT)
+    slots = {k: i for k, i in (("S", subject), ("O", obj), ("V", v)) if i is not None}
+    return Plan(wanted, words, set(), silent, list(roles), set(), slots)
+
+
 def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
     """found holds, per unit, the word the target column uses for its first
     meaning ("" for none)."""
@@ -113,7 +197,8 @@ def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
     wanted = [set(u.roles) for u in units]
     cases = language_meta(target, root).get("cases") or {}
     if not cases:
-        return Plan(wanted, [None] * len(units), roles=[u.roles for u in units])
+        return _by_person(il, target, words, root) or Plan(
+            wanted, [None] * len(units), roles=[u.roles for u in units])
     case_features = set(cases.values())
     kinds = [_kind(w, case_features) for w in words]
     source = language_meta(il.language, root) if il.language else {}

@@ -135,11 +135,20 @@ def _load(language: str, root: Path) -> Lexicon:
     # Inflected forms the lists above don't have (行きました, reads): the
     # word's meaning joined with the meanings the form adds, as columns join
     # them ("go+@polite+@past"), so later stages read both.
+    # An English past form meanings.jsonl lists bare ("saw" under see) is
+    # read as the past first, so the tense isn't lost (see+@past). A past
+    # spelled like the lemma (read) stays the lemma.
     for word in inflections(language, root):
         for form in word.forms:
-            if fold(form.text) not in found:
-                meaning = "+".join([word.meaning, *sorted(form.features)])
-                add(form.text, Entry(form.text, form.reading, meaning=meaning, source="inflections"))
+            meaning = "+".join([word.meaning, *sorted(form.features)])
+            entry = Entry(form.text, form.reading, meaning=meaning, source="inflections")
+            had = found.get(fold(form.text))
+            if not had:
+                add(form.text, entry)
+            elif ("@past" in form.features and form.text != word.lemma
+                  and all(e.source == "meanings" for e in had)
+                  and any(e.meaning == word.meaning for e in had)):
+                had.insert(0, entry)
 
     def freeze(table):
         return {k: tuple(v) for k, v in table.items()}

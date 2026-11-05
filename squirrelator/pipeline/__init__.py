@@ -36,7 +36,8 @@ def run(source: str, from_lang: str, to_lang: str, *, root=None) -> Translation:
             raise UnsupportedLanguage(lang, supported)
     text = source.strip()
     if from_lang == to_lang or not text:
-        return Translation(text, confidence=1.0 if text else 0.0, from_lang=from_lang, to_lang=to_lang)
+        return Translation(text, confidence=1.0 if text else 0.0, from_lang=from_lang, to_lang=to_lang,
+                           engine="pipeline")
 
     sep = "" if to_lang != "english" and not lexicon(to_lang, root).spaced else " "
     lex = lexicon(from_lang, root)
@@ -62,4 +63,5 @@ def run(source: str, from_lang: str, to_lang: str, *, root=None) -> Translation:
     return Translation(
         sep.join(best), tuple(dict.fromkeys(alternatives)), tuple(steps),
         tuple(dict.fromkeys(unknown)), round(confidence, 3), True, from_lang, to_lang,
+        engine="pipeline",
     )

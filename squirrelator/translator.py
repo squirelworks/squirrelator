@@ -31,14 +31,19 @@ def translate(
     engine="rules" is the rule-based translator for code and a few phrases.
     engine="pipeline" runs the data-driven pipeline between
     squirrel-lang-data languages (squirrelator.pipeline.run); it is alpha.
-    engine="auto" (the default) uses rules for every pair rules supports,
-    exactly as before, and the pipeline for a pair rules does not support
-    but the pipeline does (japanese to english).
+    engine="auto" (the default) uses the pipeline for sentences between
+    English, Latin and Klingon (rules only writes code comments for
+    those), rules for every other pair rules supports, and the pipeline
+    for a pair rules does not support but the pipeline does (japanese to
+    english). When the pipeline understands none of the source, auto keeps
+    the rules result.
     """
     from_lang = _norm(from_lang)
     to_lang = _norm(to_lang)
     text = source.strip()
 
+    if engine == "auto" and _pipeline_first(from_lang, to_lang):
+        return translate_full(source, from_lang, to_lang, style=style).text
     if _engine_for(engine, from_lang, to_lang) == "pipeline":
         from .pipeline import run
         try:
@@ -69,17 +74,33 @@ def translate(
 ENGINES = ("auto", "rules", "pipeline")
 
 
+# Human languages both engines know. Between them, auto uses the pipeline
+# when Latin or Klingon is one side: rules only writes code comments there.
+HUMAN = ("english", "latin", "klingon")
+PIPELINE_FIRST = ("latin", "klingon")
+
+
+def _pipeline_first(from_lang: str, to_lang: str) -> bool:
+    """Whether auto sends this pair to the pipeline although rules supports
+    it: sentences between English, Latin and Klingon, with Latin or Klingon
+    on one side. Code pairs (latin to python) stay on rules."""
+    return (from_lang != to_lang and from_lang in HUMAN and to_lang in HUMAN
+            and (from_lang in PIPELINE_FIRST or to_lang in PIPELINE_FIRST)
+            and _pipeline_knows(from_lang, to_lang))
+
+
 def _engine_for(engine: str, from_lang: str, to_lang: str) -> str:
     """The engine that translates this pair: "rules" or "pipeline". auto
-    keeps every pair rules supports on rules, so its results don't change,
-    and gives the pipeline only pairs rules would reject. Without the
-    language data, auto is rules."""
+    gives the pipeline the English, Latin and Klingon pairs it translates
+    as sentences, keeps every other pair rules supports on rules, and gives
+    the pipeline pairs rules would reject. Without the language data, auto
+    is rules."""
     if engine not in ENGINES:
         raise ValueError(f'engine must be one of {", ".join(ENGINES)}, not {engine!r}')
     if engine != "auto":
         return engine
     if from_lang in SUPPORTED and to_lang in SUPPORTED:
-        return "rules"
+        return "pipeline" if _pipeline_first(from_lang, to_lang) else "rules"
     return "pipeline" if _pipeline_knows(from_lang, to_lang) else "rules"
 
 
@@ -254,21 +275,27 @@ def translate_full(
 
     Unlike translate(), an unknown language raises UnsupportedLanguage.
     Every pair is alpha until it has a passing test set. engine works as
-    in translate(). Under engine="auto", a pair both engines know (english,
-    latin and klingon) keeps the rules result and adds the pipeline's as
-    second_opinion, when the pipeline understood any of the source.
+    in translate(). Under engine="auto", a pair of English, Latin and
+    Klingon gives the pipeline's result, with the rules result as
+    second_opinion when rules understood any of the source. When rules
+    understood the source at least as well (a code instruction such as
+    "print hello"), the rules result comes first, with the pipeline's as
+    second_opinion when it understood any.
     """
     frm, to = _norm(from_lang), _norm(to_lang)
+    if engine == "auto" and _pipeline_first(frm, to):
+        from .pipeline import run
+        piped = run(source, frm, to)
+        rules = _rules_full(source, from_lang, to_lang, style=style)
+        if piped.confidence == 0 or 0 < piped.confidence <= rules.confidence:
+            # A code instruction ("print hello", jatlh "nuqneH"): rules
+            # understood it at least as well, so rules stays first.
+            return replace(rules, second_opinion=piped) if piped.confidence > 0 else rules
+        return replace(piped, second_opinion=rules) if rules.confidence > 0 else piped
     if _engine_for(engine, frm, to) == "pipeline":
         from .pipeline import run
         return run(source, frm, to)
-    result = _rules_full(source, from_lang, to_lang, style=style)
-    if engine == "auto" and frm != to and _pipeline_knows(frm, to):
-        from .pipeline import run
-        other = run(source, frm, to)
-        if other.confidence > 0:
-            return replace(result, second_opinion=other)
-    return result
+    return _rules_full(source, from_lang, to_lang, style=style)
 
 
 def _pipeline_knows(*langs: str) -> bool:
@@ -287,11 +314,12 @@ def _rules_full(source: str, from_lang: str, to_lang: str, *, style: Optional[st
     for lang in (frm, to):
         if lang not in SUPPORTED:
             raise UnsupportedLanguage(lang, sorted(SUPPORTED))
-    text = translate(source, from_lang, to_lang, style=style)
+    text = translate(source, from_lang, to_lang, style=style, engine="rules")
     src = source.strip()
 
     def result(breakdown=(), unknown=(), confidence=0.0, alpha=True):
-        return Translation(text, (), tuple(breakdown), tuple(unknown), confidence, alpha, frm, to)
+        return Translation(text, (), tuple(breakdown), tuple(unknown), confidence, alpha, frm, to,
+                           engine="rules")
 
     if frm == to:
         return result(confidence=1.0, alpha=False)

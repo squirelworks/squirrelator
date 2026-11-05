@@ -5,25 +5,34 @@ the SquirrelGo release rules (LanguageStudentDesk `docs/RELEASES.md`): Claude
 prepares a **draft** GitHub Release, the owner clicks **Publish**, and tags
 are never moved, reused or deleted.
 
-## Next: v0.1.0
+## Released
 
-The first release that reads its language data from squirrel-lang-data, so
-it can be tested with the apps against the same frozen data. `pyproject.toml`
-already says 0.1.0; the last tag is v0.0.1.
+- [x] **v0.1.0** (2026-11-04): Phase 0, the `data/` submodule pinned to
+      data v0.1.0, golden tests and CI.
 
-It's due when all of these are on `main`:
+Since then, on `main`: the whole Phase 1 pipeline (Analyze, Parse,
+Interlingua, Generate, Rank), `engine="auto"` as the default with the
+Pipeline as a second opinion for Latin and Klingon, Latin and English
+inflections from the data, the `native/` Compose app with a test APK
+workflow, and `data/` at the **v0.1.3** tag (#38). See `ROADMAP.md`.
 
-- [ ] **Phase 0** of the roadmap: `AGENTS.md`, CI (pytest, ruff, a syntax
-      check of the web app), the PR guard, and golden tests for what works
-      today.
-- [ ] From **Phase 1**: the `squirrel-lang-data` submodule at `data/`, pinned
-      to the published **data v0.1.0** release, with the engine finding it
-      through `SQUIRREL_LANG_DATA` or `data/`.
+## Next: v0.1.1
+
+- [ ] Optionally wait for squirrel-lang-data **v0.1.4** and a one-seam PR here
+      moving `data/` to it (the code pack, Latin and English inflection
+      tables, the grammar expansion). If the owner wants v0.1.1 sooner, it
+      ships on v0.1.3.
+- [ ] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk.
 - [ ] CI green on `main`.
-- [ ] A release PR adding `release-notes/v0.1.0.md`, with nothing else in it.
+- [ ] A release PR adding `release-notes/v0.1.1.md` (and raising the version
+      in `pyproject.toml` and `squirrelator.__version__`), with nothing else
+      in it.
+- [ ] **Actions → Draft release → Run workflow** with `v0.1.1`.
+- [ ] The owner publishes. Nothing is released until the owner says
+      "release".
 
-The rest of Phase 1 (the full analyze, parse, interlingua, generate and rank
-pipeline) and later phases are v0.2.0 and on. They don't hold v0.1.0 back.
+The native phone app isn't part of v0.1.1. Its first release needs the
+signing secrets in this repo (#25).
 
 ## How the draft is made
 
@@ -33,7 +42,7 @@ pipeline) and later phases are v0.2.0 and on. They don't hold v0.1.0 back.
    **draft** release targeting that commit. It never creates or moves a tag.
 2. The owner clicks **Publish**, which creates the tag.
 
-## After v0.1.0
+## Between releases
 
 While the apps are tested, `data/` only moves to another squirrel-lang-data
 release, never to an untagged commit. Fixes ship as v0.1.1 and so on.

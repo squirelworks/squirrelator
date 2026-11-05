@@ -100,6 +100,8 @@ def test_latin_verb_form_gives_its_pronoun_back(latin_words):
 
 
 def test_english_past_forms_keep_their_tense(root):
+    if not inflections("english", root):
+        pytest.skip("English inflection tables arrive in squirrel-lang-data v0.1.4")
     entries = lexicon("english", root).lookup("saw")
     assert entries[0].meaning == "see+@past"
     # A past spelled like the lemma stays the lemma: read is read.

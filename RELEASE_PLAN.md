@@ -31,8 +31,11 @@ workflow, and `data/` at the **v0.1.3** tag (#38). See `ROADMAP.md`.
 - [ ] The owner publishes. Nothing is released until the owner says
       "release".
 
-The native phone app isn't part of v0.1.1. Its first release needs the
-signing secrets in this repo (#25).
+v0.1.1 is also the phone app's first Google Play build. Publishing the
+release sends it to internal testing, and a hand-started promotion moves it
+to closed testing (`native/README.md`, "Google Play"). That needs the Play
+and upload-key secrets in this repo first. The app's version comes from
+`pyproject.toml`, so the release PR doesn't touch `native/`.
 
 ## How the draft is made
 

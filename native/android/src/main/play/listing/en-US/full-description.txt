@@ -1,0 +1,22 @@
+squirrelator is a translator that explains itself. Type a sentence, pick two languages, and it tells you not only the translation but how it got there: which words it found, which it couldn't, and how sure it is.
+
+It's built on rules and a shared meaning network, not on a cloud service or an AI model. The same sentence always gives the same answer, and nothing you type leaves your phone.
+
+What it does
+• Translates between human languages, from Latin and Japanese to Klingon
+• Turns plain English like "count from 1 to 5" into code in Python, JavaScript, SQL and more
+• Shows alternatives when a sentence can be read more than one way
+• Explains every result with a short "Why"
+• Marks words it doesn't know instead of guessing
+• Gives a second opinion from its other engine for Latin and Klingon
+• Works fully offline: the language data is inside the app
+• Light and dark themes
+
+Honest about what it knows
+squirrelator is in alpha. Every language pair is labeled alpha until its test set passes, and each translation shows a confidence score. Unknown words appear in [brackets] so you can see exactly what's missing.
+
+Part of SquirrelGo
+squirrelator is the translation engine behind Language Student Desk and the SquirrelGo apps. Its language data is open (CC BY-SA 4.0) and its code is open source (MIT).
+
+Privacy
+No account, no ads, no tracking. The app collects no data.

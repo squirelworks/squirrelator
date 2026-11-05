@@ -82,5 +82,54 @@ Each test APK is signed with a new throwaway key, because no key is kept for
 test builds. So to install a newer test APK, uninstall the old one first.
 
 This isn't a release: nothing goes to Releases or Play, and the upload key
-isn't used. Release signing (APKs signed in GitHub Actions with the upload
-key from GitHub secrets, AABs never on GitHub) comes with the first release.
+isn't used.
+
+## Google Play
+
+The phone app is `com.squirelworks.squirrelator` on Google Play. It goes there
+the same way the SquirrelGo apps do (LanguageStudentDesk `docs/PLAY.md`).
+
+### Version
+
+The app's version is the engine's: `version` in `pyproject.toml`, which each
+release PR raises. `versionCode` follows from it (0.1.1 is 101, 1.2.3 is
+10203), so it always goes up. Play shows each release as
+**squirrelator 0.1.1**: the app's name and version.
+
+### How a build gets to testers
+
+The upload runs from LanguageStudentDesk, which holds the Play service account
+and the upload key (its `docs/PLAY.md`, "squirrelator"). Its **squirrelator
+Play testing** workflow checks every hour for a new published squirrelator
+release. When Play doesn't have that version yet, it builds the AAB from the
+release tag, signs it, sends it to **internal testing** and sets the store
+listing below. Promotion to **closed testing** is a hand-started run of the
+same workflow. The AAB never leaves the runner. Nothing needs setting up in
+this repo.
+
+While the app has never been published, Play takes a release only as a
+draft, so the first one needs **Start rollout** once in Play Console
+(**Test and release → Testing → Internal testing**).
+
+### Store listing
+
+Everything for the listing is in `android/src/main/play/`:
+
+| File | Play Console field |
+| --- | --- |
+| `icon.png` (512 × 512) | App icon |
+| `feature.png` (1024 × 500) | Feature graphic |
+| `screenshots/phone-*.png` (1080 × 1920) | Phone screenshots |
+| `listing/en-US/title.txt` | App name |
+| `listing/en-US/short-description.txt` | Short description |
+| `listing/en-US/full-description.txt` | Full description |
+
+The screenshots are the real translate screen with the engine and data from
+this repo. The launcher icon in `android/src/main/res/` is the same picture.
+
+### A Play bundle on your own computer
+
+To build a Play bundle on your own computer, put `upload.storeFile`,
+`upload.storePassword`, `upload.keyAlias` and `upload.keyPassword` in
+`native/local.properties` and run `gradle :android:bundleRelease`. Without
+them the bundle is debug-signed, which Play refuses.

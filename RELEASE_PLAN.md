@@ -31,8 +31,12 @@ workflow, and `data/` at the **v0.1.3** tag (#38). See `ROADMAP.md`.
 - [ ] The owner publishes. Nothing is released until the owner says
       "release".
 
-The native phone app isn't part of v0.1.1. Its first release needs the
-signing secrets in this repo (#25).
+v0.1.1 is also the phone app's first Google Play build. Once it's
+published, LanguageStudentDesk's **squirrelator Play testing** workflow sends
+it to internal testing within the hour and sets the store listing; a
+hand-started run promotes it to closed testing (`native/README.md`, "Google
+Play"). The app's version comes from `pyproject.toml`, so the release PR
+doesn't touch `native/`.
 
 ## How the draft is made
 

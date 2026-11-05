@@ -38,8 +38,12 @@ class PythonProcessEngineTest {
         assertEquals("Pipeline (alpha)", ja.engine)
         assertTrue(ja.text.startsWith("I go to school by bus."), ja.text)
         val la = engine.translate("I drink water.", "english", "latin")
-        assertEquals("Rules", la.engine)
-        assertTrue("Second opinion from Pipeline (alpha)" in la.text && "Aquam bibō." in la.text, la.text)
+        assertEquals("Pipeline (alpha)", la.engine)
+        assertTrue(la.text.startsWith("Aquam bibō."), la.text)
+        // A code instruction keeps Rules first, with the pipeline's second opinion.
+        val code = engine.translate("print hello", "english", "latin")
+        assertEquals("Rules", code.engine)
+        assertTrue("Second opinion from Pipeline (alpha)" in code.text, code.text)
     }
 
     @Test

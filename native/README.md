@@ -98,23 +98,18 @@ release PR raises. `versionCode` follows from it (0.1.1 is 101, 1.2.3 is
 
 ### How a build gets to testers
 
-1. The owner publishes a release (`v0.1.1`). The **Google Play** workflow
-   (`.github/workflows/play.yml`) builds the AAB from that tag, signs it with
-   the upload key and sends it to the **internal testing** track. The AAB is
-   deleted on the runner; it's never an artifact, a release asset or a commit.
-2. When internal testing looks good: **Actions → Google Play → Run workflow**,
-   tag `v0.1.1`, action **promote**. That moves the same build to
-   **closed testing** (Play's "Closed testing - Alpha" track). Nothing is
-   built again.
+The upload runs from LanguageStudentDesk, which holds the Play service account
+and the upload key (its `docs/PLAY.md`, "squirrelator"). Its **squirrelator
+Play testing** workflow checks every hour for a new published squirrelator
+release. When Play doesn't have that version yet, it builds the AAB from the
+release tag, signs it, sends it to **internal testing** and sets the store
+listing below. Promotion to **closed testing** is a hand-started run of the
+same workflow. The AAB never leaves the runner. Nothing needs setting up in
+this repo.
 
-The same form can **upload** a tag again by hand, or **check** the secrets
-(it unlocks the key and opens Play without changing anything).
-
-While the app has never been published, Play only takes a release as a draft.
-The workflow then sends it as one and says so in the log: open Play Console →
-**Test and release → Testing → Internal testing**, edit the draft release and
-press **Start rollout**. After that first time, releases roll out by
-themselves.
+While the app has never been published, Play takes a release only as a
+draft, so the first one needs **Start rollout** once in Play Console
+(**Test and release → Testing → Internal testing**).
 
 ### Store listing
 
@@ -132,28 +127,7 @@ Everything for the listing is in `android/src/main/play/`:
 The screenshots are the real translate screen with the engine and data from
 this repo. The launcher icon in `android/src/main/res/` is the same picture.
 
-### One-time setup (owner)
-
-Add these **repository secrets** in this repo (**Settings → Secrets and
-variables → Actions → New repository secret**). They're the same values as
-LanguageStudentDesk's; GitHub can't copy secrets from one repo to another:
-
-| Secret | Value |
-| --- | --- |
-| `PLAY_SERVICE_ACCOUNT_JSON` | the whole JSON key of the Play service account |
-| `UPLOAD_KEYSTORE_BASE64` | the upload keystore, base64: `base64 -w0 upload.jks` (macOS: `base64 -i upload.jks`) |
-| `UPLOAD_STORE_PASSWORD` | the keystore password |
-| `UPLOAD_KEY_ALIAS` | the key's alias |
-| `UPLOAD_KEY_PASSWORD` | the key's password |
-
-In Play Console → **Users and permissions**, the service account needs
-**Release apps to testing tracks** and **View app information** for
-squirrelator. If it was given those for the whole account, that already
-covers it.
-
-Optional repository **variables**: `PLAY_TRACK` if your closed testing track
-isn't the default `alpha`, and `PLAY_INTERNAL_TRACK` if internal testing
-isn't `internal`.
+### A Play bundle on your own computer
 
 To build a Play bundle on your own computer, put `upload.storeFile`,
 `upload.storePassword`, `upload.keyAlias` and `upload.keyPassword` in

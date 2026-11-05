@@ -27,7 +27,7 @@ val appVersionCode: Int = appVersion.split(".").map { it.toInt() }.let { (major,
 // Play takes only bundles signed with the app's upload key. Release builds
 // read it from UPLOAD_STORE_FILE, UPLOAD_STORE_PASSWORD, UPLOAD_KEY_ALIAS and
 // UPLOAD_KEY_PASSWORD in the environment (the Play workflow sets these from
-// secrets), or upload.storeFile, upload.storePassword, upload.keyAlias and
+// secrets in LanguageStudentDesk), or upload.storeFile, upload.storePassword, upload.keyAlias and
 // upload.keyPassword in the gitignored native/local.properties. Without them
 // a release build is signed with the debug key, which Play refuses: fine for
 // the compile check, never for an upload. Same names as the SquirrelGo apps.

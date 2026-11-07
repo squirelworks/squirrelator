@@ -69,6 +69,28 @@ def _inherent(word: Word) -> set[str]:
     return set.intersection(*sets) if sets else set()
 
 
+def _cited_person(unit: Unit, language: str, root) -> set[str]:
+    """The person every inflection of this spelling shares.
+
+    A bare Klingon jatlh is third person in the table, but the word list
+    writes that spelling with no person, so the unit's roles don't say who
+    acts. When every form spelled this way shares one person, that is what
+    the source said."""
+    if not unit.text or not language or not unit.meanings:
+        return set()
+    found = []
+    for word in inflections(language, root):
+        if word.meaning not in unit.meanings:
+            continue
+        forms = [f for f in word.forms if f.text.casefold() == unit.text.casefold()]
+        if not forms:
+            continue
+        shared = set.intersection(*(set(f.features) for f in forms)) & PERSONS
+        if len(shared) == 1:
+            found.append(shared)
+    return found[0] if len(found) == 1 else set()
+
+
 def pick_form(word: Word, wanted: set[str]):
     """The form carrying most of what is wanted and least that isn't."""
     inherent = _inherent(word)
@@ -176,8 +198,12 @@ def _by_person(il: Interlingua, target: str, words: list[Word | None], root) -> 
         if person:
             silent.add(subject)  # the verb's form says it
     elif subject is None and "@command" not in wanted[v]:
-        dictionary = words[v].form("dictionary")
-        wanted[v] |= (dictionary.features - TENSE) if dictionary else set()
+        cited = _cited_person(units[v], il.language, root)
+        if cited:
+            wanted[v] |= cited
+        else:
+            dictionary = words[v].form("dictionary")
+            wanted[v] |= (dictionary.features - TENSE) if dictionary else set()
     if obj is not None and OBJECT in verb_features:
         # The forms with @object take a third-person object (vIlegh).
         if not _inherent(words[obj]) & (PERSONS - {"@third-person"}):
@@ -315,16 +341,24 @@ def agree(il: Interlingua, target: str, found: list[str], *, root=None) -> Plan:
         if not wanted[j] & case_features and SUBJECT in cases:
             wanted[i].add(cases[SUBJECT])
 
-    # The verb takes its subject's person and number. With no subject it
-    # keeps the person of its dictionary form, as the column writes it
-    # (Japanese leaves "I" unsaid: 飲みました is bibī).
+    # The verb takes its subject's person and number. With no subject, a
+    # source form that already says who acts keeps that person (bare jatlh
+    # is third person). Otherwise it keeps the target dictionary form's
+    # person (Japanese leaves "I" unsaid: 飲みました is bibī).
     silent = set()
     for v in verbs[:1]:
         if not wanted[v] & TENSE and "@command" not in wanted[v]:
             wanted[v].add("@present")
         if subject is None:
-            dictionary = words[v].form("dictionary")
-            wanted[v] |= (dictionary.features - TENSE) if dictionary else set()
+            # A source form that already says who acts (bare jatlh is third
+            # person) keeps that person. Otherwise the target's dictionary
+            # form does (Japanese leaves "I" unsaid: 飲みました is bibī).
+            cited = _cited_person(units[v], il.language, root)
+            if cited:
+                wanted[v] |= cited
+            else:
+                dictionary = words[v].form("dictionary")
+                wanted[v] |= (dictionary.features - TENSE) if dictionary else set()
     if verbs and subject is not None:
         v, s = verbs[0], subject
         person = _inherent(words[s]) & PERSONS if words[s] else set()

@@ -158,25 +158,50 @@ function fromNatural(text, to) {
   return `# No pattern matched\n# Source: ${text}`;
 }
 
+function withLiteral(sentence, literal) {
+  return literal ? sentence + "\n" + literal : sentence;
+}
+
+function printed(inner) {
+  const quoted = inner.length >= 2 && (inner[0] === '"' || inner[0] === "'") && inner[0] === inner.at(-1);
+  const sentence = quoted ? "Print the word." : "Show the number.";
+  return { display: withLiteral(sentence, inner), gloss: "Print " + inner };
+}
+
 function toEnglish(text, from) {
+  return explainLines(text, from).map(e => e.display).join("\n") || "(no recognizable statements)";
+}
+
+function explainLines(text, from) {
   const lines = text.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#") && !l.startsWith(";"));
   const out = [];
   for (const s of lines) {
-    if (from === "python" && s.startsWith("print(")) out.push("Print " + s.slice(6,-1));
-    else if (from === "quickbasic" && s.toUpperCase().startsWith("PRINT")) out.push("Print " + s.slice(5).trim());
-    else if (from === "lolcode" && s.includes("VISIBLE")) out.push("Show " + s.split("VISIBLE")[1].trim());
-    else if (from === "javascript" && s.includes("console.log")) out.push("Print to console");
-    else if (from === "z80" && /LD/i.test(s)) out.push("Load data: " + s);
-    else if (from === "z80" && /INC/i.test(s)) out.push("Increment: " + s);
-    else out.push("Execute: " + s);
+    if (from === "python" && s.startsWith("print(") && s.endsWith(")")) {
+      const p = printed(s.slice(6, -1));
+      out.push({ display: p.display, gloss: p.gloss });
+    } else if (from === "python" && s.includes("for ") && s.includes(" in ")) {
+      out.push({ display: "Start a loop.", gloss: "Start a loop" });
+    } else if (from === "quickbasic" && s.toUpperCase().startsWith("PRINT")) {
+      const p = printed(s.slice(5).trim());
+      out.push({ display: p.display, gloss: p.gloss });
+    } else if (from === "lolcode" && s.includes("VISIBLE")) {
+      const rest = s.split("VISIBLE")[1].trim();
+      out.push({ display: withLiteral("Print the word.", rest), gloss: "Show " + rest });
+    } else if (from === "javascript" && s.includes("console.log")) {
+      out.push({ display: withLiteral("Print the word on the screen.", s), gloss: "Print to console: " + s });
+    } else if (from === "z80" && /LD/i.test(s)) {
+      out.push({ display: withLiteral("Load the data.", s), gloss: "Load data: " + s });
+    } else if (from === "z80" && /INC/i.test(s)) {
+      out.push({ display: withLiteral("Add one.", s), gloss: "Increment: " + s });
+    } else out.push({ display: "Execute: " + s, gloss: "Execute: " + s });
   }
-  return out.length ? out.join("\n") : "(no recognizable statements)";
+  return out;
 }
 
 function codeToCode(text, from, to) {
-  const eng = toEnglish(text, from);
-  if (eng.startsWith("(")) return `# Direct mapping not available\n# ${eng}`;
-  return fromNatural(eng, to);
+  const gloss = explainLines(text, from).map(e => e.gloss).join("\n");
+  if (!gloss || gloss.startsWith("(")) return `# Direct mapping not available\n# ${gloss}`;
+  return fromNatural(gloss, to);
 }
 </script>
 </body>

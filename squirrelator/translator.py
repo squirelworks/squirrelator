@@ -44,6 +44,9 @@ def translate(
 
     if engine == "auto" and _pipeline_first(from_lang, to_lang):
         return translate_full(source, from_lang, to_lang, style=style).text
+    explained = _code_in_language(text, from_lang, to_lang)
+    if explained is not None:
+        return explained
     if _engine_for(engine, from_lang, to_lang) == "pipeline":
         from .pipeline import run
         try:
@@ -174,14 +177,38 @@ def _to_english(text: str, from_lang: str) -> str:
     explanations = _explain_lines(text, from_lang)
     if not explanations:
         return "(no recognizable statements)"
-    return "\n".join(e for _, e, _ in explanations)
+    return "\n".join(e for _, e, _, _ in explanations)
 
 
-def _explain_lines(text: str, from_lang: str) -> list[tuple[str, str, bool]]:
-    """Return (source line, plain-English explanation, understood) for each
-    line. understood is False where the explanation only repeats the line."""
+def _with_literal(sentence: str, literal: str | None) -> str:
+    """The code-pack row, then a quoted string or identifier left as written.
+    The literal is not part of the sentence the pipeline translates."""
+    if not literal:
+        return sentence
+    return f"{sentence}\n{literal}"
+
+
+def _printed(inner: str) -> tuple[str, str]:
+    """A print argument: a quoted string is "Print the word.", anything else
+    is "Show the number." The argument itself is returned unchanged."""
+    quoted = len(inner) >= 2 and inner[0] == inner[-1] and inner[0] in "\"'"
+    sentence = "Print the word." if quoted else "Show the number."
+    return _with_literal(sentence, inner), f"Print {inner}"
+
+
+def _explain_lines(text: str, from_lang: str) -> list[tuple[str, str, bool, str]]:
+    """Return (source line, explanation, understood, code gloss) for each line.
+
+    The explanation is a code-pack row from squirrel-lang-data ("Print the
+    word."), with a quoted string or identifier kept on the next line.
+    understood is False where the explanation only repeats the line. The
+    code gloss is the older wording code-to-code matches, so the literal
+    stays the message instead of the row's nouns."""
     lines = text.splitlines()
     explanations = []
+
+    def add(source: str, display: str, ok: bool, gloss: str | None = None):
+        explanations.append((source, display, ok, gloss if gloss is not None else display))
 
     for line in lines:
         s = line.strip()
@@ -189,69 +216,118 @@ def _explain_lines(text: str, from_lang: str) -> list[tuple[str, str, bool]]:
             continue
 
         if from_lang == "python":
-            if s.startswith("print("):
-                explanations.append((s, f"Print {s[6:-1]}", True))
+            if s.startswith("print(") and s.endswith(")"):
+                display, gloss = _printed(s[6:-1])
+                add(s, display, True, gloss)
             elif "for " in s and " in " in s:
-                explanations.append((s, "Start a loop", True))
+                add(s, "Start a loop.", True, "Start a loop")
             elif "=" in s and not s.startswith("if"):
-                explanations.append((s, f"Assign a value: {s}", True))
+                add(s, _with_literal("Set the value.", s), True, f"Assign a value: {s}")
 
         elif from_lang == "quickbasic":
             if s.upper().startswith("PRINT"):
-                explanations.append((s, f"Print {s[5:].strip()}", True))
+                display, gloss = _printed(s[5:].strip())
+                add(s, display, True, gloss)
             elif s.upper().startswith("FOR"):
-                explanations.append((s, f"Start a counted loop: {s}", True))
+                add(s, _with_literal("Start a loop.", s), True, f"Start a counted loop: {s}")
             elif s.upper().startswith("NEXT"):
-                explanations.append((s, "End the loop", True))
+                add(s, "End the loop.", True, "End the loop")
 
         elif from_lang == "lolcode":
             if "VISIBLE" in s:
-                explanations.append((s, f"Show {s.split('VISIBLE',1)[1].strip()}", True))
+                rest = s.split("VISIBLE", 1)[1].strip()
+                add(s, _with_literal("Print the word.", rest), True, f"Show {rest}")
             elif "I HAS A" in s:
-                explanations.append((s, f"Create a variable: {s}", True))
+                add(s, _with_literal("Create a variable.", s), True, f"Create a variable: {s}")
 
         elif from_lang == "z80":
             if "LD" in s.upper():
-                explanations.append((s, f"Load data: {s}", True))
+                add(s, _with_literal("Load the data.", s), True, f"Load data: {s}")
             elif "INC" in s.upper():
-                explanations.append((s, f"Increment: {s}", True))
+                add(s, _with_literal("Add one.", s), True, f"Increment: {s}")
             elif "RET" in s.upper():
-                explanations.append((s, "Return from subroutine", True))
+                add(s, "Return the value.", True, "Return from subroutine")
 
         elif from_lang == "javascript":
             if "console.log" in s:
-                explanations.append((s, f"Print to console: {s}", True))
+                add(s, _with_literal("Print the word on the screen.", s), True, f"Print to console: {s}")
             elif "for (" in s:
-                explanations.append((s, "Start a for loop", True))
+                add(s, "Start a loop.", True, "Start a for loop")
 
         elif from_lang == "latin":
             if "print" in s.lower() or "dic" in s.lower():
-                explanations.append((s, "Print / say something", True))
+                quoted = re.search(r"""(['"])(.+?)\1""", s)
+                literal = quoted.group(0) if quoted else None
+                add(s, _with_literal("Print the word.", literal), True, "Print / say something")
             elif "=" in s:
-                explanations.append((s, f"Assign: {s}", True))
+                add(s, _with_literal("Set the value.", s), True, f"Assign: {s}")
             else:
-                explanations.append((s, f"Latin statement: {s}", False))
+                add(s, f"Latin statement: {s}", False)
 
         elif from_lang == "klingon":
             if "jatlh" in s.lower() or "print" in s.lower():
-                explanations.append((s, "Speak / print", True))
+                quoted = re.search(r"""(['"])(.+?)\1""", s)
+                literal = quoted.group(0) if quoted else None
+                add(s, _with_literal("Print the word.", literal), True, "Speak / print")
             elif "=" in s:
-                explanations.append((s, f"Assign: {s}", True))
+                add(s, _with_literal("Set the value.", s), True, f"Assign: {s}")
             else:
-                explanations.append((s, f"Klingon statement: {s}", False))
+                add(s, f"Klingon statement: {s}", False)
 
         else:
-            explanations.append((s, f"Execute: {s}", False))
+            add(s, f"Execute: {s}", False)
 
     return explanations
 
 
+# Programming languages whose explanations are code-pack sentences. A
+# human language with a matrix column then gets that sentence from the
+# pipeline, and the quoted string or identifier is copied after it.
+_CODE_LANGS = {"python", "javascript", "quickbasic", "lolcode", "z80", "sql", "shell", "brainfood"}
+
+
+def _code_in_language(text: str, from_lang: str, to_lang: str) -> str | None:
+    if from_lang not in _CODE_LANGS or to_lang in SUPPORTED or to_lang in ("english", "pseudocode"):
+        return None
+    if not _pipeline_knows("english", to_lang):
+        return None
+    rows = [display for _, display, ok, _ in _explain_lines(text, from_lang) if ok]
+    if not rows:
+        return None
+    from .pipeline import run
+    parts = []
+    for display in rows:
+        row, sep, literal = display.partition("\n")
+        spoken = run(row, "english", to_lang).text
+        parts.append(f"{spoken}\n{literal}" if sep else spoken)
+    return "\n".join(parts)
+
+
+def _code_in_language_full(source: str, from_lang: str, to_lang: str) -> Translation | None:
+    text = _code_in_language(source.strip(), from_lang, to_lang)
+    if text is None:
+        return None
+    from .pipeline import run
+    steps = []
+    for line, display, ok, _ in _explain_lines(source.strip(), from_lang):
+        if not ok:
+            continue
+        row, sep, literal = display.partition("\n")
+        spoken = run(row, "english", to_lang).text
+        shown = f"{spoken}\n{literal}" if sep else spoken
+        steps.append(Step(line, shown, "Explained with a code-pack sentence."))
+    return Translation(text, (), tuple(steps), (), 1.0, True, from_lang, to_lang, engine="pipeline")
+
+
 def _code_to_code(text: str, from_lang: str, to_lang: str) -> str:
-    # Simple pass-through via English intermediate for known patterns
-    english = _to_english(text, from_lang)
-    if english.startswith("(") or "no recognizable" in english:
-        return f"# Direct {from_lang} → {to_lang} not yet mapped\n# Intermediate: {english}"
-    return _from_natural(english, to_lang)
+    # Code-to-code still matches the gloss that carries the literal, so
+    # "hi" stays "hi". The row sentence is only what a person reads.
+    gloss = "\n".join(g for _, _, _, g in _explain_lines(text, from_lang))
+    if not gloss:
+        gloss = "(no recognizable statements)"
+    if gloss.startswith("(") or "no recognizable" in gloss:
+        return f"# Direct {from_lang} → {to_lang} not yet mapped\n# Intermediate: {gloss}"
+    return _from_natural(gloss, to_lang)
 
 
 # Plain-words names for the patterns _match_natural knows.
@@ -295,6 +371,9 @@ def translate_full(
     if _engine_for(engine, frm, to) == "pipeline":
         from .pipeline import run
         return run(source, frm, to)
+    explained = _code_in_language_full(source, frm, to)
+    if explained is not None:
+        return explained
     return _rules_full(source, from_lang, to_lang, style=style)
 
 
@@ -333,7 +412,7 @@ def _rules_full(source: str, from_lang: str, to_lang: str, *, style: Optional[st
     lines = [ln.strip() for ln in src.splitlines()]
     lines = [ln for ln in lines if ln and not ln.startswith(("#", ";"))]
     all_explained = _explain_lines(src, frm)
-    explained = [(line, expl) for line, expl, ok in all_explained if ok]
+    explained = [(line, expl) for line, expl, ok, _ in all_explained if ok]
     understood = {line for line, _ in explained}
     unknown = [ln for ln in lines if ln not in understood]
     share = len(explained) / len(lines) if lines else 0.0
@@ -342,7 +421,7 @@ def _rules_full(source: str, from_lang: str, to_lang: str, *, style: Optional[st
         steps = [Step(line, expl, "Explained line by line.") for line, expl in explained]
         return result(steps, unknown, share)
 
-    english = "\n".join(e for _, e, _ in all_explained)
+    english = "\n".join(g for _, _, _, g in all_explained)
     pattern, _ = _match_natural(english, to) if explained else (None, "")
     if pattern is None:
         return result([Step(line, expl, "Explained in English first.") for line, expl in explained],

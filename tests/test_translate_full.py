@@ -52,8 +52,8 @@ def test_unmatched_sentence_is_marked_unknown_not_guessed():
 def test_code_to_english_breakdown_and_unknown_lines():
     r = translate_full("for i in range(1, 4):\n    print(i)\nfoo()", "python", "english")
     assert [(s.source, s.result) for s in r.breakdown] == [
-        ("for i in range(1, 4):", "Start a loop"),
-        ("print(i)", "Print i"),
+        ("for i in range(1, 4):", "Start a loop."),
+        ("print(i)", "Show the number.\ni"),
     ]
     assert r.unknown == ("foo()",)
     assert r.confidence == pytest.approx(2 / 3)
@@ -68,13 +68,20 @@ def test_lines_only_echoed_back_count_as_unknown():
 
 def test_code_to_code_goes_through_english():
     r = translate_full('PRINT "Hi"', "quickbasic", "javascript")
-    assert [s.result for s in r.breakdown] == ['Print "Hi"', r.text]
+    assert [s.result for s in r.breakdown] == ['Print the word.\n"Hi"', r.text]
     assert r.confidence == 1.0
 
 
 def test_every_pair_is_alpha_except_same_language():
     assert translate_full("x = 5", "python", "python").alpha is False
     assert translate_full("print hello", "english", "python").alpha is True
+
+
+def test_code_explanation_uses_the_code_pack_and_keeps_the_literal():
+    r = translate_full('print("hi")', "python", "japanese")
+    assert r.text == '単語を表示する。\n"hi"'
+    assert r.breakdown[0].result == r.text
+    assert '"hi"' in r.text and "こんにちは" not in r.text
 
 
 def test_breakdown_has_no_implementation_notes():

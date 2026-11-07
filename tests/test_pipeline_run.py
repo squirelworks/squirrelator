@@ -55,6 +55,15 @@ def test_unsupported_language():
     assert "english" in languages() and "japanese" in languages()
 
 
+def test_kanji_konnichiwa_is_hello_and_a_sentence_stays_today(root):
+    # 今日は is the kanji spelling of konnichiwa. On its own that is hello.
+    # 今日は暑いです keeps today and the topic particle.
+    assert run("今日は", "japanese", "english", root=root).text == "Hello."
+    assert run("今日は。", "japanese", "english", root=root).text == "Hello."
+    hot = run("今日は暑いです。", "japanese", "english", root=root).text
+    assert hot != "Hello." and "today" in hot.casefold()
+
+
 def test_same_language_and_empty_source(root):
     assert run(" 学生 ", "japanese", "japanese", root=root).text == "学生"
     assert run("", "japanese", "english", root=root).text == ""

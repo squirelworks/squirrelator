@@ -62,6 +62,14 @@ def test_english_not_finds_the_klingon_suffix(klingon):
     assert to_klingon("I do not understand.", klingon).endswith("be'")
 
 
+def test_bare_klingon_jatlh_is_third_person_in_latin(klingon):
+    # The word list writes jatlh with no person. Every table form spelled
+    # that way is third person, so Latin is loquitur, not the dictionary loquor.
+    assert run('jatlh "nuqneH"', "klingon", "latin", root=klingon).text == "Loquitur salvē."
+    assert run("jatlh", "klingon", "latin", root=klingon).text == "Loquitur."
+    assert run("jIjatlh", "klingon", "latin", root=klingon).text == "Loquor."
+
+
 @pytest.mark.parametrize("klingon_text, english", [
     ("Duj vIlegh", "I see the ship."),
     ("maSuv", "We fight."),

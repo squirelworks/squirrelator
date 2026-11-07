@@ -80,3 +80,13 @@ Claude prepares a **draft** GitHub Release; the owner clicks Publish. Tags
 are never created, moved, reused or deleted by hand. CI on PRs and pushes
 only checks and builds; it never uploads build output. See
 `RELEASE_PLAN.md`.
+
+## Cursor Cloud specific instructions
+
+The workspace root is the parent of the checkouts, not this git repo. The engine is `repos/squirrelator` when that directory exists, and the repo root otherwise. Cloud setup installs `python3-venv` and `python3-tk`, creates `.venv` inside the engine repo, and checks out the `data/` submodule there. Use that `.venv/bin/python`.
+
+- If `data/` is empty, run `git submodule update --init` in the engine repo. The engine reads that checkout, or the directory in `SQUIRREL_LANG_DATA` when that variable is set.
+- Checks, from the engine repo: `.venv/bin/python -m pytest -q`, `.venv/bin/ruff check .`, and `python3 .github/scripts/check_web.py app` (Node).
+- `python3 squirrelator.py` opens the Tk GUI and needs a display. Headless use is `python3 squirrelator.py --cli english python "print hello"`.
+- LanguageStudentDesk, when it is checked out beside this repo, is standard-library Python: `python3 LanguageStudentDesk.py --list`. Setup also initializes its `data/` submodule.
+- The Kotlin apps under `native/` need JDK 17, Gradle 8.14.3, and the Android SDK. This environment does not install that toolchain.

@@ -137,8 +137,10 @@ def test_lexicon_is_loaded_once():
 
 
 def test_words_with_a_meaning_win_over_a_bare_vocab_word():
-    # 今日は is also the greeting (vocab only, no meaning); 今日 + は carry
-    # today and @topic, so the sentence splits.
+    # 今日は is konnichiwa, hello, when that kanji spelling is the whole
+    # utterance. Inside a sentence, 今日 and は keep today and @topic.
+    assert words(analyze("今日は", "japanese")) == ["今日は"]
+    assert words(analyze("今日は。", "japanese")) == ["今日は"]
     assert words(analyze("今日は暑いです。", "japanese")) == ["今日", "は", "暑い", "です"]
     # A vocab word still beats a split into three or more pieces.
     assert words(analyze("ありがとうございます", "japanese")) == ["ありがとう", "ございます"]

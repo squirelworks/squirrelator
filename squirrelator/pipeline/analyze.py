@@ -17,7 +17,7 @@ inflection tables are known words too: 行きました carries go, @polite and
 import unicodedata
 from dataclasses import dataclass
 
-from ..lexicon import Entry, Lexicon, lexicon
+from ..lexicon import Entry, Lexicon, fold, lexicon
 
 # Between two letters these stay inside the word: apostrophes, hyphens and
 # the Armenian emphasis, exclamation and question marks (ի՞նչ).
@@ -164,8 +164,36 @@ def _unspaced(text: str, lex: Lexicon) -> list[Token]:
     return tokens
 
 
+def _whole_utterance(text: str, tokens: list[Token], lex: Lexicon) -> list[Token]:
+    """A kanji spelling of a greeting is that greeting when it is the whole
+    utterance. 今日は is konnichiwa, the data's note for こんにちは, so on its
+    own it says hello. Inside a sentence the parts keep their own meanings
+    (今日は暑い is today, not hello)."""
+    words = [t for t in tokens if t.kind == "word"]
+    if len(words) < 2:
+        return tokens
+    spelled = "".join(t.text for t in words)
+    noted = next((e for e in lex.lookup(spelled) if e.source == "vocab" and e.note), None)
+    if noted is None or fold(noted.word) != fold(spelled):
+        return tokens
+    column = tuple(e for e in lex.lookup(noted.note) if e.source == "column" and e.meaning)
+    if not column:
+        return tokens
+    greeting = Token(spelled, words[0].start, words[-1].end, "word", column)
+    out, placed = [], False
+    for token in tokens:
+        if token.kind == "word":
+            if not placed:
+                out.append(greeting)
+                placed = True
+            continue
+        out.append(token)
+    return out
+
+
 def analyze(text: str, language: str, *, lex: Lexicon | None = None) -> list[Token]:
     """Tokens for text in a squirrel-lang-data language. Offsets cover the
     whole text, so joining every token's text gives the source back."""
     lex = lex or lexicon(language)
-    return (_spaced if lex.spaced else _unspaced)(text, lex)
+    tokens = (_spaced if lex.spaced else _unspaced)(text, lex)
+    return _whole_utterance(text, tokens, lex)

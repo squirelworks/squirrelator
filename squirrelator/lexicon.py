@@ -27,6 +27,7 @@ class Entry:
     gloss: str = ""        # English meaning, from the vocabulary
     meaning: str = ""      # meaning unit id from the meaning matrix, if any
     source: str = ""       # "vocab", "column", "meanings", "phrasings" or "inflections"
+    note: str = ""         # another spelling this word also is, when the data names one
 
 
 def fold(text: str) -> str:
@@ -127,7 +128,7 @@ def _load(language: str, root: Path) -> Lexicon:
                 add(form, Entry(form, meaning=p["m"], source="phrasings"))
     else:
         for v in _jsonl(root / "languages" / language / "vocab.jsonl"):
-            add(v["word"], Entry(v["word"], v.get("reading", ""), v.get("meaning", ""), source="vocab"))
+            add(v["word"], Entry(v["word"], v.get("reading", ""), v.get("meaning", ""), source="vocab", note=v.get("note", "")))
         for row in _jsonl(column):
             for text, reading, meaning in row.get("t", []):
                 add(text, Entry(text, reading, meaning=meaning, source="column"))

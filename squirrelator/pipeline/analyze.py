@@ -80,6 +80,10 @@ def _runs(text: str, letters: frozenset[str] = frozenset()) -> list[tuple[str, i
     return runs
 
 
+def _meant(entries) -> bool:
+    return any(e.meaning for e in entries)
+
+
 def _cost(entries) -> float:
     """A word the data gives a meaning costs 1; a word only the vocab list
     has (a gloss, no meaning) costs 2.5. So 今日は splits into 今日 + は,
@@ -142,16 +146,55 @@ def _spaced(text: str, lex: Lexicon) -> list[Token]:
         for k in range(r + 2, min(len(runs), r + 2 * MAX_PHRASE - 1), 2):
             if runs[k][0] != "word" or text[runs[k - 1][1]:runs[k - 1][2]] != " ":
                 break
-            if entries := lex.lookup(text[start:runs[k][2]]):
+            # A phrase the data gives no meaning (a vocab card such as
+            # "το τσάι" with only a gloss) doesn't swallow words that have one.
+            entries = lex.lookup(text[start:runs[k][2]])
+            if entries and (_meant(entries) or not _meant(found)):
                 found, last = entries, k
+        if not _meant(found) and (glued := _prefix_phrase(text, runs, r, lex)):
+            tokens += glued[0]
+            r = glued[1] + 1
+            continue
         end = runs[last][2]
         word = text[start:end]
+        if found and not _meant(found) and last == r:
+            # A vocab card with only a gloss (French "l'eau") gives way to
+            # pieces that all have meanings (l' + eau).
+            pieces = _segment(word, start, lex, whole_word=True)
+            if pieces and len(pieces) > 1 and all(_meant(t.entries) for t in pieces):
+                tokens += pieces
+                r = last + 1
+                continue
         if found:
             tokens.append(Token(word, start, end, "word", found))
         else:
             tokens += _segment(word, start, lex, whole_word=True) or [Token(word, start, end, "word")]
         r = last + 1
     return tokens
+
+
+def _prefix_phrase(text: str, runs, r: int, lex: Lexicon):
+    """A prefix glued to the first word of a phrase: French J'ai mal is j'
+    and the phrase "ai mal". Returns (tokens, last run) when the word after
+    a known prefix starts a phrase of two or more words that has a meaning,
+    else None."""
+    _, start, end = runs[r]
+    for cut in range(start + 1, end):
+        prefix = lex.prefix(text[start:cut])
+        if not prefix:
+            continue
+        best = None
+        for k in range(r + 2, min(len(runs), r + 2 * MAX_PHRASE - 1), 2):
+            if runs[k][0] != "word" or text[runs[k - 1][1]:runs[k - 1][2]] != " ":
+                break
+            entries = lex.lookup(text[cut:runs[k][2]])
+            if entries and _meant(entries):
+                best = (entries, k)
+        if best:
+            entries, k = best
+            return [Token(text[start:cut], start, cut, "word", prefix, "prefix"),
+                    Token(text[cut:runs[k][2]], cut, runs[k][2], "word", entries)], k
+    return None
 
 
 def _unspaced(text: str, lex: Lexicon) -> list[Token]:

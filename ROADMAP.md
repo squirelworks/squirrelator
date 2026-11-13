@@ -39,6 +39,8 @@ Open issues: #25 (phone app) and #26 (Pipeline vs Rules coverage).
 - [ ] Language-to-language pairs go through the interlingua, not through English strings
 - [ ] For each pair: dropped subjects and objects, tense and aspect, particles and case, counters and measure words, politeness level, word order
 - [ ] **Test sets for each pair:** every accepted translation and some rejected ones, from the matrix plus Tatoeba (CC BY 2.0 FR) with attribution. A pair's alpha label comes off only when its set passes (bar proposed in #26: 90% of column rows both ways).
+- [x] English as the source: a word with several meanings reads as the one the row has (love, house, have), contractions in a row's wording count as its pieces, and English contractions come from the data (data #105)
+- [x] Spaced languages: a prefix with a content meaning heads its own phrase (French j', d', t'), a prefix may glue to a phrase (J'ai mal), and a phrase or vocab card with only a gloss doesn't swallow words that have meanings (το τσάι, l'eau)
 - [ ] Detect the source language from its script and word list, with a user override
 - [x] english↔latin and english↔klingon sentences move from Rules to the Pipeline under Auto (the owner's call, #26); a code instruction keeps Rules first, and the other engine's answer shows as a second opinion (#32)
 

@@ -16,10 +16,10 @@ how English says those rows. Those are returned as implied units, so a later sta
 can say "I" in English without the engine inventing it.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ..matrix import Matrix, matrix
-from .parse import Clause, Phrase, meanings_of
+from .parse import Clause, Phrase, grammar_only, meanings_of
 
 
 @dataclass(frozen=True)
@@ -59,15 +59,15 @@ def _choose(options: tuple[str, ...], content: str, mx: Matrix) -> tuple[str, tu
 def _unit(phrase: Phrase, mx: Matrix) -> Unit:
     # The data joins meanings one word carries with "+": "meet+@past",
     # "not+know". Content parts are meanings; "@" parts are roles.
-    options = [m for m in meanings_of(phrase.head) if not m.startswith("@")]
+    options = [m for m in meanings_of(phrase.head) if not grammar_only(m)]
     parts = options[0].split("+") if options else []
     content = [p for p in parts if not p.startswith("@")]
     meaning = content[0] if content else ""
     roles, alts = [p for p in parts if p.startswith("@")], []
-    for options in phrase.roles:
-        if not options:
+    for role_options in phrase.roles:
+        if not role_options:
             continue
-        chosen, others = _choose(options, meaning, mx)
+        chosen, others = _choose(role_options, meaning, mx)
         roles.append(chosen)
         alts.append(others)
     return Unit(meaning, phrase.head.text, tuple(roles), tuple(options[1:]), tuple(alts),
@@ -83,7 +83,11 @@ def _wording(mx: Matrix, row_id: str, language: str) -> str:
         rendering = mx.columns.get(language, {}).get(row_id)
         texts = (" ".join(t.strip("-") for t, _, _ in rendering.tokens),) if rendering else ()
     words = " ".join(texts).casefold()
-    return " " + "".join(c if c.isalnum() or c in "'’" else " " for c in words) + " "
+    words = "".join(c if c.isalnum() or c in "'’" else " " for c in words)
+    # A contraction is also its pieces, as the analyzer may split it:
+    # "it's" is "it" + "'s", so both are words of "It's cold today."
+    split = "".join(f" {c}" if c in "'’" else c for c in words)
+    return f" {words} {split} " if split != words else f" {words} "
 
 
 def _row_reading(mx: Matrix, row_id: str, language: str, text: str) -> list[str]:
@@ -129,41 +133,59 @@ def _pronoun(language: str, wanted: frozenset[str], root) -> str:
     return ""
 
 
+def _as_row(unit: Unit, meanings) -> Unit:
+    """unit reading as the alternative meaning the row has, when its first
+    meaning isn't one of the row's; otherwise unit as it is."""
+    if not unit.meaning or unit.meaning in meanings:
+        return unit
+    alt = next((a for a in unit.alternatives if a in meanings), None)
+    if alt is None:
+        return unit
+    others = tuple(m for m in (unit.meaning, *unit.alternatives) if m != alt)
+    return replace(unit, meaning=alt, alternatives=others)
+
+
 def interlingua(clause: Clause, language: str, *, root=None) -> Interlingua:
     """Meaning units, roles and matching matrix rows for one parsed clause."""
     mx = matrix(root)
     units = [_unit(p, mx) for p in clause.phrases]
     units = _with_subjects(units, language, root)
-    have = [m for u in units for m in u.meanings]
 
     found = []
     if units:
         for row in mx.rows.values():
             wording = _wording(mx, row.id, language)
+            # A word that can carry several meanings reads as the one the
+            # row has: English "love" is like or love, and in love-you it is
+            # love. Other rows still see the word's first meaning.
+            read_as = [_as_row(u, row.meanings) for u in units]
             # A word the row's own wording has may carry no meaning of the
             # row: English "is" in "Where is the station?" is not exist.
             # Every other word must carry one of the row's meanings.
-            free = [u for u in units if _in(u.text, wording)]
-            needed = [m for u in units if u not in free for m in u.meanings]
-            if any(not u.meaning for u in units if u not in free):
+            free = [u for u in read_as if _in(u.text, wording)]
+            needed = [m for u in read_as if u not in free for m in u.meanings]
+            if any(not u.meaning for u in read_as if u not in free):
                 continue
             if not set(needed) <= set(row.meanings):
                 continue
             # A word the row's column writes reads as the row reads it: 家 is
             # home in going-home even when the word list gives house first.
-            read = have + [m for u in free for m in _row_reading(mx, row.id, language, u.text)]
+            said = [m for u in read_as for m in u.meanings]
+            read = said + [m for u in free for m in _row_reading(mx, row.id, language, u.text)]
             if not set(row.meanings) & set(read):
                 continue
             extra = [m for m in row.meanings if m not in read]
             unsaid = row.implied.get(language, ())
             if all(m in unsaid for m in extra):
                 ignored = {u.text for u in free if not set(u.meanings) & set(row.meanings)}
-                found.append((len(free), row.id, extra, ignored))
+                found.append((len(free), row.id, extra, ignored, read_as))
     # Rows whose wording has more of the clause's words come first: "How
     # much is it?" is how-much-is-it before how-much-this. Ties keep data order.
     found.sort(key=lambda f: -f[0])
     matches = tuple(f[1] for f in found)
     implied, explained = (found[0][2], found[0][3]) if found else (None, set())
+    if found:
+        units = found[0][4]
     unknown = tuple(u.text for u in units if not u.meaning and u.text not in explained)
     implied_units = tuple(Unit(m, "", implied=True) for m in implied or ())
     return Interlingua(implied_units + tuple(units), clause.features, matches, unknown, language)

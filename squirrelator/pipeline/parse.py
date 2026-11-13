@@ -36,8 +36,14 @@ def meanings_of(token: Token) -> tuple[str, ...]:
     return tuple(dict.fromkeys(e.meaning for e in token.entries if e.meaning))
 
 
+def grammar_only(meaning: str) -> bool:
+    """A meaning made only of grammar parts: "@the", "@place+@the". One
+    with a content part ("@copula+he", French est-il) is a word."""
+    return bool(meaning) and all(p.startswith("@") for p in meaning.split("+"))
+
+
 def is_marker(token: Token) -> bool:
-    return meaning_of(token).startswith("@")
+    return grammar_only(meaning_of(token))
 
 
 @dataclass(frozen=True)
@@ -116,7 +122,7 @@ def _acts_as_marker(t: Token, words: list[Token], i: int, default, sides: dict, 
     一 本). After a particle (猫が います), before a verb (一 数) or with
     nothing to attach to (请坐, 加一) it is a word."""
     ms = meanings_of(t)
-    if all(m.startswith("@") for m in ms) or not any(m.startswith("@") for m in ms):
+    if all(grammar_only(m) for m in ms) or not any(grammar_only(m) for m in ms):
         return is_marker(t)
     # Only the language's own matrix column shows a word working as a marker.
     grammar = [e.meaning for e in t.entries if e.meaning.startswith("@") and e.source == "column"]
@@ -145,7 +151,9 @@ def _clause(tokens: list[Token], default: str | None, sides: dict, near: dict) -
 
     words = [t for t in tokens if t.kind in ("word", "number")]
     for i, t in enumerate(words):
-        if t.affix == "prefix":
+        if t.affix == "prefix" and (is_marker(t) or not meaning_of(t)):
+            # A prefix with a content meaning (French j', I) falls through
+            # and heads its own phrase, as a content suffix does.
             waiting.append(t)
             last = None
         elif t.affix == "suffix" and phrases and (is_marker(t) or not meaning_of(t)):

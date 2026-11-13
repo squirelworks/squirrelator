@@ -6,8 +6,10 @@ probabilities.
 - A matrix candidate is the data's own sentence, so it starts at 1. When
   the source language's column also renders that row, every grammar
   meaning the row has and the clause lacks, or the clause has and the row
-  lacks (@past against a present-tense row), costs 0.25. Other English
-  wordings of the same row come just after the first.
+  lacks (@past against a present-tense row), costs 0.25. English has no
+  column, so an English clause is held against the row's English sentence
+  for the past and number only. Other English wordings of the same row
+  come just after the first.
 - A words candidate is a gloss, so it starts at 0.5, scaled by the share of
   the clause's words the target has a word for, less 0.05 for each marker
   it had to drop.
@@ -16,6 +18,7 @@ Ties keep Generate's order.
 """
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 from ..inflections import inflections
 from ..matrix import matrix
@@ -27,6 +30,7 @@ WORDING = 0.01
 GLOSS = 0.5
 DROPPED = 0.05
 PERSONS = {"@first-person", "@second-person", "@third-person"}
+ENGLISH_MARKED = {"@past", "@plural"}
 
 
 @dataclass(frozen=True)
@@ -80,6 +84,25 @@ def _row_grammar(tokens, forms=None) -> set[str]:
     return out
 
 
+def _english_marks(il: Interlingua) -> set[str]:
+    return {f for u in il.units for f in u.roles if f in ENGLISH_MARKED} | (set(il.features) & ENGLISH_MARKED)
+
+
+@lru_cache(maxsize=None)
+def _english_row_marks(row_id: str, root) -> frozenset[str]:
+    """The past and number the row's English sentence carries."""
+    from ..lexicon import lexicon
+    from .analyze import analyze
+    from .interlingua import interlingua
+    from .parse import parse
+    en = matrix(root).rows[row_id].en
+    out = set()
+    for clause in parse(analyze(en, "english", lex=lexicon("english", root)), "english", root=root):
+        if clause.phrases:
+            out |= _english_marks(interlingua(clause, "english", root=root))
+    return frozenset(out)
+
+
 def _plural(n: int, word: str) -> str:
     return f"{n} {word}" if n == 1 else f"{n} {word}s"
 
@@ -111,9 +134,13 @@ def rank(candidates, il: Interlingua, source: str, *, root=None) -> tuple[Ranked
             if rendering:
                 have = _grammar(il, rendering.tokens, forms)
                 off = sorted((have ^ _row_grammar(rendering.tokens, forms)) & marked)
-                if off:
-                    score -= MISMATCH * len(off)
-                    note = f"A sentence from the meaning matrix, but its grammar differs: {', '.join(off)}."
+            elif source == "english" and c.row in mx.rows:
+                off = sorted(_english_marks(il) ^ _english_row_marks(c.row, root))
+            else:
+                off = []
+            if off:
+                score -= MISMATCH * len(off)
+                note = f"A sentence from the meaning matrix, but its grammar differs: {', '.join(off)}."
         else:
             covered = 1 - len(c.missing) / words
             score = GLOSS * covered - DROPPED * len(c.dropped)

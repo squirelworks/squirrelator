@@ -2403,7 +2403,7 @@
   "source": "jatlh \"nuqneH\"",
   "from": "klingon",
   "to": "latin",
-  "expected": "Loquitur salvē."
+  "expected": "Salvē loquitur."
  },
  {
   "source": "jatlh \"nuqneH\"",
@@ -2547,7 +2547,7 @@
   "source": "Qapla'",
   "from": "klingon",
   "to": "latin",
-  "expected": "# Could not match a known pattern for latin\n# Source: Klingon statement: Qapla'"
+  "expected": "Fēlīciter!"
  },
  {
   "source": "Qapla'",

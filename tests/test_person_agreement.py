@@ -65,7 +65,8 @@ def test_english_not_finds_the_klingon_suffix(klingon):
 def test_bare_klingon_jatlh_is_third_person_in_latin(klingon):
     # The word list writes jatlh with no person. Every table form spelled
     # that way is third person, so Latin is loquitur, not the dictionary loquor.
-    assert run('jatlh "nuqneH"', "klingon", "latin", root=klingon).text == "Loquitur salvē."
+    # Latin puts the verb last, as its column does.
+    assert run('jatlh "nuqneH"', "klingon", "latin", root=klingon).text == "Salvē loquitur."
     assert run("jatlh", "klingon", "latin", root=klingon).text == "Loquitur."
     assert run("jIjatlh", "klingon", "latin", root=klingon).text == "Loquor."
 
@@ -92,14 +93,24 @@ def test_person_is_agreement_not_a_grammar_mismatch(klingon):
 
 
 @pytest.mark.parametrize("english, latin", [
-    ("I see the ship.", "Videō nāvem."),
-    ("The officers see the ships.", "Praefectī vident nāvēs."),
-    ("I eat food.", "Comedō cibum."),
-    ("The officer saw the child.", "Puerum praefectus vīdit."),
+    # The column's rows, verb last; "saw" is the present row with a note,
+    # and the past is the next candidate.
+    ("I see the ship.", "Nāvem videō."),
+    ("The officers see the ships.", "Praefectī nāvēs vident."),
+    ("I eat food.", "Cibum edō."),
+    ("The officer saw the child.", "Praefectus puerum videt."),
 ])
 def test_latin_words_only_the_tables_have(latin_words, english, latin):
     r = run(english, "english", "latin", root=latin_words)
     assert r.text == latin and not r.unknown
+
+
+def test_an_english_past_against_a_present_row_says_so(latin_words):
+    r = run("The officer saw the child.", "english", "latin", root=latin_words)
+    assert "@past" in r.breakdown[0].why and "Praefectus puerum vīdit." in r.alternatives
+    assert r.breakdown[0].why == "A sentence from the meaning matrix, but its grammar differs: @past."
+    same = run("The officer sees the child.", "english", "latin", root=latin_words)
+    assert same.breakdown[0].why == "A sentence from the meaning matrix."
 
 
 def test_latin_verb_form_gives_its_pronoun_back(latin_words):

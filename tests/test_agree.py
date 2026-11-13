@@ -49,7 +49,7 @@ def test_marked_roles_take_their_case_and_the_verb_its_subjects_person(latin):
 
 
 def test_a_possessor_takes_the_genitive(latin):
-    assert "amīcī" in run("友達の本を読みます。", "japanese", "latin", root=latin).text
+    assert "amīcī" in run("友達の本を読みます。", "japanese", "latin", root=latin).text.casefold()
 
 
 def test_an_unsaid_subject_keeps_the_dictionary_person_and_a_pronoun_the_verb_says_is_dropped(latin):

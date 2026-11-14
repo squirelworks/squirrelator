@@ -21,7 +21,11 @@
   button { background: var(--accent); color: #000; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
   button:hover { filter: brightness(1.1); }
   button.secondary { background: #333; color: var(--text); }
-  #out { background: var(--card); padding: 0.7rem; border-radius: 6px; white-space: pre-wrap; flex: 1; min-height: 220px; border: 1px solid #333; margin: 0; overflow: auto; }
+  #out { background: var(--bg); padding: 0.7rem; border-radius: 6px; white-space: pre-wrap; flex: 1; min-height: 160px; border: 1px solid #333; margin: 0; overflow: auto; }
+  .alt-block { margin-top: 0.65rem; padding-top: 0.55rem; border-top: 1px solid #333; }
+  .alt-heading { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+  .alt-list { list-style: none; margin: 0; padding: 0; }
+  .alt-list li { padding: 0.35rem 0.5rem; margin: 0.2rem 0; background: var(--bg); border-radius: 4px; font-family: ui-monospace, monospace; font-size: 0.95rem; }
   .translate-workspace { display: flex; gap: 0.75rem; align-items: stretch; min-height: 280px; }
   .pane { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--card); border: 1px solid #333; border-radius: 8px; padding: 0.75rem; }
   .pane h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--muted); font-weight: 600; }
@@ -93,6 +97,7 @@
         <select id="to"></select>
       </div>
       <pre id="out">Click Translate or try an example below.</pre>
+      <div id="alternatives" class="alt-block" hidden></div>
     </section>
   </div>
 
@@ -160,8 +165,9 @@ function translate() {
     setStatus("Enter some source text");
     return;
   }
-  const out = doTranslate(src, from, to);
-  document.getElementById("out").textContent = out;
+  const { text, alternatives } = doTranslate(src, from, to);
+  document.getElementById("out").textContent = text;
+  renderAlternatives(document.getElementById("alternatives"), "Alternatives", alternatives);
   setStatus(`Translated ${languageLabel(from)} → ${languageLabel(to)}`);
 }
 
@@ -178,12 +184,14 @@ function swapSides() {
   document.getElementById("to").value = newTo;
   document.getElementById("source").value = newSource;
   document.getElementById("out").textContent = newResult || "Click Translate to update the result.";
+  renderAlternatives(document.getElementById("alternatives"), "Alternatives", []);
   setStatus(`Swapped — ${languageLabel(newFrom)} → ${languageLabel(newTo)}`);
 }
 
 function clearAll() {
   document.getElementById("source").value = "";
   document.getElementById("out").textContent = "";
+  renderAlternatives(document.getElementById("alternatives"), "Alternatives", []);
   setStatus("Cleared");
 }
 
@@ -202,16 +210,19 @@ function load(src, from, to) {
 function doTranslate(text, from, to) {
   from = from.toLowerCase(); to = to.toLowerCase();
   if (!SUPPORTED.includes(from) || !SUPPORTED.includes(to))
-    return `Unsupported: ${from} → ${to}`;
+    return { text: `Unsupported: ${from} → ${to}`, alternatives: [] };
   if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to))
-    return "That language is off in Settings.";
-  if (from === to) return text;
+    return { text: "That language is off in Settings.", alternatives: [] };
+  if (from === to) return { text, alternatives: [] };
 
+  let textOut;
   if (from === "english" || from === "pseudocode")
-    return fromNatural(text, to);
-  if (to === "english")
-    return toEnglish(text, from);
-  return codeToCode(text, from, to);
+    textOut = fromNatural(text, to);
+  else if (to === "english")
+    textOut = toEnglish(text, from);
+  else
+    textOut = codeToCode(text, from, to);
+  return { text: textOut, alternatives: [] };
 }
 
 function fromNatural(text, to) {

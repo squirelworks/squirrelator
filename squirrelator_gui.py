@@ -6,8 +6,8 @@ squirrelator GUI — desktop translator
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from squirrelator.features import CUSTOM, Settings
-from squirrelator.menus import AUTO, ENGINES, PIPELINE, display, languages_for
-from squirrelator.translate_ui import language_label, swap_translate_state
+from squirrelator.menus import AUTO, ENGINES, PIPELINE, languages_for, translate_view
+from squirrelator.translate_ui import format_alternatives_lines, language_label, swap_translate_state
 
 
 class SquirrelatorApp:
@@ -86,6 +86,7 @@ class SquirrelatorApp:
         result_shell = ttk.LabelFrame(body, text="Result", padding=8)
         result_shell.grid(row=0, column=2, sticky="nsew")
         result_shell.rowconfigure(1, weight=1)
+        result_shell.rowconfigure(3, weight=0)
         result_shell.columnconfigure(0, weight=1)
 
         to_row = ttk.Frame(result_shell)
@@ -100,6 +101,18 @@ class SquirrelatorApp:
         self.result = scrolledtext.ScrolledText(result_shell, font=("Consolas", 13), wrap="word",
                                                 state="disabled", height=12)
         self.result.grid(row=1, column=0, sticky="nsew")
+
+        self.alt_frame = ttk.Frame(result_shell)
+        self.alt_frame.grid(row=2, column=0, sticky="ew", pady=(8, 0))
+        self.alt_frame.columnconfigure(0, weight=1)
+        ttk.Label(self.alt_frame, text="Alternatives", style="Muted.TLabel").grid(row=0, column=0, sticky="w")
+        self.alt_list = tk.Listbox(
+            self.alt_frame, font=("Consolas", 12), height=4, activestyle="none",
+            exportselection=False, highlightthickness=0,
+        )
+        self.alt_list.grid(row=1, column=0, sticky="ew")
+        self.alt_list.bind("<Double-Button-1>", self._copy_alternative)
+        self.alt_frame.grid_remove()
 
         self.status = ttk.Label(root, text="Ready", relief="sunken", anchor="w", font=("Segoe UI", 10))
         self.status.pack(fill="x", side="bottom")
@@ -152,6 +165,7 @@ class SquirrelatorApp:
         self.source.delete("1.0", "end")
         self.source.insert("1.0", src)
         self._set_result(res)
+        self._set_alternatives(())
         self.status.config(
             text=f"Swapped — {language_label(self.from_var.get())} → {language_label(self.to_var.get())}"
         )
@@ -165,6 +179,24 @@ class SquirrelatorApp:
         if text:
             self.result.insert("1.0", text)
         self.result.config(state="disabled")
+
+    def _set_alternatives(self, alternatives):
+        lines = format_alternatives_lines(alternatives)
+        self.alt_list.delete(0, "end")
+        if lines:
+            self.alt_frame.grid()
+            for line in lines:
+                self.alt_list.insert("end", line)
+        else:
+            self.alt_frame.grid_remove()
+
+    def _copy_alternative(self, _event=None):
+        sel = self.alt_list.curselection()
+        if not sel:
+            return
+        text = self.alt_list.get(sel[0])
+        self.root.clipboard_clear()
+        self.root.clipboard_append(text)
 
     def open_settings(self):
         """Simple / More / Everything, Customize and What's in the app — same
@@ -254,15 +286,17 @@ class SquirrelatorApp:
         try:
             engine = self.engine_var.get()
             frm, to = self.from_var.get(), self.to_var.get()
-            out, used = display(src, frm, to, engine)
-            self._set_result(out)
-            self.status.config(text=f"Translated {language_label(frm)} → {language_label(to)} with {used}")
+            view = translate_view(src, frm, to, engine)
+            self._set_result(view.result)
+            self._set_alternatives(view.alternatives)
+            self.status.config(text=f"Translated {language_label(frm)} → {language_label(to)} with {view.engine}")
         except Exception as e:
             self.status.config(text=f"Error: {e}")
 
     def clear(self):
         self.source.delete("1.0", "end")
         self._set_result("")
+        self._set_alternatives(())
         self.status.config(text="Cleared")
 
 

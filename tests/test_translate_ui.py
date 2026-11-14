@@ -1,4 +1,4 @@
-from squirrelator.translate_ui import language_label, swap_translate_state
+from squirrelator.translate_ui import format_alternatives_lines, language_label, swap_translate_state
 
 
 def test_language_label():
@@ -25,6 +25,11 @@ def test_swap_moves_result_into_source_when_present():
         "bonjour",
         "hello",
     )
+
+
+def test_format_alternatives_lines_skips_blanks():
+    assert format_alternatives_lines(("A", "", "B")) == ["A", "B"]
+    assert format_alternatives_lines(()) == []
 
 
 def test_swap_clears_empty_result_after_moving_text():

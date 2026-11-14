@@ -8,7 +8,8 @@
   :root { --bg:#0f0f12; --card:#1a1a20; --accent:#26a69a; --text:#eee; --muted:#999; }
   * { box-sizing: border-box; }
   body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-  header { background: linear-gradient(135deg,#1a1a2e,#0d3b36); padding: 1.2rem; text-align: center; border-bottom: 3px solid var(--accent); }
+  header { background: linear-gradient(135deg,#1a1a2e,#0d3b36); padding: 1.2rem; text-align: center; border-bottom: 3px solid var(--accent); position: relative; }
+  #open-settings { position: absolute; right: 1rem; top: 1rem; background: #333; color: var(--text); border: 1px solid #444; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
   header h1 { margin: 0; }
   header p { margin: 0.3rem 0 0; color: var(--muted); }
   main { max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem; }
@@ -34,14 +35,37 @@
     .swap-col { padding: 0.25rem 0; }
     textarea, #out { min-height: 160px; }
   }
+  [hidden] { display: none !important; }
+  .sqf-notice { display: flex; align-items: center; gap: .5rem; margin: .75rem 0; padding: .6rem .8rem;
+    background: #121a1a; border: 1px solid #1e4a44; border-radius: 10px; color: #e8e8e8; font-size: .9rem; line-height: 1.4; }
+  .sqf-notice span { flex: 1 1 auto; min-width: 0; }
+  .sqf-link { background: none; border: 0; padding: .3rem 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; min-height: 32px; }
+  .sqf-close { background: none; border: 1px solid #3a3a44; border-radius: 8px; color: #aaa; font-size: 1.1rem; width: 36px; height: 36px; cursor: pointer; }
+  .sqf-levels, .sqf-switches { margin: 0 0 1rem; padding: .6rem .85rem; border: 1px solid #2a2a32; border-radius: 12px; background: #16161c; }
+  .sqf-levels legend, .sqf-switches legend { padding: 0 .3rem; color: #aaa; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+  .sqf-row { display: flex; gap: .6rem; align-items: flex-start; margin: .45rem 0; cursor: pointer; color: var(--text); }
+  .sqf-row input { margin-top: .25rem; width: 1.1rem; height: 1.1rem; accent-color: var(--accent); flex: 0 0 auto; }
+  .sqf-row strong, .sqf-whats strong { display: block; color: #e8e8e8; }
+  .sqf-row small, .sqf-whats small { display: block; color: #aaa; font-size: .85rem; line-height: 1.35; }
+  .sqf-custom { margin: .3rem 0 0; color: var(--accent); font-size: .85rem; }
+  .sqf-whats h2 { margin: 0 0 .35rem; color: var(--accent); font-size: 1.15rem; }
+  .sqf-whats ul { list-style: none; margin: 0; padding: 0; }
+  .sqf-whats li { margin: .5rem 0; padding: .6rem .8rem; background: #1a1a20; border-radius: 10px; }
+  .sqf-whats strong { display: inline; }
+  .sqf-off { color: #aaa; font-size: .85rem; }
+  .sqf-on { color: #8bc34a; font-size: .85rem; }
 </style>
 </head>
 <body>
 <header>
+  <button type="button" id="open-settings">Settings</button>
   <h1>squirrelator</h1>
   <p>Translate between human language, pseudocode, and programming languages</p>
 </header>
 <main>
+  <div id="notice" hidden></div>
+  <section id="settings" hidden></section>
+
   <div class="toolbar">
     <button type="button" onclick="translate()">Translate</button>
     <button type="button" class="secondary" onclick="clearAll()">Clear</button>
@@ -53,18 +77,7 @@
       <h2 id="source-heading">Source</h2>
       <div class="picker">
         <label for="from">From</label>
-        <select id="from">
-          <option value="english">English</option>
-          <option value="pseudocode">Pseudocode</option>
-          <option value="python">Python</option>
-          <option value="javascript">JavaScript</option>
-          <option value="quickbasic">QuickBASIC</option>
-          <option value="brainfood">brainFOOD</option>
-          <option value="lolcode">LOLCODE</option>
-          <option value="z80">Z80 Assembly</option>
-          <option value="shell">Shell</option>
-          <option value="sql">SQL</option>
-        </select>
+        <select id="from"></select>
       </div>
       <textarea id="source" aria-label="Source text">print hello</textarea>
     </section>
@@ -77,18 +90,7 @@
       <h2 id="result-heading">Result</h2>
       <div class="picker">
         <label for="to">To</label>
-        <select id="to">
-          <option value="python">Python</option>
-          <option value="javascript">JavaScript</option>
-          <option value="quickbasic">QuickBASIC</option>
-          <option value="lolcode">LOLCODE</option>
-          <option value="english">English</option>
-          <option value="pseudocode">Pseudocode</option>
-          <option value="brainfood">brainFOOD</option>
-          <option value="z80">Z80 Assembly</option>
-          <option value="shell">Shell</option>
-          <option value="sql">SQL</option>
-        </select>
+        <select id="to"></select>
       </div>
       <pre id="out">Click Translate or try an example below.</pre>
     </section>
@@ -104,10 +106,47 @@
   </div>
 </main>
 
+<script src="features.js"></script>
+<script src="features-settings.js"></script>
 <script src="translate-ui.js"></script>
 <script>
 // Client-side rule engine (mirrors the Python package for standalone use)
-const SUPPORTED = ["english","pseudocode","python","javascript","quickbasic","brainfood","lolcode","z80","sql","shell"];
+const LANG_LABELS = {
+  english: "English",
+  pseudocode: "Pseudocode",
+  python: "Python",
+  javascript: "JavaScript",
+  quickbasic: "QuickBASIC",
+  brainfood: "brainFOOD",
+  lolcode: "LOLCODE",
+  z80: "Z80 Assembly",
+  shell: "Shell",
+  sql: "SQL",
+};
+const SUPPORTED = Object.keys(LANG_LABELS);
+
+function visibleLangs() {
+  return SUPPORTED.filter((id) => SquirrelFeatures.allowsLanguage(id));
+}
+
+function fillSelects(keep) {
+  const langs = visibleLangs();
+  for (const id of ["from", "to"]) {
+    const sel = document.getElementById(id);
+    const prev = keep && sel.value;
+    sel.innerHTML = "";
+    langs.forEach((lang) => {
+      const opt = document.createElement("option");
+      opt.value = lang;
+      opt.textContent = LANG_LABELS[lang] || languageLabel(lang);
+      sel.appendChild(opt);
+    });
+    if (prev && langs.includes(prev)) sel.value = prev;
+    else if (id === "from" && langs.includes("english")) sel.value = "english";
+    else if (id === "to" && langs.includes("python")) sel.value = "python";
+    else if (langs.length) sel.value = langs[0];
+  }
+}
 
 function setStatus(msg) {
   document.getElementById("status").textContent = msg || "";
@@ -132,6 +171,9 @@ function swapSides() {
   const source = document.getElementById("source").value;
   const result = document.getElementById("out").textContent;
   const [newFrom, newTo, newSource, newResult] = swapTranslateState(from, to, source, result);
+  if (!visibleLangs().includes(newFrom) || !visibleLangs().includes(newTo)) {
+    fillSelects(false);
+  }
   document.getElementById("from").value = newFrom;
   document.getElementById("to").value = newTo;
   document.getElementById("source").value = newSource;
@@ -147,6 +189,11 @@ function clearAll() {
 
 function load(src, from, to) {
   document.getElementById("source").value = src;
+  if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to)) {
+    document.getElementById("out").textContent = "Turn on the matching switch in Settings to use this example.";
+    setStatus("Example needs a Settings switch");
+    return;
+  }
   document.getElementById("from").value = from;
   document.getElementById("to").value = to;
   translate();
@@ -156,6 +203,8 @@ function doTranslate(text, from, to) {
   from = from.toLowerCase(); to = to.toLowerCase();
   if (!SUPPORTED.includes(from) || !SUPPORTED.includes(to))
     return `Unsupported: ${from} → ${to}`;
+  if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to))
+    return "That language is off in Settings.";
   if (from === to) return text;
 
   if (from === "english" || from === "pseudocode")
@@ -261,6 +310,19 @@ document.getElementById("source").addEventListener("keydown", (e) => {
     translate();
   }
 });
+
+const settingsEl = document.getElementById("settings");
+const openBtn = document.getElementById("open-settings");
+function toggleSettings(show) {
+  settingsEl.hidden = show === undefined ? !settingsEl.hidden : !show;
+  openBtn.textContent = settingsEl.hidden ? "Settings" : "Close Settings";
+  if (!settingsEl.hidden) settingsEl.scrollIntoView({ behavior: "smooth" });
+}
+openBtn.onclick = () => toggleSettings();
+SquirrelFeatures.renderNotice(document.getElementById("notice"), () => toggleSettings(true));
+SquirrelFeatures.renderSettings(settingsEl);
+SquirrelFeatures.onChange(() => fillSelects(true));
+fillSelects(false);
 </script>
 </body>
 </html>

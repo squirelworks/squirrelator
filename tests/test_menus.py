@@ -128,6 +128,19 @@ def test_translate_view_carries_rules_breakdown():
     assert view.breakdown[0].source == 'print("hello")'
 
 
+def test_translate_view_prose_keeps_paragraphs():
+    try:
+        data.data_dir()
+    except data.DataNotFound:
+        pytest.skip("squirrel-lang-data not checked out")
+    source = "I drink water.\n\nI go to school by bus."
+    view = translate_view(source, "english", "japanese", PIPELINE)
+    assert "\n\n" in view.body
+    assert "水" in view.body
+    assert "学校" in view.body
+    assert len(view.breakdown) >= 2
+
+
 def test_translate_view_exposes_unknown_alpha_and_body():
     try:
         data.data_dir()

@@ -139,6 +139,7 @@
 <script src="features.js"></script>
 <script src="features-settings.js"></script>
 <script src="translate-ui.js"></script>
+<script src="prose.js"></script>
 <script>
 // Client-side rule engine (mirrors the Python package for standalone use)
 const LANG_LABELS = {
@@ -262,8 +263,7 @@ function load(src, from, to) {
   translate();
 }
 
-function doTranslate(text, from, to) {
-  from = from.toLowerCase(); to = to.toLowerCase();
+function doTranslateOne(text, from, to) {
   if (!SUPPORTED.includes(from) || !SUPPORTED.includes(to))
     return { text: `Unsupported: ${from} → ${to}`, alternatives: [], breakdown: [], unknown: [], alpha: false, confidence: 0 };
   if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to))
@@ -290,6 +290,28 @@ function doTranslate(text, from, to) {
   const alpha = pairShowsAlpha(from, to);
   const confidence = unknown.length ? 0 : (textOut.startsWith("#") ? 0.5 : 1);
   return { text: textOut, alternatives: [], breakdown, unknown, alpha, confidence };
+}
+
+function doTranslate(text, from, to) {
+  from = from.toLowerCase();
+  to = to.toLowerCase();
+  if (shouldTranslateProse(text, from, to)) {
+    const parts = [];
+    const translatedParagraphs = [];
+    for (const paragraph of splitProseParagraphs(text)) {
+      const sentenceTexts = [];
+      for (const sentence of splitSentences(paragraph)) {
+        const part = doTranslateOne(sentence, from, to);
+        parts.push(part);
+        sentenceTexts.push(part.text);
+      }
+      translatedParagraphs.push(sentenceTexts);
+    }
+    const body = joinTranslatedParagraphs(translatedParagraphs);
+    const merged = mergeTranslateParts(parts);
+    return { text: body, ...merged };
+  }
+  return doTranslateOne(text, from, to);
 }
 
 function breakdownFromCode(text, from) {

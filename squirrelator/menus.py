@@ -14,6 +14,12 @@ from dataclasses import dataclass
 
 from .features import Settings
 from .result import Step, Translation
+from .prose import (
+    join_translated_paragraphs,
+    should_translate_prose,
+    split_prose_paragraphs,
+    split_sentences,
+)
 from .translator import SUPPORTED, _engine_for, _pipeline_first, translate, translate_full
 
 AUTO = "Auto"
@@ -131,20 +137,78 @@ def _view_from_translation(
     )
 
 
-def _translate_view(source: str, from_lang: str, to_lang: str, engine: str) -> TranslateView:
+def _translate_one_raw(
+    source: str, from_lang: str, to_lang: str, engine: str,
+) -> Translation:
     if engine == AUTO and _pipeline_first(from_lang, to_lang):
-        t = translate_full(source, from_lang, to_lang)
+        return translate_full(source, from_lang, to_lang)
+    if runs_pipeline(engine, from_lang, to_lang):
+        return translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
+    if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
+        return translate_full(source, from_lang, to_lang)
+    text = translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
+    return Translation(text, engine="rules")
+
+
+def _merge_translations(translations: list[Translation], body: str) -> Translation:
+    """Combine per-sentence translations into one view (ordered union of metadata)."""
+    unknown = tuple(dict.fromkeys(w for t in translations for w in t.unknown))
+    alternatives = tuple(dict.fromkeys(a for t in translations for a in t.alternatives))
+    breakdown = tuple(step for t in translations for step in t.breakdown)
+    confidence = min((t.confidence for t in translations), default=0.0)
+    alpha = any(t.alpha for t in translations)
+    second = translations[0].second_opinion if len(translations) == 1 else None
+    engine = translations[0].engine if translations else ""
+    from_l = translations[0].from_lang if translations else ""
+    to_l = translations[0].to_lang if translations else ""
+    return Translation(
+        body,
+        alternatives,
+        breakdown,
+        unknown,
+        confidence,
+        alpha,
+        from_l,
+        to_l,
+        second,
+        engine,
+    )
+
+
+def _format_translation_view(
+    t: Translation, engine_menu: str, from_lang: str, to_lang: str,
+) -> TranslateView:
+    if engine_menu == AUTO and _pipeline_first(from_lang, to_lang):
         if t.engine == "pipeline":
             return _view_from_translation(t, format_result(t), pipeline_label(t.alpha), from_lang)
         return _view_from_translation(t, format_rules_result(t), RULES, from_lang)
-    if runs_pipeline(engine, from_lang, to_lang):
-        t = translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
+    if runs_pipeline(engine_menu, from_lang, to_lang):
         return _view_from_translation(t, format_result(t), pipeline_label(t.alpha), from_lang)
-    if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
-        t = translate_full(source, from_lang, to_lang)
+    if engine_menu == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
         return _view_from_translation(t, format_rules_result(t), RULES, from_lang)
-    text = translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
-    return TranslateView(text, (), (), RULES, (), False, text, from_lang)
+    return _view_from_translation(t, t.text, RULES, from_lang)
+
+
+def _translate_prose_view(source: str, from_lang: str, to_lang: str, engine: str) -> TranslateView:
+    translations: list[Translation] = []
+    translated_paragraphs: list[list[str]] = []
+    for paragraph in split_prose_paragraphs(source):
+        sentence_texts: list[str] = []
+        for sentence in split_sentences(paragraph):
+            t = _translate_one_raw(sentence, from_lang, to_lang, engine)
+            translations.append(t)
+            sentence_texts.append(t.text)
+        translated_paragraphs.append(sentence_texts)
+    body = join_translated_paragraphs(translated_paragraphs)
+    merged = _merge_translations(translations, body)
+    return _format_translation_view(merged, engine, from_lang, to_lang)
+
+
+def _translate_view(source: str, from_lang: str, to_lang: str, engine: str) -> TranslateView:
+    if should_translate_prose(source, from_lang, to_lang):
+        return _translate_prose_view(source, from_lang, to_lang, engine)
+    t = _translate_one_raw(source, from_lang, to_lang, engine)
+    return _format_translation_view(t, engine, from_lang, to_lang)
 
 
 def translate_view(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> TranslateView:

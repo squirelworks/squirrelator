@@ -71,6 +71,26 @@ def test_code_instructions_stay_on_rules_with_the_pipelines_second_opinion():
     # Code pairs never reach the pipeline.
     assert translate("print hello", "english", "python") == 'print("hello")'
     assert translate_full('dic "salve"', "latin", "python").second_opinion is None
+    # Bare jatlh "…" is still the rules code pattern.
+    spoken = translate_full('jatlh "nuqneH"', "klingon", "english")
+    assert spoken.engine == "rules" and spoken.text.startswith("Print the word.")
+
+
+def test_conjugated_klingon_jatlh_stays_on_the_pipeline():
+    """Da-jatlh-'a' embeds jatlh and uses ' as a glottal stop. Auto must not
+    treat that as the code-comment print pattern (#26 Dajatlh'a')."""
+    try:
+        data.data_dir()
+    except data.DataNotFound:
+        pytest.skip("squirrel-lang-data not checked out")
+    from squirrelator.inflections import inflections
+    if not inflections("klingon"):
+        pytest.skip("Klingon affix tables arrive in squirrel-lang-data v0.1.4")
+    r = translate_full("Dajatlh'a'", "klingon", "english")
+    assert r.engine == "pipeline"
+    assert r.text == "You speak?"
+    assert translate("Dajatlh'a'", "klingon", "english") == "You speak?"
+    assert translate_full("Dajatlh'a'", "klingon", "english", engine="rules").text != r.text
 
 
 def test_without_the_data_latin_stays_on_rules(monkeypatch, tmp_path):

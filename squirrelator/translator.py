@@ -265,9 +265,12 @@ def _explain_lines(text: str, from_lang: str) -> list[tuple[str, str, bool, str]
                 add(s, f"Latin statement: {s}", False)
 
         elif from_lang == "klingon":
-            if "jatlh" in s.lower() or "print" in s.lower():
-                quoted = re.search(r"""(['"])(.+?)\1""", s)
-                literal = quoted.group(0) if quoted else None
+            # Whole-word jatlh/print only: Da-jatlh-'a' is a conjugated verb,
+            # not the code-comment "jatlh" pattern. Klingon ' is a glottal
+            # stop, so only double-quoted messages count as print literals.
+            if re.search(r"(?i)\bjatlh\b", s) or re.search(r"(?i)\bprint\b", s):
+                quoted = re.search(r'"([^"]*)"', s)
+                literal = f'"{quoted.group(1)}"' if quoted is not None else None
                 add(s, _with_literal("Print the word.", literal), True, "Speak / print")
             elif "=" in s:
                 add(s, _with_literal("Set the value.", s), True, f"Assign: {s}")

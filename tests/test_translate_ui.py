@@ -1,9 +1,16 @@
 from squirrelator import Step
+from squirrelator.menus import AUTO, languages_for
 from squirrelator.translate_ui import (
+    CODE_PICKER_GROUP,
+    build_language_picker_entries,
     format_alternatives_lines,
     format_breakdown_rows,
     is_natural_language,
+    is_picker_header,
     language_label,
+    partition_picker_languages,
+    picker_combobox_values,
+    picker_language_ids,
     result_footer_text,
     segment_result_text,
     segment_source_text,
@@ -71,6 +78,30 @@ def test_is_natural_language():
     assert is_natural_language("japanese")
     assert not is_natural_language("python")
     assert is_natural_language("pseudocode")
+
+
+def test_picker_groups_code_after_human_languages():
+    langs = languages_for(AUTO)
+    human, code = partition_picker_languages(langs)
+    assert human == [lang for lang in langs if is_natural_language(lang)]
+    assert code == [lang for lang in langs if not is_natural_language(lang)]
+    assert code
+    entries = build_language_picker_entries(langs)
+    assert picker_language_ids(entries) == langs
+    headers = [e for e in entries if e.kind == "header"]
+    assert len(headers) == 1
+    assert headers[0].value == CODE_PICKER_GROUP
+    idx = next(i for i, e in enumerate(entries) if e.kind == "header")
+    assert [e.value for e in entries[idx + 1 :]] == code
+    combo_values = picker_combobox_values(entries)
+    assert is_picker_header(combo_values[idx])
+    assert combo_values[idx + 1] == code[0]
+
+
+def test_picker_skips_code_group_when_no_programming_targets():
+    entries = build_language_picker_entries(["english", "japanese"])
+    assert all(e.kind == "language" for e in entries)
+    assert picker_combobox_values(entries) == ["english", "japanese"]
 
 
 def test_segment_result_text_highlights_brackets():

@@ -316,7 +316,11 @@ def _code_in_language_full(source: str, from_lang: str, to_lang: str) -> Transla
         spoken = run(row, "english", to_lang).text
         shown = f"{spoken}\n{literal}" if sep else spoken
         steps.append(Step(line, shown, "Explained with a code-pack sentence."))
-    return Translation(text, (), tuple(steps), (), 1.0, True, from_lang, to_lang, engine="pipeline")
+    from .coverage import pair_is_alpha
+    return Translation(
+        text, (), tuple(steps), (), 1.0,
+        pair_is_alpha(from_lang, to_lang), from_lang, to_lang, engine="pipeline",
+    )
 
 
 def _code_to_code(text: str, from_lang: str, to_lang: str) -> str:
@@ -350,8 +354,10 @@ def translate_full(
     breakdown, unknown parts, confidence and alpha label.
 
     Unlike translate(), an unknown language raises UnsupportedLanguage.
-    Every pair is alpha until it has a passing test set. engine works as
-    in translate(). Under engine="auto", a pair of English, Latin and
+    Pipeline pairs drop alpha when coverage.pair_is_alpha says the
+    meaning-matrix columns clear the #26 bar; Rules pairs stay alpha
+    until they have their own passing set. engine works as in
+    translate(). Under engine="auto", a pair of English, Latin and
     Klingon gives the pipeline's result, with the rules result as
     second_opinion when rules understood any of the source. When rules
     understood the source at least as well (a code instruction such as

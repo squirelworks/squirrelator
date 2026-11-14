@@ -19,7 +19,8 @@ interface Engine {
 }
 
 /**
- * A translation as shown: [text], the [engine] that made it ("Rules" or
- * "Pipeline (alpha)"), and the [mode] chosen, "Auto" on every app for now.
+ * A translation as shown: [text], the [engine] that made it ("Rules",
+ * "Pipeline", or "Pipeline (alpha)" while the pair is under the coverage
+ * bar), and the [mode] chosen, "Auto" on every app for now.
  */
 data class Translated(val text: String, val engine: String, val mode: String = "Auto")

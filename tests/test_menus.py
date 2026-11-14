@@ -73,6 +73,11 @@ def test_result_text_shows_the_second_opinion():
     out = format_result(Translation("# Could not match", alpha=False, second_opinion=other))
     assert out.startswith("# Could not match")
     assert out.endswith("Second opinion from Pipeline (alpha), confidence 100%:\n  Aquam bibō.")
+    # A pair that cleared the coverage bar drops alpha from the engine name too.
+    ready = Translation("Aquam bibō.", (), (), (), 1.0, False, engine="pipeline")
+    out = format_result(Translation("# Could not match", alpha=False, second_opinion=ready))
+    assert "Second opinion from Pipeline, confidence 100%:" in out
+    assert "Pipeline (alpha)" not in out
 
 
 def test_second_opinion_names_the_engine_that_made_it():
@@ -91,7 +96,7 @@ def test_rules_result_text_is_unchanged_without_a_second_opinion():
 
 def test_display_is_what_every_app_shows():
     from squirrelator import translate
-    from squirrelator.menus import display
+    from squirrelator.menus import display, pipeline_label
     assert display("print hello", "english", "python") == ('print("hello")', RULES)
     assert display("print hello", "english", "python", RULES) == ('print("hello")', RULES)
     assert display("hi", "python", "japanese")[0] == translate("hi", "python", "japanese")
@@ -100,9 +105,13 @@ def test_display_is_what_every_app_shows():
     except data.DataNotFound:
         return
     text, used = display("バスで学校に行きます。", "japanese", "english")
-    assert used == PIPELINE and text.endswith("Alpha. Confidence 100%.")
+    # Japanese clears the coverage bar: no Alpha line; engine name is Pipeline.
+    assert used == pipeline_label(False) == "Pipeline"
+    assert "Alpha." not in text and text.startswith("I go to school by bus.")
     text, used = display("I drink water.", "english", "latin")
-    assert used == PIPELINE and text.startswith("Aquam bibō.") and "Alpha." in text
+    assert used == "Pipeline" and text.startswith("Aquam bibō.") and "Alpha." not in text
     text, used = display("print hello", "english", "latin")
     assert used == RULES and text.startswith("# Latin: Salve / hello")
-    assert "Second opinion from Pipeline (alpha)" in text
+    # Second opinion is the pipeline's reading of the code gloss; latin is at the bar.
+    assert "Second opinion from Pipeline," in text
+    assert PIPELINE in ENGINES  # menu still offers the alpha-labelled engine

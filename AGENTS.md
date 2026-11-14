@@ -32,6 +32,8 @@ conflicts work is in `.github/MERGING.md`.
 - Never invent. Unknown words and structures are marked unknown.
 - Return alternatives when the source leaves something open.
 - Every language pair is labeled **alpha** until its test set passes.
+  Pipeline pairs use the meaning-matrix coverage bar in
+  `squirrelator.coverage` (#26); do not hand-edit which pairs are alpha.
 - `translate(source, from_lang, to_lang, *, style=None)` keeps working,
   because LSD calls it. New features go behind new functions or keyword
   arguments. A breaking change needs the owner's OK.

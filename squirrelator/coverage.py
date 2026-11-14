@@ -5,9 +5,8 @@ English result in each direction (column → English, and English → column).
 The numbers are generated, never hand-edited into docs or issues.
 
 A pair meets the alpha bar in #26 when at least ALPHA_BAR of its column
-rows match top-1 both ways. This module reports that; it does not flip
-any alpha label in the product (that is a follow-up once the report is the
-source of truth).
+rows match top-1 both ways. Product Pipeline alpha labels follow that bar
+via pair_is_alpha(), which reads the same measurements as this report.
 """
 
 from __future__ import annotations
@@ -22,7 +21,6 @@ from .pipeline.generate import render
 # Issue #26: drop "alpha" when at least this share of column rows come back
 # as the top English result in both directions.
 ALPHA_BAR = 0.90
-
 
 @dataclass(frozen=True)
 class ColumnCoverage:
@@ -62,6 +60,13 @@ class CoverageReport:
         return tuple(c for c in self.columns if c.meets_alpha_bar(self.bar))
 
 
+# Per-process cache of column measurements. Cleared by clear_coverage_cache().
+# While a column is being measured, pair_is_alpha must not re-enter measure
+# (measure_column calls pipeline.run, which asks for alpha).
+_column_cache: dict[tuple[str, str], ColumnCoverage] = {}
+_measuring: set[tuple[str, str]] = set()
+
+
 def _column_text(rendering) -> str:
     return render([t for t, _, _ in rendering.tokens], rendering.sep, rendering.end)
 
@@ -84,34 +89,57 @@ def _data_pin(root: Path) -> str:
         return root.name
 
 
+def _root_key(root=None) -> str:
+    """Stable cache key for a data checkout (or the default lookup)."""
+    from .data import DataNotFound, data_dir
+
+    try:
+        return str(data_dir(root).resolve())
+    except DataNotFound:
+        return "" if root is None else str(Path(root).resolve())
+
+
+def clear_coverage_cache() -> None:
+    """Drop cached column measurements (tests and a data-pin change)."""
+    _column_cache.clear()
+    _measuring.clear()
+
+
 def measure_column(language: str, mx: Matrix | None = None, *, root=None) -> ColumnCoverage:
     """Count top-1 hits for one column against English both ways."""
-    mx = mx or matrix(root)
-    cols = mx.columns.get(language, {})
-    to_en = from_en = 0
-    to_misses: list[str] = []
-    from_misses: list[str] = []
-    for row_id, rendering in sorted(cols.items()):
-        row = mx.rows[row_id]
-        source = _column_text(rendering)
-        got_en = run(source, language, "english", root=root).text
-        if got_en in _english_targets(row):
-            to_en += 1
-        else:
-            to_misses.append(row_id)
-        got_lang = run(row.en, "english", language, root=root).text
-        if got_lang == source:
-            from_en += 1
-        else:
-            from_misses.append(row_id)
-    return ColumnCoverage(
-        language,
-        len(cols),
-        to_en,
-        from_en,
-        tuple(to_misses),
-        tuple(from_misses),
-    )
+    key = (language, _root_key(root))
+    _measuring.add(key)
+    try:
+        mx = mx or matrix(root)
+        cols = mx.columns.get(language, {})
+        to_en = from_en = 0
+        to_misses: list[str] = []
+        from_misses: list[str] = []
+        for row_id, rendering in sorted(cols.items()):
+            row = mx.rows[row_id]
+            source = _column_text(rendering)
+            got_en = run(source, language, "english", root=root).text
+            if got_en in _english_targets(row):
+                to_en += 1
+            else:
+                to_misses.append(row_id)
+            got_lang = run(row.en, "english", language, root=root).text
+            if got_lang == source:
+                from_en += 1
+            else:
+                from_misses.append(row_id)
+        result = ColumnCoverage(
+            language,
+            len(cols),
+            to_en,
+            from_en,
+            tuple(to_misses),
+            tuple(from_misses),
+        )
+        _column_cache[key] = result
+        return result
+    finally:
+        _measuring.discard(key)
 
 
 def measure_all(*, root=None) -> CoverageReport:
@@ -130,6 +158,64 @@ def measure_all(*, root=None) -> CoverageReport:
     return CoverageReport(columns, data_pin=pin, bar=ALPHA_BAR)
 
 
+def column_meets_alpha_bar(
+    language: str,
+    *,
+    root=None,
+    bar: float = ALPHA_BAR,
+    report: CoverageReport | None = None,
+) -> bool:
+    """True when this language's meaning-matrix column clears the #26 bar.
+
+    English is the reference side and has no column; it always counts as
+    meeting the bar. A language with no column (or an empty one) does not.
+    Uses the same measure_column() path as the CI report, with a per-process
+    cache so ordinary translations do not re-measure every call.
+    """
+    if language == "english":
+        return True
+    if report is not None:
+        for c in report.columns:
+            if c.language == language:
+                return c.meets_alpha_bar(bar)
+        return False
+    key = (language, _root_key(root))
+    if key in _measuring:
+        # measure_column is on the stack (via pipeline.run); alpha is unused
+        # for the .text checks, so skip re-entry.
+        return False
+    if key not in _column_cache:
+        measure_column(language, root=root)
+    cached = _column_cache.get(key)
+    return bool(cached and cached.meets_alpha_bar(bar))
+
+
+def pair_is_alpha(
+    from_lang: str,
+    to_lang: str,
+    *,
+    root=None,
+    bar: float = ALPHA_BAR,
+    report: CoverageReport | None = None,
+) -> bool:
+    """Whether a Pipeline pair still carries the alpha label (#26 / P2.1).
+
+    Same-language is never alpha. Otherwise every non-English side must
+    clear the coverage bar; if any side has no column or is under the bar,
+    the pair stays alpha. Driven by column_meets_alpha_bar(), not a
+    hand-edited list.
+    """
+    if from_lang == to_lang:
+        return False
+    sides = {from_lang, to_lang} - {"english"}
+    if not sides:
+        return False
+    return not all(
+        column_meets_alpha_bar(lang, root=root, bar=bar, report=report)
+        for lang in sides
+    )
+
+
 def format_markdown(report: CoverageReport) -> str:
     """A Markdown table matching the shape used in #26, plus the alpha bar."""
     bar_pct = int(round(report.bar * 100))
@@ -142,7 +228,8 @@ def format_markdown(report: CoverageReport) -> str:
         "English → column: the column's own rendering).",
         "",
         f"Alpha bar (#26): ≥{bar_pct}% top-1 both ways. "
-        "This report does not change product alpha labels.",
+        "Pipeline product alpha labels follow this bar "
+        "(squirrelator.coverage.pair_is_alpha).",
         "",
     ]
     if report.data_pin:

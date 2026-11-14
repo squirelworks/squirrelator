@@ -31,7 +31,9 @@ def test_translate_full_gives_alternatives_breakdown_and_confidence(root):
     [step] = r.breakdown
     assert step.source == "バスで学校に行きます。" and step.result == r.text
     assert "meaning matrix" in step.why
-    assert r.confidence == 1.0 and r.alpha and r.unknown == ()
+    assert r.confidence == 1.0 and r.unknown == ()
+    # Japanese clears the #26 coverage bar on the pinned data, so alpha is off.
+    assert r.alpha is False
     assert translate_full("バスで学校に行きます。", "japanese", "english", engine="pipeline") == r
 
 

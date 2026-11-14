@@ -28,16 +28,23 @@ def run(source: str, from_lang: str, to_lang: str, *, root=None) -> Translation:
     best for its next candidates. The breakdown has one Step per clause,
     whose why is Rank's note. unknown lists source words the data has no
     meaning for, and words the target has no word for. confidence is the
-    mean of the best scores. Every pair is alpha.
+    mean of the best scores. Alpha follows the coverage bar in
+    squirrelator.coverage.pair_is_alpha (#26): off when every non-English
+    side's meaning-matrix column clears ≥90% top-1 both ways.
     """
+    from ..coverage import pair_is_alpha
+
     supported = languages(root)
     for lang in (from_lang, to_lang):
         if lang not in supported:
             raise UnsupportedLanguage(lang, supported)
     text = source.strip()
+    alpha = pair_is_alpha(from_lang, to_lang, root=root)
     if from_lang == to_lang or not text:
-        return Translation(text, confidence=1.0 if text else 0.0, from_lang=from_lang, to_lang=to_lang,
-                           engine="pipeline")
+        return Translation(
+            text, confidence=1.0 if text else 0.0, alpha=alpha,
+            from_lang=from_lang, to_lang=to_lang, engine="pipeline",
+        )
 
     sep = "" if to_lang != "english" and not lexicon(to_lang, root).spaced else " "
     lex = lexicon(from_lang, root)
@@ -62,6 +69,6 @@ def run(source: str, from_lang: str, to_lang: str, *, root=None) -> Translation:
     confidence = sum(r[0].score for r in picks) / len(picks) if picks else 0.0
     return Translation(
         sep.join(best), tuple(dict.fromkeys(alternatives)), tuple(steps),
-        tuple(dict.fromkeys(unknown)), round(confidence, 3), True, from_lang, to_lang,
+        tuple(dict.fromkeys(unknown)), round(confidence, 3), alpha, from_lang, to_lang,
         engine="pipeline",
     )

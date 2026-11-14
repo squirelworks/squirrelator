@@ -7,8 +7,11 @@ from squirrelator.coverage import (
     ALPHA_BAR,
     ColumnCoverage,
     CoverageReport,
+    clear_coverage_cache,
+    column_meets_alpha_bar,
     format_markdown,
     measure_column,
+    pair_is_alpha,
     write_report,
 )
 
@@ -16,6 +19,13 @@ try:
     data.data_dir()
 except data.DataNotFound:
     pytest.skip("squirrel-lang-data not checked out", allow_module_level=True)
+
+
+@pytest.fixture(autouse=True)
+def _fresh_coverage_cache():
+    clear_coverage_cache()
+    yield
+    clear_coverage_cache()
 
 
 def test_alpha_bar_matches_issue_26():
@@ -31,6 +41,25 @@ def test_meets_alpha_bar_both_ways():
     assert not low_from.meets_alpha_bar()
     empty = ColumnCoverage("x", 0, 0, 0)
     assert not empty.meets_alpha_bar()
+
+
+def test_pair_is_alpha_follows_report_not_a_hand_list():
+    report = CoverageReport(
+        (
+            ColumnCoverage("hangul", 100, 100, 100),
+            ColumnCoverage("klingon", 17, 15, 16),  # under 90%
+        ),
+        bar=0.90,
+    )
+    assert not pair_is_alpha("english", "hangul", report=report)
+    assert not pair_is_alpha("hangul", "english", report=report)
+    assert pair_is_alpha("english", "klingon", report=report)
+    assert pair_is_alpha("hangul", "klingon", report=report)
+    assert not pair_is_alpha("hangul", "hangul", report=report)
+    assert pair_is_alpha("english", "amharic", report=report)  # no column
+    assert column_meets_alpha_bar("english", report=report)
+    assert column_meets_alpha_bar("hangul", report=report)
+    assert not column_meets_alpha_bar("klingon", report=report)
 
 
 def test_format_markdown_table_shape():
@@ -49,7 +78,8 @@ def test_format_markdown_table_shape():
     assert "| hangul | 103 | 103/103 | 103/103 | yes |" in md
     assert "Columns at the bar: 2 of 2" in md
     assert "chinese → en: eat-food, what-time" in md
-    assert "This report does not change product alpha labels." in md
+    assert "pair_is_alpha" in md
+    assert "This report does not change product alpha labels." not in md
 
 
 def test_measure_klingon_column_smoke(root):
@@ -59,8 +89,10 @@ def test_measure_klingon_column_smoke(root):
     assert c.rows >= 1
     assert 0 <= c.to_english <= c.rows
     assert 0 <= c.from_english <= c.rows
-    # Known open misses from #26; the report must still count the rest.
-    assert c.to_english >= c.rows - 2
+    # After the #51 miss fixes, Klingon clears the bar on the pinned data;
+    # the report must still count every row either way.
+    assert c.to_english + len(c.to_english_misses) == c.rows
+    assert c.from_english + len(c.from_english_misses) == c.rows
 
 
 def test_write_report_produces_every_column(root, tmp_path):
@@ -73,3 +105,6 @@ def test_write_report_produces_every_column(root, tmp_path):
         assert f"| {c.language} |" in text
     assert report.data_pin
     assert "v0.1.5" in report.data_pin or len(report.data_pin) >= 7
+    # Product alpha for a passing column follows the same measurement.
+    for c in report.passing():
+        assert not pair_is_alpha("english", c.language, report=report)

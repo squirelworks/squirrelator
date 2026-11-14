@@ -28,7 +28,8 @@ class Translation:
     breakdown     Steps explaining how the source became the text
     unknown       parts of the source no rule understood, shown, not guessed
     confidence    share of the source a rule understood, from 0.0 to 1.0
-    alpha         True until this language pair's test set passes
+    alpha         True until this language pair clears its test bar
+                  (Pipeline: coverage.pair_is_alpha / #26)
     second_opinion  the other engine's Translation, for a pair both engines
                   know (english, latin and klingon under engine="auto"),
                   or None

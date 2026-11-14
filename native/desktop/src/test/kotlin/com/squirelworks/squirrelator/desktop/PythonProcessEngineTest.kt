@@ -34,16 +34,19 @@ class PythonProcessEngineTest {
 
     @Test
     fun showsThePipelinesAnswerAndTheSecondOpinion() {
+        // Pairs at the coverage bar drop alpha from the engine name and the
+        // result text; the Engine menu still offers "Pipeline (alpha)".
         val ja = engine.translate("バスで学校に行きます。", "japanese", "english")
-        assertEquals("Pipeline (alpha)", ja.engine)
+        assertEquals("Pipeline", ja.engine)
         assertTrue(ja.text.startsWith("I go to school by bus."), ja.text)
+        assertTrue("Alpha." !in ja.text, ja.text)
         val la = engine.translate("I drink water.", "english", "latin")
-        assertEquals("Pipeline (alpha)", la.engine)
+        assertEquals("Pipeline", la.engine)
         assertTrue(la.text.startsWith("Aquam bibō."), la.text)
         // A code instruction keeps Rules first, with the pipeline's second opinion.
         val code = engine.translate("print hello", "english", "latin")
         assertEquals("Rules", code.engine)
-        assertTrue("Second opinion from Pipeline (alpha)" in code.text, code.text)
+        assertTrue("Second opinion from Pipeline," in code.text, code.text)
     }
 
     @Test

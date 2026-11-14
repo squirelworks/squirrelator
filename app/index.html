@@ -26,6 +26,16 @@
   .alt-heading { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
   .alt-list { list-style: none; margin: 0; padding: 0; }
   .alt-list li { padding: 0.35rem 0.5rem; margin: 0.2rem 0; background: var(--bg); border-radius: 4px; font-family: ui-monospace, monospace; font-size: 0.95rem; }
+  .bd-block { margin-top: 0.65rem; padding-top: 0.55rem; border-top: 1px solid #333; }
+  .bd-heading { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+  .bd-body { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .bd-list { list-style: none; margin: 0; padding: 0; flex: 1 1 140px; min-width: 120px; max-height: 160px; overflow: auto; }
+  .bd-list li { padding: 0.35rem 0.5rem; margin: 0.15rem 0; background: var(--bg); border-radius: 4px; font-family: ui-monospace, monospace; font-size: 0.9rem; cursor: pointer; border: 1px solid transparent; }
+  .bd-list li.bd-selected, .bd-list li:focus { border-color: var(--accent); outline: none; }
+  .bd-detail { flex: 1 1 200px; font-size: 0.9rem; }
+  .bd-field { margin-bottom: 0.45rem; }
+  .bd-label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.15rem; }
+  .bd-value { white-space: pre-wrap; font-family: ui-monospace, monospace; }
   .translate-workspace { display: flex; gap: 0.75rem; align-items: stretch; min-height: 280px; }
   .pane { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--card); border: 1px solid #333; border-radius: 8px; padding: 0.75rem; }
   .pane h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--muted); font-weight: 600; }
@@ -98,6 +108,7 @@
       </div>
       <pre id="out">Click Translate or try an example below.</pre>
       <div id="alternatives" class="alt-block" hidden></div>
+      <div id="breakdown" class="bd-block" hidden></div>
     </section>
   </div>
 
@@ -165,9 +176,10 @@ function translate() {
     setStatus("Enter some source text");
     return;
   }
-  const { text, alternatives } = doTranslate(src, from, to);
+  const { text, alternatives, breakdown } = doTranslate(src, from, to);
   document.getElementById("out").textContent = text;
   renderAlternatives(document.getElementById("alternatives"), "Alternatives", alternatives);
+  renderBreakdown(document.getElementById("breakdown"), "Breakdown", breakdown);
   setStatus(`Translated ${languageLabel(from)} → ${languageLabel(to)}`);
 }
 
@@ -185,6 +197,7 @@ function swapSides() {
   document.getElementById("source").value = newSource;
   document.getElementById("out").textContent = newResult || "Click Translate to update the result.";
   renderAlternatives(document.getElementById("alternatives"), "Alternatives", []);
+  renderBreakdown(document.getElementById("breakdown"), "Breakdown", []);
   setStatus(`Swapped — ${languageLabel(newFrom)} → ${languageLabel(newTo)}`);
 }
 
@@ -192,6 +205,7 @@ function clearAll() {
   document.getElementById("source").value = "";
   document.getElementById("out").textContent = "";
   renderAlternatives(document.getElementById("alternatives"), "Alternatives", []);
+  renderBreakdown(document.getElementById("breakdown"), "Breakdown", []);
   setStatus("Cleared");
 }
 
@@ -210,10 +224,10 @@ function load(src, from, to) {
 function doTranslate(text, from, to) {
   from = from.toLowerCase(); to = to.toLowerCase();
   if (!SUPPORTED.includes(from) || !SUPPORTED.includes(to))
-    return { text: `Unsupported: ${from} → ${to}`, alternatives: [] };
+    return { text: `Unsupported: ${from} → ${to}`, alternatives: [], breakdown: [] };
   if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to))
-    return { text: "That language is off in Settings.", alternatives: [] };
-  if (from === to) return { text, alternatives: [] };
+    return { text: "That language is off in Settings.", alternatives: [], breakdown: [] };
+  if (from === to) return { text, alternatives: [], breakdown: [] };
 
   let textOut;
   if (from === "english" || from === "pseudocode")
@@ -222,7 +236,29 @@ function doTranslate(text, from, to) {
     textOut = toEnglish(text, from);
   else
     textOut = codeToCode(text, from, to);
-  return { text: textOut, alternatives: [] };
+  let breakdown = [];
+  if (to === "english" && from !== "english" && from !== "pseudocode") {
+    breakdown = breakdownFromCode(text, from);
+  } else if ((from === "english" || from === "pseudocode") && to !== "english") {
+    breakdown = breakdownFromEnglish(text, textOut);
+  }
+  return { text: textOut, alternatives: [], breakdown };
+}
+
+function breakdownFromCode(text, from) {
+  const lines = text.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && !l.startsWith(";"));
+  const explained = [];
+  for (const line of lines) {
+    const [entry] = explainLines(line + "\n", from).filter(Boolean);
+    if (entry) explained.push({ source: line, result: entry.display, why: entry.gloss });
+  }
+  return explained;
+}
+
+function breakdownFromEnglish(source, result) {
+  const src = source.trim();
+  if (!src) return [];
+  return [{ source: src, result, why: "Matched a familiar instruction pattern." }];
 }
 
 function fromNatural(text, to) {

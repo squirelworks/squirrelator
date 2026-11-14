@@ -13,7 +13,7 @@ always in the menu: alpha labels a feature, it never hides one.
 from dataclasses import dataclass
 
 from .features import Settings
-from .result import Translation
+from .result import Step, Translation
 from .translator import SUPPORTED, _engine_for, _pipeline_first, translate, translate_full
 
 AUTO = "Auto"
@@ -77,8 +77,6 @@ def format_result(t: Translation) -> str:
     parts = [t.text]
     if t.unknown:
         parts.append("Not in the data yet: " + ", ".join(t.unknown))
-    if t.breakdown and any(s.why for s in t.breakdown):
-        parts.append("Why:\n" + "\n".join(f"  {s.source}\n    {s.why}" for s in t.breakdown))
     if t.alpha:
         parts.append(f"Alpha. Confidence {round(t.confidence * 100)}%.")
     if t.second_opinion:
@@ -112,27 +110,32 @@ def _second_opinion(o: Translation) -> str:
 @dataclass(frozen=True)
 class TranslateView:
     """What the translate screen shows: main result text, primary alternatives,
-    and which engine label to show in the status line."""
+    breakdown steps, and which engine label to show in the status line."""
 
     result: str
     alternatives: tuple[str, ...]
+    breakdown: tuple[Step, ...]
     engine: str
+
+
+def _view_from_translation(t: Translation, result: str, engine: str) -> TranslateView:
+    return TranslateView(result, t.alternatives, t.breakdown, engine)
 
 
 def _translate_view(source: str, from_lang: str, to_lang: str, engine: str) -> TranslateView:
     if engine == AUTO and _pipeline_first(from_lang, to_lang):
         t = translate_full(source, from_lang, to_lang)
         if t.engine == "pipeline":
-            return TranslateView(format_result(t), t.alternatives, pipeline_label(t.alpha))
-        return TranslateView(format_rules_result(t), t.alternatives, RULES)
+            return _view_from_translation(t, format_result(t), pipeline_label(t.alpha))
+        return _view_from_translation(t, format_rules_result(t), RULES)
     if runs_pipeline(engine, from_lang, to_lang):
         t = translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
-        return TranslateView(format_result(t), t.alternatives, pipeline_label(t.alpha))
+        return _view_from_translation(t, format_result(t), pipeline_label(t.alpha))
     if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
         t = translate_full(source, from_lang, to_lang)
-        return TranslateView(format_rules_result(t), t.alternatives, RULES)
+        return _view_from_translation(t, format_rules_result(t), RULES)
     text = translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
-    return TranslateView(text, (), RULES)
+    return TranslateView(text, (), (), RULES)
 
 
 def translate_view(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> TranslateView:

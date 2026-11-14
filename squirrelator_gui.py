@@ -7,7 +7,12 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 from squirrelator.features import CUSTOM, Settings
 from squirrelator.menus import AUTO, ENGINES, PIPELINE, languages_for, translate_view
-from squirrelator.translate_ui import format_alternatives_lines, language_label, swap_translate_state
+from squirrelator.translate_ui import (
+    format_alternatives_lines,
+    format_breakdown_rows,
+    language_label,
+    swap_translate_state,
+)
 
 
 class SquirrelatorApp:
@@ -87,6 +92,7 @@ class SquirrelatorApp:
         result_shell.grid(row=0, column=2, sticky="nsew")
         result_shell.rowconfigure(1, weight=1)
         result_shell.rowconfigure(3, weight=0)
+        result_shell.rowconfigure(4, weight=0)
         result_shell.columnconfigure(0, weight=1)
 
         to_row = ttk.Frame(result_shell)
@@ -113,6 +119,37 @@ class SquirrelatorApp:
         self.alt_list.grid(row=1, column=0, sticky="ew")
         self.alt_list.bind("<Double-Button-1>", self._copy_alternative)
         self.alt_frame.grid_remove()
+
+        self.bd_frame = ttk.Frame(result_shell)
+        self.bd_frame.grid(row=3, column=0, sticky="ew", pady=(8, 0))
+        self.bd_frame.columnconfigure(0, weight=1)
+        ttk.Label(self.bd_frame, text="Breakdown", style="Muted.TLabel").grid(row=0, column=0, sticky="w")
+        bd_body = ttk.Frame(self.bd_frame)
+        bd_body.grid(row=1, column=0, sticky="ew")
+        bd_body.columnconfigure(0, weight=1)
+        bd_body.columnconfigure(1, weight=1)
+        self.bd_list = tk.Listbox(
+            bd_body, font=("Consolas", 11), height=4, activestyle="dotbox",
+            exportselection=False, highlightthickness=0,
+        )
+        self.bd_list.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        self.bd_list.bind("<<ListboxSelect>>", self._show_breakdown_detail)
+        self.bd_detail = ttk.LabelFrame(bd_body, text="Selected", padding=6)
+        self.bd_detail.grid(row=0, column=1, sticky="nsew")
+        self._bd_detail_vars = {
+            "dictionary": tk.StringVar(value="—"),
+            "meaning": tk.StringVar(value="—"),
+            "note": tk.StringVar(value="—"),
+        }
+        for i, (key, label) in enumerate(
+            (("dictionary", "Dictionary form"), ("meaning", "Meaning unit"), ("note", "Why it was placed"))
+        ):
+            ttk.Label(self.bd_detail, text=f"{label}:", style="Muted.TLabel").grid(row=i * 2, column=0, sticky="nw")
+            ttk.Label(
+                self.bd_detail, textvariable=self._bd_detail_vars[key], wraplength=280,
+            ).grid(row=i * 2 + 1, column=0, sticky="w", pady=(0, 4))
+        self._breakdown_rows = []
+        self.bd_frame.grid_remove()
 
         self.status = ttk.Label(root, text="Ready", relief="sunken", anchor="w", font=("Segoe UI", 10))
         self.status.pack(fill="x", side="bottom")
@@ -166,6 +203,7 @@ class SquirrelatorApp:
         self.source.insert("1.0", src)
         self._set_result(res)
         self._set_alternatives(())
+        self._set_breakdown(())
         self.status.config(
             text=f"Swapped — {language_label(self.from_var.get())} → {language_label(self.to_var.get())}"
         )
@@ -197,6 +235,30 @@ class SquirrelatorApp:
         text = self.alt_list.get(sel[0])
         self.root.clipboard_clear()
         self.root.clipboard_append(text)
+
+    def _set_breakdown(self, breakdown):
+        steps = breakdown if isinstance(breakdown, tuple) else tuple(breakdown or ())
+        self._breakdown_rows = format_breakdown_rows(steps)
+        self.bd_list.delete(0, "end")
+        for key in self._bd_detail_vars:
+            self._bd_detail_vars[key].set("—")
+        if self._breakdown_rows:
+            self.bd_frame.grid()
+            for row in self._breakdown_rows:
+                self.bd_list.insert("end", row.summary)
+            self.bd_list.selection_set(0)
+            self._show_breakdown_detail()
+        else:
+            self.bd_frame.grid_remove()
+
+    def _show_breakdown_detail(self, _event=None):
+        sel = self.bd_list.curselection()
+        if not sel or not self._breakdown_rows:
+            return
+        row = self._breakdown_rows[sel[0]]
+        self._bd_detail_vars["dictionary"].set(row.dictionary_form or "—")
+        self._bd_detail_vars["meaning"].set(row.meaning_unit or "—")
+        self._bd_detail_vars["note"].set(row.note or "—")
 
     def open_settings(self):
         """Simple / More / Everything, Customize and What's in the app — same
@@ -289,6 +351,7 @@ class SquirrelatorApp:
             view = translate_view(src, frm, to, engine)
             self._set_result(view.result)
             self._set_alternatives(view.alternatives)
+            self._set_breakdown(view.breakdown)
             self.status.config(text=f"Translated {language_label(frm)} → {language_label(to)} with {view.engine}")
         except Exception as e:
             self.status.config(text=f"Error: {e}")
@@ -297,6 +360,7 @@ class SquirrelatorApp:
         self.source.delete("1.0", "end")
         self._set_result("")
         self._set_alternatives(())
+        self._set_breakdown(())
         self.status.config(text="Cleared")
 
 

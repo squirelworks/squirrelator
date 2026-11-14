@@ -1,5 +1,9 @@
 """Pure helpers for the translate screen layout (Tk, web, and tests)."""
 
+from dataclasses import dataclass
+
+from .result import Step
+
 _LABELS = {
     "brainfood": "brainFOOD",
     "javascript": "JavaScript",
@@ -26,6 +30,30 @@ def format_alternatives_lines(alternatives: tuple[str, ...] | list[str]) -> list
     """User-facing alternative wordings, one line each, for the Alternatives
     section under the result."""
     return [a for a in alternatives if a]
+
+
+@dataclass(frozen=True)
+class BreakdownRow:
+    """One selectable row in the Breakdown view."""
+
+    dictionary_form: str
+    meaning_unit: str
+    note: str
+
+    @property
+    def summary(self) -> str:
+        """Short label for a list row."""
+        return self.dictionary_form or self.meaning_unit or self.note
+
+
+def format_breakdown_rows(breakdown: tuple[Step, ...] | list[Step]) -> list[BreakdownRow]:
+    """Turn pipeline or rules breakdown steps into plain-language rows for the UI."""
+    rows: list[BreakdownRow] = []
+    for step in breakdown:
+        if not (step.source or step.result or step.why):
+            continue
+        rows.append(BreakdownRow(step.source, step.result, step.why))
+    return rows
 
 
 def swap_translate_state(

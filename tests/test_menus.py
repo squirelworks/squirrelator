@@ -72,7 +72,8 @@ def test_result_text_leaves_alternatives_to_the_list():
     assert "私は好き。" not in out
     assert "Also:" not in out
     assert "Not in the data yet: xyzzy" in out
-    assert "Word by word." in out
+    assert "Why:" not in out
+    assert "Word by word." not in out
     assert out.endswith("Alpha. Confidence 33%.")
 
 
@@ -115,6 +116,16 @@ def test_translate_view_lists_primary_alternatives():
     assert view.result.startswith("I go to school by bus.")
     assert "I take the bus to school." in view.alternatives
     assert "Also:" not in view.result
+    assert "Why:" not in view.result
+    assert len(view.breakdown) == 1
+    assert view.breakdown[0].source == "バスで学校に行きます。"
+    assert "meaning matrix" in view.breakdown[0].why
+
+
+def test_translate_view_carries_rules_breakdown():
+    view = translate_view('print("hello")', "python", "english")
+    assert view.breakdown
+    assert view.breakdown[0].source == 'print("hello")'
 
 
 def test_display_is_what_every_app_shows():

@@ -9,20 +9,32 @@
   * { box-sizing: border-box; }
   body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
   header { background: linear-gradient(135deg,#1a1a2e,#0d3b36); padding: 1.2rem; text-align: center; border-bottom: 3px solid var(--accent); position: relative; }
+  #open-settings { position: absolute; right: 1rem; top: 1rem; background: #333; color: var(--text); border: 1px solid #444; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
   header h1 { margin: 0; }
   header p { margin: 0.3rem 0 0; color: var(--muted); }
-  #open-settings { position: absolute; right: 1rem; top: 1rem; background: #333; color: var(--text); border: 1px solid #444; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
-  main { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; }
-  .row { display: flex; gap: 0.8rem; margin-bottom: 0.8rem; }
+  main { max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-bottom: 1rem; }
   label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.2rem; }
   select, textarea, button { font: inherit; }
-  select { flex: 1; padding: 0.5rem; background: var(--card); color: var(--text); border: 1px solid #333; border-radius: 6px; }
-  textarea { width: 100%; min-height: 140px; padding: 0.7rem; background: var(--card); color: var(--text); border: 1px solid #333; border-radius: 6px; }
+  select { width: 100%; padding: 0.5rem; background: var(--card); color: var(--text); border: 1px solid #333; border-radius: 6px; }
+  textarea { width: 100%; flex: 1; min-height: 220px; padding: 0.7rem; background: var(--card); color: var(--text); border: 1px solid #333; border-radius: 6px; resize: vertical; }
   button { background: var(--accent); color: #000; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
   button:hover { filter: brightness(1.1); }
-  pre { background: var(--card); padding: 1rem; border-radius: 6px; white-space: pre-wrap; min-height: 120px; border: 1px solid #333; }
+  button.secondary { background: #333; color: var(--text); }
+  #out { background: var(--card); padding: 0.7rem; border-radius: 6px; white-space: pre-wrap; flex: 1; min-height: 220px; border: 1px solid #333; margin: 0; overflow: auto; }
+  .translate-workspace { display: flex; gap: 0.75rem; align-items: stretch; min-height: 280px; }
+  .pane { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--card); border: 1px solid #333; border-radius: 8px; padding: 0.75rem; }
+  .pane h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--muted); font-weight: 600; }
+  .picker { margin-bottom: 0.6rem; }
+  .swap-col { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  #swap-btn { padding: 0.55rem 0.75rem; font-size: 1.1rem; line-height: 1.2; min-width: 3.5rem; }
   .examples { margin-top: 1rem; }
   .examples button { background: #333; color: var(--text); margin: 0.2rem; font-size: 0.85rem; }
+  @media (max-width: 820px) {
+    .translate-workspace { flex-direction: column; }
+    .swap-col { padding: 0.25rem 0; }
+    textarea, #out { min-height: 160px; }
+  }
   [hidden] { display: none !important; }
   .sqf-notice { display: flex; align-items: center; gap: .5rem; margin: .75rem 0; padding: .6rem .8rem;
     background: #121a1a; border: 1px solid #1e4a44; border-radius: 10px; color: #e8e8e8; font-size: .9rem; line-height: 1.4; }
@@ -54,39 +66,49 @@
   <div id="notice" hidden></div>
   <section id="settings" hidden></section>
 
-  <div class="row">
-    <div style="flex:1">
-      <label>From</label>
-      <select id="from"></select>
-    </div>
-    <div style="flex:1">
-      <label>To</label>
-      <select id="to"></select>
-    </div>
+  <div class="toolbar">
+    <button type="button" onclick="translate()">Translate</button>
+    <button type="button" class="secondary" onclick="clearAll()">Clear</button>
+    <span id="status" style="color: var(--muted); font-size: 0.9rem;"></span>
   </div>
 
-  <label>Source</label>
-  <textarea id="source">print hello</textarea>
+  <div class="translate-workspace">
+    <section class="pane" aria-labelledby="source-heading">
+      <h2 id="source-heading">Source</h2>
+      <div class="picker">
+        <label for="from">From</label>
+        <select id="from"></select>
+      </div>
+      <textarea id="source" aria-label="Source text">print hello</textarea>
+    </section>
 
-  <div style="margin: 0.8rem 0;">
-    <button onclick="translate()">Translate</button>
+    <div class="swap-col">
+      <button type="button" id="swap-btn" title="Swap languages" onclick="swapSides()">⇄</button>
+    </div>
+
+    <section class="pane" aria-labelledby="result-heading">
+      <h2 id="result-heading">Result</h2>
+      <div class="picker">
+        <label for="to">To</label>
+        <select id="to"></select>
+      </div>
+      <pre id="out">Click Translate or try an example below.</pre>
+    </section>
   </div>
-
-  <label>Result</label>
-  <pre id="out">Click Translate or try an example below.</pre>
 
   <div class="examples">
     <label>Examples</label><br>
-    <button onclick="load('print hello','english','python')">English → Python</button>
-    <button onclick="load('for each number from 1 to 5 print it','english','quickbasic')">English → QuickBASIC</button>
-    <button onclick="load('PRINT \"Hello\"','quickbasic','english')">QuickBASIC → English</button>
-    <button onclick="load('VISIBLE \"Hi\"','lolcode','python')">LOLCODE → Python</button>
-    <button onclick="load('set count to 10','english','javascript')">Assignment → JS</button>
+    <button type="button" onclick="load('print hello','english','python')">English → Python</button>
+    <button type="button" onclick="load('for each number from 1 to 5 print it','english','quickbasic')">English → QuickBASIC</button>
+    <button type="button" onclick="load('PRINT \"Hello\"','quickbasic','english')">QuickBASIC → English</button>
+    <button type="button" onclick="load('VISIBLE \"Hi\"','lolcode','python')">LOLCODE → Python</button>
+    <button type="button" onclick="load('set count to 10','english','javascript')">Assignment → JS</button>
   </div>
 </main>
 
 <script src="features.js"></script>
 <script src="features-settings.js"></script>
+<script src="translate-ui.js"></script>
 <script>
 // Client-side rule engine (mirrors the Python package for standalone use)
 const LANG_LABELS = {
@@ -116,7 +138,7 @@ function fillSelects(keep) {
     langs.forEach((lang) => {
       const opt = document.createElement("option");
       opt.value = lang;
-      opt.textContent = LANG_LABELS[lang];
+      opt.textContent = LANG_LABELS[lang] || languageLabel(lang);
       sel.appendChild(opt);
     });
     if (prev && langs.includes(prev)) sel.value = prev;
@@ -126,17 +148,50 @@ function fillSelects(keep) {
   }
 }
 
+function setStatus(msg) {
+  document.getElementById("status").textContent = msg || "";
+}
+
 function translate() {
   const from = document.getElementById("from").value;
   const to = document.getElementById("to").value;
   const src = document.getElementById("source").value.trim();
-  document.getElementById("out").textContent = doTranslate(src, from, to);
+  if (!src) {
+    setStatus("Enter some source text");
+    return;
+  }
+  const out = doTranslate(src, from, to);
+  document.getElementById("out").textContent = out;
+  setStatus(`Translated ${languageLabel(from)} → ${languageLabel(to)}`);
+}
+
+function swapSides() {
+  const from = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
+  const source = document.getElementById("source").value;
+  const result = document.getElementById("out").textContent;
+  const [newFrom, newTo, newSource, newResult] = swapTranslateState(from, to, source, result);
+  if (!visibleLangs().includes(newFrom) || !visibleLangs().includes(newTo)) {
+    fillSelects(false);
+  }
+  document.getElementById("from").value = newFrom;
+  document.getElementById("to").value = newTo;
+  document.getElementById("source").value = newSource;
+  document.getElementById("out").textContent = newResult || "Click Translate to update the result.";
+  setStatus(`Swapped — ${languageLabel(newFrom)} → ${languageLabel(newTo)}`);
+}
+
+function clearAll() {
+  document.getElementById("source").value = "";
+  document.getElementById("out").textContent = "";
+  setStatus("Cleared");
 }
 
 function load(src, from, to) {
   document.getElementById("source").value = src;
   if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to)) {
     document.getElementById("out").textContent = "Turn on the matching switch in Settings to use this example.";
+    setStatus("Example needs a Settings switch");
     return;
   }
   document.getElementById("from").value = from;
@@ -248,6 +303,13 @@ function codeToCode(text, from, to) {
   if (!gloss || gloss.startsWith("(")) return `# Direct mapping not available\n# ${gloss}`;
   return fromNatural(gloss, to);
 }
+
+document.getElementById("source").addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    translate();
+  }
+});
 
 const settingsEl = document.getElementById("settings");
 const openBtn = document.getElementById("open-settings");

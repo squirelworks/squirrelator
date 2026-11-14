@@ -1,26 +1,31 @@
-"""Regression fixtures and report (ROADMAP Phase 5)."""
+"""Regression report (ROADMAP Phase 5): golden + TL pair accepts."""
 
 import pytest
 
 from squirrelator.regression import (
-    REGRESSION_DIR,
     load_pair_fixtures,
     measure_golden,
     measure_pairs,
+    tl_tests_dir,
     write_report,
 )
 
 
-def test_pair_fixtures_are_present_and_named():
-    fixtures = load_pair_fixtures()
-    assert fixtures, "expected tests/regression/*-english.json"
+def test_tl_tests_are_reachable():
+    path = tl_tests_dir()
+    assert path is not None and path.is_dir(), (
+        "LanguageStudentDesk translation-learner/tests not found. "
+        "Set SQUIRREL_TL_TESTS or check the repo out beside squirrelator."
+    )
+    fixtures = load_pair_fixtures(path)
+    assert fixtures, f"no translation-pair-tests/1 files in {path}"
     langs = {f["language"] for f in fixtures}
-    assert "japanese" in langs and "chinese" in langs and "klingon" in langs
-    for path in REGRESSION_DIR.glob("*-english.json"):
-        assert path.name.endswith("-english.json")
+    assert "japanese" in langs and "chinese" in langs
 
 
 def test_pair_suites_pass_on_the_pinned_data():
+    if tl_tests_dir() is None:
+        pytest.skip("LanguageStudentDesk TL tests not checked out")
     try:
         from squirrelator import data
         data.data_dir()
@@ -39,6 +44,8 @@ def test_golden_suite_still_matches():
 
 
 def test_write_report_makes_markdown(tmp_path):
+    if tl_tests_dir() is None:
+        pytest.skip("LanguageStudentDesk TL tests not checked out")
     try:
         from squirrelator import data
         data.data_dir()
@@ -49,3 +56,4 @@ def test_write_report_makes_markdown(tmp_path):
     text = out.read_text(encoding="utf-8")
     assert "Golden translations" in text and "Pipeline pair fixtures" in text
     assert report.golden.total > 0 and report.pairs
+    assert "translation-learner/tests" in report.tl_tests.replace("\\", "/")

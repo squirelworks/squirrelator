@@ -64,12 +64,12 @@ own PR, after LanguageStudentDesk's pin bump.
 ## Phase 3: A translator UI that works like Google Translate (GUI and web as twins)
 
 - [x] Auto as the default engine in the GUI, with the Pipeline offered as an alpha engine (#24, #30)
-- [ ] Two panes with the source and the result, a language picker on each side, and a swap button
-- [ ] An **Alternatives** list under the result
-- [ ] A **Breakdown** view: click a word to see its meaning unit, dictionary form and the rule that placed it
-- [ ] Unknown words highlighted, and an alpha badge for each pair
-- [ ] Pasted prose translated sentence by sentence, keeping paragraphs
-- [ ] A "Code" target group in the target picker (Phase 4)
+- [x] Two panes with the source and the result, a language picker on each side, and a swap button (#55)
+- [x] An **Alternatives** list under the result (#56)
+- [x] A **Breakdown** view: dictionary form, meaning unit and plain-language why (#57)
+- [x] Unknown words highlighted, and an alpha badge for each pair (#58)
+- [x] Pasted prose translated sentence by sentence, keeping paragraphs (#59)
+- [x] A "Code" target group in the target picker (#60)
 
 ## Phase 3a: Native apps (#25)
 

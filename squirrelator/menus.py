@@ -10,6 +10,7 @@ other pairs Rules supports, and the pipeline for the rest. All three are
 always in the menu: alpha labels a feature, it never hides one.
 """
 
+from .features import Settings
 from .result import Translation
 from .translator import SUPPORTED, _engine_for, _pipeline_first, translate, translate_full
 
@@ -38,15 +39,24 @@ def _pipeline_languages() -> list[str]:
         return []
 
 
-def languages_for(engine: str) -> list[str]:
+def _filter_langs(langs: list[str], settings: Settings | None) -> list[str]:
+    """Drop languages whose feature switch is off (joke / older code groups)."""
+    if settings is None:
+        return langs
+    return [lang for lang in langs if settings.allows_language(lang)]
+
+
+def languages_for(engine: str, settings: Settings | None = None) -> list[str]:
     """The From/To menu entries for an engine (a label from ENGINES). Auto
     offers both engines' languages: human languages A to Z, then
-    pseudocode and the programming languages in the rules order."""
-    rules = [lang for lang in _RULES_ORDER if lang in SUPPORTED]
+    pseudocode and the programming languages in the rules order. Pass
+    Settings to hide languages whose features.json switch is off."""
+    rules = _filter_langs([lang for lang in _RULES_ORDER if lang in SUPPORTED], settings)
     if engine == PIPELINE:
-        return _pipeline_languages()
+        return _filter_langs(_pipeline_languages(), settings)
     if engine == AUTO:
         human = sorted(set(_pipeline_languages()) | {"english", "klingon", "latin"})
+        human = _filter_langs(human, settings)
         return human + [lang for lang in rules if lang not in human]
     return rules
 

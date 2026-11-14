@@ -152,3 +152,20 @@ def test_a_suffix_with_a_content_meaning_is_its_own_phrase(root):
         pytest.skip("the Korean code pack arrives in squirrel-lang-data v0.1.4")
     [c] = parse(analyze("하나부터 열까지 센다.", "hangul", lex=lexicon("hangul", root)), "hangul", root=root)
     assert [p.head.text for p in c.phrases] == ["하나", "부터", "열", "센다"]
+
+
+def test_thai_yu_is_live_with_you_and_place_with_a_place_noun(root):
+    """อยู่ is live in where-live and @place after station/toilet/hotel."""
+    from squirrelator.lexicon import lexicon
+    from squirrelator.matrix import matrix
+    if "where-live" not in matrix(root).columns.get("thai", {}):
+        pytest.skip("the pinned data has no Thai where-live row yet")
+
+    def heads(text):
+        return [p.head.text for c in parse(analyze(text, "thai", lex=lexicon("thai", root)), "thai", root=root)
+                for p in c.phrases]
+
+    assert heads("คุณอยู่ที่ไหน?") == ["คุณ", "อยู่", "ที่ไหน"]
+    assert heads("สถานีอยู่ที่ไหน?") == ["สถานี", "ที่ไหน"]
+    from squirrelator.pipeline import run
+    assert run("คุณอยู่ที่ไหน?", "thai", "english", root=root).text == "Where do you live?"

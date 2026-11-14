@@ -12,41 +12,40 @@ are never moved, reused or deleted.
 
 ## Drafted, not published: v0.1.1
 
-- [x] `data/` moved to squirrel-lang-data **v0.1.4** (#41).
+- [x] `data/` moved to squirrel-lang-data **v0.1.4** (#41), then **v0.1.5**
+      (#49).
 - [x] Release PR: `release-notes/v0.1.1.md` and the version raised (#42).
 - [x] Phone app ready for Google Play: store listing, launcher icon, signed
       bundle (#43).
-- [x] Draft created by **Draft release**.
-- [ ] The owner publishes. **Not done, and the draft is now stale:** `main`
-      has moved on to data **v0.1.5** (#49) with more engine work (#44–#49),
-      so publishing the draft as it stands ships the older data and engine.
+- [x] Release notes refreshed for data **v0.1.5** and the engine work that
+      landed since the first draft (#44–#51): English as the source (#48),
+      code explained with the code pack (#46), bare 今日は (#47), bare Klingon
+      jatlh as third person (#45), Cloud Agent setup notes (#44), the v0.1.5
+      pin (#49), and the coverage report plus Chinese/Klingon miss fixes
+      (#51).
+- [x] Draft created by **Draft release** (against older `main`; refresh it
+      after the notes PR merges).
+- [ ] Re-run **Actions → Draft release → Run workflow** with `v0.1.1` so the
+      draft targets current `main`.
+- [ ] The owner publishes. Nothing is published without the owner's
+      "release".
 
-## Next (open): refresh, then publish
+## Next (open): refresh the draft, then publish
 
-Since the draft, on `main`: English as the source reads contractions and a
-word's row meaning (#48), code explained with the code pack's English rows
-(#46), a bare 今日は reads as hello (#47), a bare Klingon jatlh is third
-person (#45), the Cloud Agent setup notes (#44), and data **v0.1.5** with
-French, German and Italian columns and Latin following its fuller column (#49).
+The `v0.1.1` tag does not exist yet. `release-notes/v0.1.1.md` now names
+data v0.1.5 and lists what landed since the stale draft. After that notes
+PR is on `main`:
 
-The owner picks one; nothing is published without the owner's "release":
-
-1. **Keep the version (suggested).** The `v0.1.1` tag doesn't exist yet, so
-   one release PR updates `release-notes/v0.1.1.md` to name data v0.1.5 and
-   add the items above, with nothing else in it. Then re-run **Draft
-   release** with `v0.1.1`; it refreshes the existing draft to the new
-   `main` commit.
-2. **A new version.** A release PR raises the version to 0.1.2 in
-   `pyproject.toml` and `squirrelator.__version__` and adds
-   `release-notes/v0.1.2.md`; the v0.1.1 draft stays unpublished.
-
-Either way:
-
-- [ ] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk
+- [x] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk
       (both v0.1.5 today).
 - [ ] CI green on `main`.
-- [ ] The release PR, then **Actions → Draft release → Run workflow**, then
-      the owner publishes.
+- [ ] **Actions → Draft release → Run workflow** with `v0.1.1` (refreshes
+      the existing draft to the new `main` commit), then the owner publishes.
+
+If the owner prefers a new version number instead (v0.1.2), leave the
+v0.1.1 draft unpublished and open a release PR that raises the version in
+`pyproject.toml` and `squirrelator.__version__` and adds
+`release-notes/v0.1.2.md`.
 
 This is also the phone app's first Google Play build. Once it's published,
 LanguageStudentDesk's **squirrelator Play testing** workflow sends it to

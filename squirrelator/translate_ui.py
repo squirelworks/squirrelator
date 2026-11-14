@@ -22,6 +22,12 @@ def language_label(lang_id: str) -> str:
     return lang_id.replace("_", " ").title()
 
 
+def format_alternatives_lines(alternatives: tuple[str, ...] | list[str]) -> list[str]:
+    """User-facing alternative wordings, one line each, for the Alternatives
+    section under the result."""
+    return [a for a in alternatives if a]
+
+
 def swap_translate_state(
     from_lang: str, to_lang: str, source: str, result: str
 ) -> tuple[str, str, str, str]:

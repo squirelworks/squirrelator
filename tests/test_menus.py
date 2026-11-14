@@ -1,7 +1,18 @@
 import pytest
 
 from squirrelator import Step, Translation, data
-from squirrelator.menus import AUTO, ENGINE_IDS, ENGINES, PIPELINE, RULES, format_result, format_rules_result, languages_for, runs_pipeline
+from squirrelator.menus import (
+    AUTO,
+    ENGINE_IDS,
+    ENGINES,
+    PIPELINE,
+    RULES,
+    format_result,
+    format_rules_result,
+    languages_for,
+    runs_pipeline,
+    translate_view,
+)
 from squirrelator.translator import SUPPORTED
 
 
@@ -53,12 +64,13 @@ def test_pipeline_menu_lists_the_data_languages():
     assert langs == sorted(langs)
 
 
-def test_result_text_shows_alternatives_unknown_words_and_alpha():
+def test_result_text_leaves_alternatives_to_the_list():
     t = Translation("私好き[xyzzy]。", ("私は好き。",), (Step("I like xyzzy.", "私好き[xyzzy]。", "Word by word."),),
                     ("xyzzy",), 0.33, True)
     out = format_result(t)
     assert out.startswith("私好き[xyzzy]。")
-    assert "Also:\n  私は好き。" in out
+    assert "私は好き。" not in out
+    assert "Also:" not in out
     assert "Not in the data yet: xyzzy" in out
     assert "Word by word." in out
     assert out.endswith("Alpha. Confidence 33%.")
@@ -92,6 +104,17 @@ def test_rules_result_text_is_unchanged_without_a_second_opinion():
     out = format_rules_result(Translation("# Could not match", second_opinion=other))
     assert out == ("# Could not match\n\nSecond opinion from Pipeline (alpha), confidence 50%:\n"
                    "  Aquam bibō.\n  Not in the data yet: x")
+
+
+def test_translate_view_lists_primary_alternatives():
+    try:
+        data.data_dir()
+    except data.DataNotFound:
+        pytest.skip("squirrel-lang-data not checked out")
+    view = translate_view("バスで学校に行きます。", "japanese", "english")
+    assert view.result.startswith("I go to school by bus.")
+    assert "I take the bus to school." in view.alternatives
+    assert "Also:" not in view.result
 
 
 def test_display_is_what_every_app_shows():

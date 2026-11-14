@@ -10,6 +10,8 @@ other pairs Rules supports, and the pipeline for the rest. All three are
 always in the menu: alpha labels a feature, it never hides one.
 """
 
+from dataclasses import dataclass
+
 from .features import Settings
 from .result import Translation
 from .translator import SUPPORTED, _engine_for, _pipeline_first, translate, translate_full
@@ -69,12 +71,10 @@ def runs_pipeline(engine: str, from_lang: str, to_lang: str) -> bool:
 
 def format_result(t: Translation) -> str:
     """The result pane's text: the translation, then what a learner should
-    know about it: other wordings, words the data doesn't cover, and how
-    sure the engine is. The GUI uses it for the pipeline; the rules engine
-    keeps showing its plain text."""
+    know about it: words the data doesn't cover, how sure the engine is, and
+    a second opinion when Auto asks for one. Other wordings live in the
+    Alternatives list under the result."""
     parts = [t.text]
-    if t.alternatives:
-        parts.append("Also:\n" + "\n".join(f"  {a}" for a in t.alternatives))
     if t.unknown:
         parts.append("Not in the data yet: " + ", ".join(t.unknown))
     if t.breakdown and any(s.why for s in t.breakdown):
@@ -109,20 +109,42 @@ def _second_opinion(o: Translation) -> str:
     return "\n".join(lines)
 
 
+@dataclass(frozen=True)
+class TranslateView:
+    """What the translate screen shows: main result text, primary alternatives,
+    and which engine label to show in the status line."""
+
+    result: str
+    alternatives: tuple[str, ...]
+    engine: str
+
+
+def _translate_view(source: str, from_lang: str, to_lang: str, engine: str) -> TranslateView:
+    if engine == AUTO and _pipeline_first(from_lang, to_lang):
+        t = translate_full(source, from_lang, to_lang)
+        if t.engine == "pipeline":
+            return TranslateView(format_result(t), t.alternatives, pipeline_label(t.alpha))
+        return TranslateView(format_rules_result(t), t.alternatives, RULES)
+    if runs_pipeline(engine, from_lang, to_lang):
+        t = translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
+        return TranslateView(format_result(t), t.alternatives, pipeline_label(t.alpha))
+    if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
+        t = translate_full(source, from_lang, to_lang)
+        return TranslateView(format_rules_result(t), t.alternatives, RULES)
+    text = translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
+    return TranslateView(text, (), RULES)
+
+
+def translate_view(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> TranslateView:
+    """Structured translate screen output for the Tk GUI and web twin."""
+    return _translate_view(source, from_lang, to_lang, engine)
+
+
 def display(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> tuple[str, str]:
     """What an app shows for a translation, and which engine (a label from
     ENGINES) made it. Every app calls this, so the desktop GUI and the
     phone show the same thing: a pipeline pair's full result, a rules pair's
     plain text, and under Auto, for English, Latin and Klingon, whichever
     engine understood the source better, with the other's second opinion."""
-    if engine == AUTO and _pipeline_first(from_lang, to_lang):
-        t = translate_full(source, from_lang, to_lang)
-        if t.engine == "pipeline":
-            return format_result(t), pipeline_label(t.alpha)
-        return format_rules_result(t), RULES
-    if runs_pipeline(engine, from_lang, to_lang):
-        t = translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
-        return format_result(t), pipeline_label(t.alpha)
-    if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
-        return format_rules_result(translate_full(source, from_lang, to_lang)), RULES
-    return translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine]), RULES
+    view = _translate_view(source, from_lang, to_lang, engine)
+    return view.result, view.engine

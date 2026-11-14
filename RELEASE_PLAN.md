@@ -10,33 +10,50 @@ are never moved, reused or deleted.
 - [x] **v0.1.0** (2026-11-04): Phase 0, the `data/` submodule pinned to
       data v0.1.0, golden tests and CI.
 
-Since then, on `main`: the whole Phase 1 pipeline (Analyze, Parse,
-Interlingua, Generate, Rank), `engine="auto"` as the default with the
-Pipeline as a second opinion for Latin and Klingon, Latin and English
-inflections from the data, the `native/` Compose app with a test APK
-workflow, and `data/` at the **v0.1.3** tag (#38). See `ROADMAP.md`.
+## Drafted, not published: v0.1.1
 
-## Next: v0.1.1
+- [x] `data/` moved to squirrel-lang-data **v0.1.4** (#41).
+- [x] Release PR: `release-notes/v0.1.1.md` and the version raised (#42).
+- [x] Phone app ready for Google Play: store listing, launcher icon, signed
+      bundle (#43).
+- [x] Draft created by **Draft release**.
+- [ ] The owner publishes. **Not done, and the draft is now stale:** `main`
+      has moved on to data **v0.1.5** (#49) with more engine work (#44–#49),
+      so publishing the draft as it stands ships the older data and engine.
 
-- [ ] Optionally wait for squirrel-lang-data **v0.1.4** and a one-seam PR here
-      moving `data/` to it (the code pack, Latin and English inflection
-      tables, the grammar expansion). If the owner wants v0.1.1 sooner, it
-      ships on v0.1.3.
-- [ ] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk.
+## Next (open): refresh, then publish
+
+Since the draft, on `main`: English as the source reads contractions and a
+word's row meaning (#48), code explained with the code pack's English rows
+(#46), a bare 今日は reads as hello (#47), a bare Klingon jatlh is third
+person (#45), the Cloud Agent setup notes (#44), and data **v0.1.5** with
+French, German and Italian columns and Latin following its fuller column (#49).
+
+The owner picks one; nothing is published without the owner's "release":
+
+1. **Keep the version (suggested).** The `v0.1.1` tag doesn't exist yet, so
+   one release PR updates `release-notes/v0.1.1.md` to name data v0.1.5 and
+   add the items above, with nothing else in it. Then re-run **Draft
+   release** with `v0.1.1`; it refreshes the existing draft to the new
+   `main` commit.
+2. **A new version.** A release PR raises the version to 0.1.2 in
+   `pyproject.toml` and `squirrelator.__version__` and adds
+   `release-notes/v0.1.2.md`; the v0.1.1 draft stays unpublished.
+
+Either way:
+
+- [ ] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk
+      (both v0.1.5 today).
 - [ ] CI green on `main`.
-- [ ] A release PR adding `release-notes/v0.1.1.md` (and raising the version
-      in `pyproject.toml` and `squirrelator.__version__`), with nothing else
-      in it.
-- [ ] **Actions → Draft release → Run workflow** with `v0.1.1`.
-- [ ] The owner publishes. Nothing is released until the owner says
-      "release".
+- [ ] The release PR, then **Actions → Draft release → Run workflow**, then
+      the owner publishes.
 
-v0.1.1 is also the phone app's first Google Play build. Once it's
-published, LanguageStudentDesk's **squirrelator Play testing** workflow sends
-it to internal testing within the hour and sets the store listing; a
-hand-started run promotes it to closed testing (`native/README.md`, "Google
-Play"). The app's version comes from `pyproject.toml`, so the release PR
-doesn't touch `native/`.
+This is also the phone app's first Google Play build. Once it's published,
+LanguageStudentDesk's **squirrelator Play testing** workflow sends it to
+internal testing within the hour and sets the store listing; a hand-started
+run promotes it to closed testing (`native/README.md`, "Google Play"). The
+app's version comes from `pyproject.toml`, so the release PR doesn't touch
+`native/`.
 
 ## How the draft is made
 

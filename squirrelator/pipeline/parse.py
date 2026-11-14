@@ -107,9 +107,12 @@ def _neighbours(language: str, root) -> dict:
             for side, j in (("after", k - 1), ("before", k + 1)):
                 if 0 <= j < len(toks):
                     other, other_parts = toks[j]
-                    key = "content" if any(not m.startswith("@") for m in other_parts) else other
+                    content_parts = [m for m in other_parts if not m.startswith("@")]
+                    keys = {other, *content_parts}
+                    if content_parts:
+                        keys.add("content")
                     for role in parts:
-                        out.setdefault((text, role, side), set()).add(key)
+                        out.setdefault((text, role, side), set()).update(keys)
     return out
 
 
@@ -140,7 +143,36 @@ def _acts_as_marker(t: Token, words: list[Token], i: int, default, sides: dict, 
         return False
     if other is None:
         return False
-    return ("content" if content else other.text) in near.get((t.text, role, side), ())
+    allowed = near.get((t.text, role, side), ())
+    specific = other.text in allowed or any(
+        m in allowed for m in meanings_of(other) if m and not grammar_only(m)
+    )
+    has_content = any(not grammar_only(m) for m in ms)
+    if not specific:
+        # Generic "content" only for words that are never content themselves
+        # (pure markers). Dual readings like Thai อยู่ (live / @place) need
+        # a specific neighbour from the column.
+        return (not has_content) and content and "content" in allowed
+    if not has_content:
+        return True
+    # Dual-meaning word: if the column also wrote a neighbour on the other
+    # side (อยู่@place after station/hotel, before ที่ไหน), that side must
+    # match too — otherwise คุณอยู่ที่ไหน reads อยู่ as live, not @place.
+    other_side = "before" if side == "after" else "after"
+    back_allowed = near.get((t.text, role, other_side), ())
+    if not back_allowed:
+        return True
+    back = words[i - 1] if other_side == "after" and i > 0 else (
+        words[i + 1] if other_side == "before" and i + 1 < len(words) else None
+    )
+    # No word on the other side (住んでいます at the clause end): the primary
+    # neighbour was enough. When one is there (คุณอยู่ที่ไหน), it must be a
+    # neighbour the column actually wrote (station/hotel, not you).
+    if back is None:
+        return True
+    return back.text in back_allowed or any(
+        m in back_allowed for m in meanings_of(back) if m and not grammar_only(m)
+    )
 
 
 def _clause(tokens: list[Token], default: str | None, sides: dict, near: dict) -> Clause:

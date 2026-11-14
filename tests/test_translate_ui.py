@@ -2,7 +2,11 @@ from squirrelator import Step
 from squirrelator.translate_ui import (
     format_alternatives_lines,
     format_breakdown_rows,
+    is_natural_language,
     language_label,
+    result_footer_text,
+    segment_result_text,
+    segment_source_text,
     swap_translate_state,
 )
 
@@ -60,3 +64,27 @@ def test_swap_clears_empty_result_after_moving_text():
         'print("x")',
         "",
     )
+
+
+def test_is_natural_language():
+    assert is_natural_language("english")
+    assert is_natural_language("japanese")
+    assert not is_natural_language("python")
+    assert is_natural_language("pseudocode")
+
+
+def test_segment_result_text_highlights_brackets():
+    segs = segment_result_text("I like [xyzzy].", ("xyzzy",))
+    assert any(s.highlight and "[xyzzy]" in s.text for s in segs)
+    assert "".join(s.text for s in segs) == "I like [xyzzy]."
+
+
+def test_segment_source_text_highlights_unknown_words():
+    segs = segment_source_text("hello xyzzy world", ("xyzzy",))
+    highlighted = "".join(s.text for s in segs if s.highlight)
+    assert highlighted == "xyzzy"
+
+
+def test_result_footer_text_after_body():
+    full = "Hi.\n\nAlpha. Confidence 50%."
+    assert result_footer_text(full, "Hi.") == "Alpha. Confidence 50%."

@@ -21,7 +21,15 @@
   button { background: var(--accent); color: #000; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
   button:hover { filter: brightness(1.1); }
   button.secondary { background: #333; color: var(--text); }
-  #out { background: var(--bg); padding: 0.7rem; border-radius: 6px; white-space: pre-wrap; flex: 1; min-height: 160px; border: 1px solid #333; margin: 0; overflow: auto; }
+  #out { background: var(--bg); padding: 0.7rem; border-radius: 6px; white-space: pre-wrap; flex: 1; min-height: 120px; border: 1px solid #333; margin: 0; overflow: auto; font-family: ui-monospace, monospace; }
+  #result-footer { color: var(--muted); font-size: 0.9rem; white-space: pre-wrap; margin: 0.45rem 0 0; padding: 0.5rem 0.7rem; border-radius: 6px; border: 1px dashed #333; }
+  .unknown-token { background: rgba(255, 193, 7, 0.35); border-radius: 3px; }
+  .alpha-badge { font-size: 0.75rem; font-weight: 700; background: #5c4d00; color: #ffc107; padding: 0.15rem 0.5rem; border-radius: 4px; margin-left: auto; align-self: center; }
+  .pane-title { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.5rem; }
+  .pane-title h2 { margin: 0; flex: 0 0 auto; }
+  #source { flex: 1; min-height: 220px; padding: 0.7rem; background: var(--card); color: var(--text); border: 1px solid #333; border-radius: 6px; overflow: auto; white-space: pre-wrap; font-family: ui-monospace, monospace; outline: none; }
+  #source:empty::before { content: "Enter source text"; color: var(--muted); }
+  #source.source-highlighted { background: var(--bg); }
   .alt-block { margin-top: 0.65rem; padding-top: 0.55rem; border-top: 1px solid #333; }
   .alt-heading { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
   .alt-list { list-style: none; margin: 0; padding: 0; }
@@ -88,12 +96,14 @@
 
   <div class="translate-workspace">
     <section class="pane" aria-labelledby="source-heading">
-      <h2 id="source-heading">Source</h2>
+      <div class="pane-title">
+        <h2 id="source-heading">Source</h2>
+      </div>
       <div class="picker">
         <label for="from">From</label>
         <select id="from"></select>
       </div>
-      <textarea id="source" aria-label="Source text">print hello</textarea>
+      <div id="source" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Source text">print hello</div>
     </section>
 
     <div class="swap-col">
@@ -101,12 +111,16 @@
     </div>
 
     <section class="pane" aria-labelledby="result-heading">
-      <h2 id="result-heading">Result</h2>
+      <div class="pane-title">
+        <h2 id="result-heading">Result</h2>
+        <span id="alpha-badge" class="alpha-badge" hidden>Alpha</span>
+      </div>
       <div class="picker">
         <label for="to">To</label>
         <select id="to"></select>
       </div>
-      <pre id="out">Click Translate or try an example below.</pre>
+      <div id="out">Click Translate or try an example below.</div>
+      <div id="result-footer" hidden></div>
       <div id="alternatives" class="alt-block" hidden></div>
       <div id="breakdown" class="bd-block" hidden></div>
     </section>
@@ -168,16 +182,35 @@ function setStatus(msg) {
   document.getElementById("status").textContent = msg || "";
 }
 
+function fullResultText(body, meta) {
+  const parts = [body];
+  if (meta.unknown && meta.unknown.length) {
+    parts.push("Not in the data yet: " + meta.unknown.join(", "));
+  }
+  if (meta.alpha && meta.confidence != null) {
+    parts.push(`Alpha. Confidence ${Math.round(meta.confidence * 100)}%.`);
+  }
+  return parts.join("\n\n");
+}
+
 function translate() {
   const from = document.getElementById("from").value;
   const to = document.getElementById("to").value;
-  const src = document.getElementById("source").value.trim();
+  const src = sourcePlainText(document.getElementById("source")).trim();
   if (!src) {
     setStatus("Enter some source text");
     return;
   }
-  const { text, alternatives, breakdown } = doTranslate(src, from, to);
-  document.getElementById("out").textContent = text;
+  const { text, alternatives, breakdown, unknown, alpha, confidence } = doTranslate(src, from, to);
+  const body = text;
+  const full = fullResultText(body, { unknown, alpha, confidence });
+  renderResultPane(
+    document.getElementById("out"),
+    document.getElementById("result-footer"),
+    document.getElementById("alpha-badge"),
+    { result: full, body, unknown, alpha },
+  );
+  renderSourceHighlight(document.getElementById("source"), src, from, unknown);
   renderAlternatives(document.getElementById("alternatives"), "Alternatives", alternatives);
   renderBreakdown(document.getElementById("breakdown"), "Breakdown", breakdown);
   setStatus(`Translated ${languageLabel(from)} → ${languageLabel(to)}`);
@@ -186,31 +219,39 @@ function translate() {
 function swapSides() {
   const from = document.getElementById("from").value;
   const to = document.getElementById("to").value;
-  const source = document.getElementById("source").value;
-  const result = document.getElementById("out").textContent;
+  const source = sourcePlainText(document.getElementById("source"));
+  const out = document.getElementById("out");
+  const foot = document.getElementById("result-footer");
+  const result = (out.textContent || "") + (foot.hidden ? "" : "\n\n" + foot.textContent);
   const [newFrom, newTo, newSource, newResult] = swapTranslateState(from, to, source, result);
   if (!visibleLangs().includes(newFrom) || !visibleLangs().includes(newTo)) {
     fillSelects(false);
   }
   document.getElementById("from").value = newFrom;
   document.getElementById("to").value = newTo;
-  document.getElementById("source").value = newSource;
-  document.getElementById("out").textContent = newResult || "Click Translate to update the result.";
+  document.getElementById("source").textContent = newSource;
+  document.getElementById("alpha-badge").hidden = true;
+  foot.hidden = true;
+  foot.textContent = "";
+  out.textContent = newResult || "Click Translate to update the result.";
   renderAlternatives(document.getElementById("alternatives"), "Alternatives", []);
   renderBreakdown(document.getElementById("breakdown"), "Breakdown", []);
   setStatus(`Swapped — ${languageLabel(newFrom)} → ${languageLabel(newTo)}`);
 }
 
 function clearAll() {
-  document.getElementById("source").value = "";
+  document.getElementById("source").textContent = "";
   document.getElementById("out").textContent = "";
+  document.getElementById("result-footer").hidden = true;
+  document.getElementById("result-footer").textContent = "";
+  document.getElementById("alpha-badge").hidden = true;
   renderAlternatives(document.getElementById("alternatives"), "Alternatives", []);
   renderBreakdown(document.getElementById("breakdown"), "Breakdown", []);
   setStatus("Cleared");
 }
 
 function load(src, from, to) {
-  document.getElementById("source").value = src;
+  document.getElementById("source").textContent = src;
   if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to)) {
     document.getElementById("out").textContent = "Turn on the matching switch in Settings to use this example.";
     setStatus("Example needs a Settings switch");
@@ -224,10 +265,10 @@ function load(src, from, to) {
 function doTranslate(text, from, to) {
   from = from.toLowerCase(); to = to.toLowerCase();
   if (!SUPPORTED.includes(from) || !SUPPORTED.includes(to))
-    return { text: `Unsupported: ${from} → ${to}`, alternatives: [], breakdown: [] };
+    return { text: `Unsupported: ${from} → ${to}`, alternatives: [], breakdown: [], unknown: [], alpha: false, confidence: 0 };
   if (!SquirrelFeatures.allowsLanguage(from) || !SquirrelFeatures.allowsLanguage(to))
-    return { text: "That language is off in Settings.", alternatives: [], breakdown: [] };
-  if (from === to) return { text, alternatives: [], breakdown: [] };
+    return { text: "That language is off in Settings.", alternatives: [], breakdown: [], unknown: [], alpha: false, confidence: 0 };
+  if (from === to) return { text, alternatives: [], breakdown: [], unknown: [], alpha: false, confidence: 1 };
 
   let textOut;
   if (from === "english" || from === "pseudocode")
@@ -242,7 +283,13 @@ function doTranslate(text, from, to) {
   } else if ((from === "english" || from === "pseudocode") && to !== "english") {
     breakdown = breakdownFromEnglish(text, textOut);
   }
-  return { text: textOut, alternatives: [], breakdown };
+  const unknown = [];
+  if (textOut.includes("# No pattern matched") || textOut.startsWith("# Could not")) {
+    unknown.push(text.trim());
+  }
+  const alpha = pairShowsAlpha(from, to);
+  const confidence = unknown.length ? 0 : (textOut.startsWith("#") ? 0.5 : 1);
+  return { text: textOut, alternatives: [], breakdown, unknown, alpha, confidence };
 }
 
 function breakdownFromCode(text, from) {
@@ -356,6 +403,10 @@ document.getElementById("source").addEventListener("keydown", (e) => {
     e.preventDefault();
     translate();
   }
+});
+document.getElementById("source").addEventListener("input", () => {
+  const el = document.getElementById("source");
+  el.classList.remove("source-highlighted");
 });
 
 const settingsEl = document.getElementById("settings");

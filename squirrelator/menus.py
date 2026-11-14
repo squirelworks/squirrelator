@@ -116,26 +116,35 @@ class TranslateView:
     alternatives: tuple[str, ...]
     breakdown: tuple[Step, ...]
     engine: str
+    unknown: tuple[str, ...] = ()
+    alpha: bool = False
+    body: str = ""
+    from_lang: str = ""
 
 
-def _view_from_translation(t: Translation, result: str, engine: str) -> TranslateView:
-    return TranslateView(result, t.alternatives, t.breakdown, engine)
+def _view_from_translation(
+    t: Translation, result: str, engine: str, from_lang: str,
+) -> TranslateView:
+    return TranslateView(
+        result, t.alternatives, t.breakdown, engine,
+        t.unknown, t.alpha, t.text, from_lang,
+    )
 
 
 def _translate_view(source: str, from_lang: str, to_lang: str, engine: str) -> TranslateView:
     if engine == AUTO and _pipeline_first(from_lang, to_lang):
         t = translate_full(source, from_lang, to_lang)
         if t.engine == "pipeline":
-            return _view_from_translation(t, format_result(t), pipeline_label(t.alpha))
-        return _view_from_translation(t, format_rules_result(t), RULES)
+            return _view_from_translation(t, format_result(t), pipeline_label(t.alpha), from_lang)
+        return _view_from_translation(t, format_rules_result(t), RULES, from_lang)
     if runs_pipeline(engine, from_lang, to_lang):
         t = translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
-        return _view_from_translation(t, format_result(t), pipeline_label(t.alpha))
+        return _view_from_translation(t, format_result(t), pipeline_label(t.alpha), from_lang)
     if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
         t = translate_full(source, from_lang, to_lang)
-        return _view_from_translation(t, format_rules_result(t), RULES)
+        return _view_from_translation(t, format_rules_result(t), RULES, from_lang)
     text = translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
-    return TranslateView(text, (), (), RULES)
+    return TranslateView(text, (), (), RULES, (), False, text, from_lang)
 
 
 def translate_view(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> TranslateView:

@@ -1,7 +1,8 @@
 name: CI
 
-# Checks only. Nothing is built for download or uploaded here; releases go
-# through the hand-started Draft release workflow (see RELEASE_PLAN.md).
+# Checks and the Pipeline coverage Markdown artifact. Build outputs for
+# download still go only through the hand-started Draft release workflow
+# (see RELEASE_PLAN.md).
 on:
   pull_request:
   push:
@@ -30,6 +31,26 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -q -e ".[dev]"
       - run: python -m pytest -q
+
+  coverage:
+    # Pipeline meaning-matrix coverage table (#26 / ROADMAP Phase 5).
+    # Generated numbers only; not a release binary.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -e .
+      - name: Generate Pipeline coverage report
+        run: python3 .github/scripts/coverage_report.py -o coverage-report.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-coverage-report
+          path: coverage-report.md
+          if-no-files-found: error
 
   data-pin:
     # data/ may only point at a tagged squirrel-lang-data release on its main.

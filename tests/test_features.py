@@ -108,8 +108,13 @@ def test_menus_hide_languages_when_their_switch_is_off():
     assert "python" in rules and "english" in auto
 
 
-def test_app_features_js_matches_data():
-    """The web twin's generated copy must stay in sync with features.json."""
+def test_app_features_js_matches_data(tmp_path):
+    """The web twin's generated copy must stay in sync with features.json.
+
+    Compare the window.LSD_FEATURES payload only. CI shallow-checkouts the
+    data submodule, so gen_features.py's header SHA can differ from a local
+    full-history regenerate even when the JSON is identical.
+    """
     try:
         data.data_dir()
     except data.DataNotFound:
@@ -119,8 +124,17 @@ def test_app_features_js_matches_data():
     repo = Path(__file__).resolve().parents[1]
     gen = repo / "data" / "tools" / "gen_features.py"
     out = repo / "app" / "features.js"
-    r = subprocess.run(["python3", str(gen), str(out), "--check"], capture_output=True, text=True)
+    fresh = tmp_path / "features.js"
+    r = subprocess.run(["python3", str(gen), str(fresh)], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
+
+    def payload(text: str) -> str:
+        marker = "window.LSD_FEATURES ="
+        i = text.find(marker)
+        assert i >= 0, "missing window.LSD_FEATURES assignment"
+        return text[i:].strip()
+
+    assert payload(out.read_text(encoding="utf-8")) == payload(fresh.read_text(encoding="utf-8"))
 
 
 def test_missing_data_yields_empty_features(tmp_path, monkeypatch):

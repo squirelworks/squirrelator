@@ -74,13 +74,16 @@ def _grammar(il: Interlingua, tokens, forms) -> set[str]:
     return out
 
 
-def _row_grammar(tokens, forms=None) -> set[str]:
+def _row_grammar(tokens, forms=None, end: str = "") -> set[str]:
     """Grammar meanings a column row writes: its "@" tokens, plus what an
-    inflected form in the row carries (行きます is @polite and @present)."""
+    inflected form in the row carries (行きます is @polite and @present).
+    A question mark in the row's end (几点了？) is @question too."""
     out = set()
     for text, _, ms in tokens:
         out |= {m for m in ms.split("+") if m.startswith("@")}
         out |= {f for f in (forms or {}).get(text, ()) if f.startswith("@")}
+    if end and end[-1] in "?？؟":
+        out.add("@question")
     return out
 
 
@@ -117,7 +120,8 @@ def rank(candidates, il: Interlingua, source: str, *, root=None) -> tuple[Ranked
         for f in w.forms:
             forms[f.text] = forms[f.text] & f.features if f.text in forms else f.features
     # Only grammar the source column writes somewhere can differ.
-    marked = {m for r in mx.columns.get(source, {}).values() for m in _row_grammar(r.tokens, forms)}
+    marked = {m for r in mx.columns.get(source, {}).values()
+              for m in _row_grammar(r.tokens, forms, r.end)}
     # So can number and the past, when the source's tables list them
     # (Klingon puqpu', jIQongpu').
     marked |= {f for fs in forms.values() for f in fs if f in ("@plural", "@past")}
@@ -133,7 +137,7 @@ def rank(candidates, il: Interlingua, source: str, *, root=None) -> tuple[Ranked
             rendering = mx.columns.get(source, {}).get(c.row)
             if rendering:
                 have = _grammar(il, rendering.tokens, forms)
-                off = sorted((have ^ _row_grammar(rendering.tokens, forms)) & marked)
+                off = sorted((have ^ _row_grammar(rendering.tokens, forms, rendering.end)) & marked)
             elif source == "english" and c.row in mx.rows:
                 off = sorted(_english_marks(il) ^ _english_row_marks(c.row, root))
             else:

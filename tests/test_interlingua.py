@@ -13,7 +13,10 @@ except data.DataNotFound:
 
 
 def meaning_of(text, language, root):
-    clauses = parse(analyze(text, language, lex=lexicon(language, root)), language, root=root)
+    clauses = parse(
+        analyze(text, language, lex=lexicon(language, root), root=root),
+        language, root=root,
+    )
     return [interlingua(c, language, root=root) for c in clauses]
 
 
@@ -84,10 +87,7 @@ def test_every_matrix_row_round_trips_through_its_columns(root):
             found = [m for il in meaning_of(text, lang, root) for m in il.matches]
             if row["sentence"] not in found:
                 misses.append((lang, row["sentence"], text))
-    # 我吃饭: the word list has 吃饭 (eat a meal) as one word, which the
-    # row writes as 吃 + 饭.
-    allowed = {("chinese", "eat-food")}
-    assert {(lang, s) for lang, s, _ in misses} <= allowed, misses
+    assert misses == [], misses
 
 
 def test_english_be_is_part_of_the_rows_wording(root):

@@ -117,6 +117,12 @@ def _segment(text: str, offset: int, lex: Lexicon, *, whole_word: bool) -> list[
                 options.append((lex.suffix(piece), "suffix"))
             options.append((lex.lookup(piece), ""))
             for entries, affix in options:
+                # A gloss-only vocab card for the whole word (jIyajbe') must
+                # not beat a prefix+stem+suffix split where every piece has
+                # a meaning unit.
+                if (whole_word and not affix and i == 0 and j == n
+                        and entries and not _meant(entries)):
+                    continue
                 step = _cost(entries)
                 if entries and (best[j] is None or cost + step < best[j][0]):
                     best[j] = (cost + step, pieces + [(i, j, entries, affix)])
@@ -234,9 +240,74 @@ def _whole_utterance(text: str, tokens: list[Token], lex: Lexicon) -> list[Token
     return out
 
 
-def analyze(text: str, language: str, *, lex: Lexicon | None = None) -> list[Token]:
+def _glue_surface(parts: list[str], sep: str) -> str:
+    """Join column-style token texts the way generate.render does, without end."""
+    out, glue = "", True
+    for text in parts:
+        lead = text.startswith("-") and len(text) > 1
+        trail = text.endswith("-") and len(text) > 1
+        word = text[1 if lead else 0:len(text) - 1 if trail else len(text)]
+        out += ("" if glue or lead else sep) + word
+        glue = trail
+    return out
+
+
+def _column_utterance(text: str, tokens: list[Token], language: str, lex: Lexicon,
+                      root) -> list[Token]:
+    """When the words are exactly how a matrix column writes a row, use that
+    row's tokens. 我吃饭 is 我+吃+饭 (eat-food), not 我+吃饭 (eat alone)."""
+    from ..matrix import matrix
+
+    words = [t for t in tokens if t.kind == "word"]
+    if not words:
+        return tokens
+    said = "".join(t.text for t in words) if not lex.spaced else " ".join(t.text for t in words)
+    said_key = fold(said.replace(" ", ""))
+    best = None
+    for rendering in matrix(root).columns.get(language, {}).values():
+        surface = _glue_surface([t for t, _, _ in rendering.tokens], rendering.sep)
+        if fold(surface.replace(" ", "")) != said_key:
+            continue
+        if best is None or len(rendering.tokens) > len(best):
+            best = rendering.tokens
+    if best is None or len(best) <= len(words):
+        return tokens
+    # Rebuild word tokens from the row; keep non-word tokens in place.
+    start, end = words[0].start, words[-1].end
+    span = text[start:end]
+    built, pos = [], 0
+    for piece, _, _ in best:
+        bare = piece.strip("-") if len(piece) > 1 else piece
+        at = span.find(bare, pos)
+        if at < 0:
+            return tokens
+        entries = lex.lookup(bare) or lex.prefix(bare) or lex.suffix(bare)
+        if not entries and piece.endswith("-") and len(piece) > 1:
+            entries = lex.prefix(bare)
+        if not entries and piece.startswith("-") and len(piece) > 1:
+            entries = lex.suffix(bare)
+        affix = ("prefix" if piece.endswith("-") and len(piece) > 1
+                 else "suffix" if piece.startswith("-") and len(piece) > 1 else "")
+        # Prefer the column's reading of this token when the row lists it.
+        col = tuple(e for e in lex.lookup(bare) if e.source == "column")
+        built.append(Token(bare, start + at, start + at + len(bare), "word",
+                           col or entries, affix))
+        pos = at + len(bare)
+    out, placed = [], False
+    for token in tokens:
+        if token.kind == "word":
+            if not placed:
+                out.extend(built)
+                placed = True
+            continue
+        out.append(token)
+    return out
+
+
+def analyze(text: str, language: str, *, lex: Lexicon | None = None, root=None) -> list[Token]:
     """Tokens for text in a squirrel-lang-data language. Offsets cover the
     whole text, so joining every token's text gives the source back."""
-    lex = lex or lexicon(language)
+    lex = lex or lexicon(language, root)
     tokens = (_spaced if lex.spaced else _unspaced)(text, lex)
-    return _whole_utterance(text, tokens, lex)
+    tokens = _whole_utterance(text, tokens, lex)
+    return _column_utterance(text, tokens, language, lex, root)

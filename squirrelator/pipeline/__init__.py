@@ -42,7 +42,7 @@ def run(source: str, from_lang: str, to_lang: str, *, root=None) -> Translation:
     sep = "" if to_lang != "english" and not lexicon(to_lang, root).spaced else " "
     lex = lexicon(from_lang, root)
     picks, steps, unknown = [], [], []
-    for clause in parse(analyze(text, from_lang, lex=lex), from_lang, root=root):
+    for clause in parse(analyze(text, from_lang, lex=lex, root=root), from_lang, root=root):
         said = "".join(t.text for t in clause.tokens).strip()
         if not clause.phrases:
             continue

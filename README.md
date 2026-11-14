@@ -66,9 +66,12 @@ confidence and an alpha flag. It raises `UnsupportedLanguage` for a language
 it doesn't know.
 
 Both take an `engine`. The default, `engine="auto"`, uses the data-driven
-pipeline (alpha) for sentences between English, Latin and Klingon, the
+pipeline for sentences between English, Latin and Klingon, the
 rule-based engine for code and every other pair it supports, and the
-pipeline for a pair the rules don't support but the pipeline does. The pipeline reads every word from squirrel-lang-data and
+pipeline for a pair the rules don't support but the pipeline does.
+Pipeline pairs carry an alpha flag until their meaning-matrix column
+clears the coverage bar (#26); the CI coverage report is the source of
+those numbers. The pipeline reads every word from squirrel-lang-data and
 marks what the data doesn't cover instead of guessing:
 
 ```python

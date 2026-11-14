@@ -83,7 +83,7 @@ class SquirrelatorApp:
             combo.config(values=langs)
             var.set(default if default in langs else (langs[0] if langs else ""))
         if engine == PIPELINE and not langs:
-            self.status.config(text="Pipeline (alpha) has no languages: the language data is missing.")
+            self.status.config(text="Pipeline has no languages: the language data is missing.")
         else:
             self.status.config(text=f"Engine: {engine}")
 

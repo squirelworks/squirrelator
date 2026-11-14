@@ -52,14 +52,16 @@ def test_translate_is_the_engines_translate_with_defaults():
 
 
 def test_show_is_what_the_desktop_gui_shows_under_auto():
-    from squirrelator.menus import AUTO, PIPELINE, display
+    from squirrelator.menus import AUTO, display, pipeline_label
 
     assert bridge.show("print hello", "english", "python") == ['print("hello")', RULES]
     text, used = bridge.show("バスで学校に行きます。", "japanese", "english")
-    assert used == PIPELINE and text.startswith("I go to school by bus.") and "Alpha." in text
+    # Japanese clears the coverage bar: engine name drops alpha; no Alpha. line.
+    assert used == pipeline_label(False) == "Pipeline"
+    assert text.startswith("I go to school by bus.") and "Alpha." not in text
     shown = bridge.show("I drink water.", "english", "latin")
     assert shown == list(display("I drink water.", "english", "latin", AUTO))
-    assert shown[1] == PIPELINE and shown[0].startswith("Aquam bibō.")
+    assert shown[1] == "Pipeline" and shown[0].startswith("Aquam bibō.")
 
 
 def test_serve_answers_one_json_line_per_request():

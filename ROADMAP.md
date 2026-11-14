@@ -36,18 +36,18 @@ own PR, after LanguageStudentDesk's pin bump.
 
 ## Phase 2: Human-language translation
 
-- [ ] Pairs with the most data first. Status per pair is in #26:
-  - [ ] English↔Japanese (full column; above the 90% bar since #28, #47; alpha label still on)
-  - [ ] English↔Chinese (101 of 103 rows to English; open: 吃饭 and 几点了)
-  - [ ] English↔Korean (103 of 103 both ways on the matrix rows; alpha label still on)
-  - [ ] English↔Latin (declension and conjugation from the data, #36; full column since data v0.1.5, #49)
-  - [ ] English↔Klingon (15 of 17 rows right; open: jIyajbe' and Dajatlh'a')
-  - [ ] English↔French, German, Italian, Greek and Russian (full columns since data v0.1.5; at the bar on the matrix rows per #26, alpha label still on)
-  - [ ] English↔Taiwanese (no matrix column yet)
+- [ ] Pairs with the most data first. Status per pair is in #26 and the CI coverage report (numbers are generated, not copied here):
+  - [ ] English↔Japanese (full column; alpha follows the coverage bar)
+  - [ ] English↔Chinese (full column; alpha follows the coverage bar; #51 closed the known matrix misses)
+  - [ ] English↔Korean (full column; alpha follows the coverage bar)
+  - [ ] English↔Latin (declension and conjugation from the data, #36; full column since data v0.1.5, #49; alpha follows the coverage bar)
+  - [ ] English↔Klingon (full small column; #51 closed the known matrix misses; alpha follows the coverage bar)
+  - [ ] English↔French, German, Italian, Greek and Russian (full columns since data v0.1.5; alpha follows the coverage bar)
+  - [ ] English↔Taiwanese (no matrix column yet; stays alpha)
   - [ ] The rest of the languages, as their matrix columns arrive in squirrel-lang-data
 - [ ] Language-to-language pairs go through the interlingua, not through English strings
 - [ ] For each pair: dropped subjects and objects, tense and aspect, particles and case, counters and measure words, politeness level, word order
-- [ ] **Test sets for each pair:** every accepted translation and some rejected ones, from the matrix plus Tatoeba (CC BY 2.0 FR) with attribution. A pair's alpha label comes off only when its set passes (bar proposed in #26: 90% of column rows both ways).
+- [ ] **Test sets for each pair:** every accepted translation and some rejected ones, from the matrix plus Tatoeba (CC BY 2.0 FR) with attribution. Pipeline alpha already follows the matrix coverage bar (#26: 90% of column rows both ways); free-sentence sets are the next bar.
 - [x] English as the source: a word with several meanings reads as the one the row has (love, house, have), contractions in a row's wording count as its pieces, and English contractions come from the data (data #105)
 - [x] Spaced languages: a prefix with a content meaning heads its own phrase (French j', d', t'), a prefix may glue to a phrase (J'ai mal), and a phrase or vocab card with only a gloss doesn't swallow words that have meanings (το τσάι, l'eau)
 - [ ] Detect the source language from its script and word list, with a user override
@@ -101,6 +101,7 @@ Depends on LanguageStudentDesk#188: only scripts whose stroke data passes the fi
 
 ## Phase 5: Evaluation and integration with LSD
 
-- [ ] A regression report from every pair's test set and every code target's tests, generated in CI. **Do this first in Phase 5:** a per-column table (rows back to English as the top result, each direction) written as a CI artifact, and the alpha labels driven by it (#26).
+- [x] A per-column Pipeline coverage table (rows back to English as the top result, each direction) written as a CI artifact, with Pipeline alpha labels driven by it (#26, #51, and the pair_is_alpha follow-up)
+- [ ] A regression report from every pair's fuller test set and every code target's tests, generated in CI
 - [ ] LSD's translation learner and meaning network call squirrelator for checking and alternatives (LanguageStudentDesk#193, #194), with a PR in each repo naming the other
 - [x] Package releases (wheel) go to GitHub Releases (the hand-started Draft release workflow, #1)

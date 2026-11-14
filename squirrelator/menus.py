@@ -3,7 +3,8 @@ tkinter so it can be tested anywhere.
 
 There are two engines. "Rules" is the rule-based translator for code and a
 few phrases. "Pipeline (alpha)" translates between human languages from
-squirrel-lang-data. "Auto", the default as in translate(), uses the
+squirrel-lang-data; a result drops the alpha badge when that pair clears
+the coverage bar (#26). "Auto", the default as in translate(), uses the
 pipeline for sentences between English, Latin and Klingon, Rules for the
 other pairs Rules supports, and the pipeline for the rest. All three are
 always in the menu: alpha labels a feature, it never hides one.
@@ -82,8 +83,15 @@ def format_rules_result(t: Translation) -> str:
     return "\n\n".join([t.text] + ([_second_opinion(t.second_opinion)] if t.second_opinion else []))
 
 
+def pipeline_label(alpha: bool = True) -> str:
+    """Engine name shown for a Pipeline result: alpha only while the pair
+    is still under the coverage bar (#26). The Engine menu keeps PIPELINE
+    so a feature under test stays visible; the result text matches the pair."""
+    return PIPELINE if alpha else "Pipeline"
+
+
 def _second_opinion(o: Translation) -> str:
-    name = RULES if o.engine == "rules" else PIPELINE
+    name = RULES if o.engine == "rules" else pipeline_label(o.alpha)
     lines = [f"Second opinion from {name}, confidence {round(o.confidence * 100)}%:", f"  {o.text}"]
     lines += [f"  Also: {a}" for a in o.alternatives]
     if o.unknown:
@@ -100,10 +108,11 @@ def display(source: str, from_lang: str, to_lang: str, engine: str = AUTO) -> tu
     if engine == AUTO and _pipeline_first(from_lang, to_lang):
         t = translate_full(source, from_lang, to_lang)
         if t.engine == "pipeline":
-            return format_result(t), PIPELINE
+            return format_result(t), pipeline_label(t.alpha)
         return format_rules_result(t), RULES
     if runs_pipeline(engine, from_lang, to_lang):
-        return format_result(translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])), PIPELINE
+        t = translate_full(source, from_lang, to_lang, engine=ENGINE_IDS[engine])
+        return format_result(t), pipeline_label(t.alpha)
     if engine == AUTO and from_lang in SUPPORTED and to_lang in SUPPORTED:
         return format_rules_result(translate_full(source, from_lang, to_lang)), RULES
     return translate(source, from_lang, to_lang, engine=ENGINE_IDS[engine]), RULES

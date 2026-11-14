@@ -47,7 +47,8 @@ def test_latin_and_klingon_sentences_go_to_the_pipeline():
         pytest.skip("Klingon affix tables arrive in squirrel-lang-data v0.1.4")
     r = translate_full("I drink water.", "english", "latin")
     assert r == translate_full("I drink water.", "english", "latin", engine="pipeline")
-    assert r.text == "Aquam bibō." and r.engine == "pipeline" and r.alpha
+    assert r.text == "Aquam bibō." and r.engine == "pipeline"
+    assert r.alpha is False  # latin column clears the #26 coverage bar
     assert translate("I drink water.", "english", "latin") == r.text
     # Rules understood none of it, so it gives no second opinion.
     assert r.second_opinion is None
@@ -93,7 +94,7 @@ def test_pair_rules_rejects_goes_to_the_pipeline():
     assert translate("バスで学校に行きます。", "japanese", "english") == "I go to school by bus."
     full = translate_full("バスで学校に行きます。", "japanese", "english")
     assert full == translate_full("バスで学校に行きます。", "japanese", "english", engine="pipeline")
-    assert full.alpha
+    assert full.alpha is False  # japanese column clears the #26 coverage bar
     assert translate("I drink coffee.", "english", "hangul") == translate(
         "I drink coffee.", "english", "hangul", engine="pipeline")
 

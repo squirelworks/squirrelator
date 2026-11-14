@@ -1,0 +1,146 @@
+{
+  "schema": "squirrelator-regression-pair/1",
+  "language": "armenian",
+  "into": "english",
+  "about": "Vendored from LanguageStudentDesk translation-learner/tests/armenian-english.json accept lists; source text rendered from the pinned meaning-matrix column.",
+  "cases": [
+    {
+      "sentence": "dont-know",
+      "source": "Չգիտեմ։",
+      "expect": [
+        "I don't know.",
+        "I do not know.",
+        "Don't know."
+      ]
+    },
+    {
+      "sentence": "dont-understand",
+      "source": "Ես չեմ հասկանում։",
+      "expect": [
+        "I don't understand.",
+        "I do not understand.",
+        "I didn't understand."
+      ]
+    },
+    {
+      "sentence": "drink-water",
+      "source": "Ես ջուր եմ խմում։",
+      "expect": [
+        "I drink water.",
+        "I'm drinking water.",
+        "I drank water.",
+        "I'll drink water."
+      ]
+    },
+    {
+      "sentence": "go-school",
+      "source": "Ես դպրոց եմ գնում։",
+      "expect": [
+        "I go to school.",
+        "I'm going to school.",
+        "I went to school.",
+        "I'll go to school."
+      ]
+    },
+    {
+      "sentence": "going-home",
+      "source": "Ես տուն եմ գնում։",
+      "expect": [
+        "I am going home.",
+        "I'm going home.",
+        "I go home."
+      ]
+    },
+    {
+      "sentence": "hello",
+      "source": "Բարև։",
+      "expect": [
+        "Hello.",
+        "Hi."
+      ]
+    },
+    {
+      "sentence": "hot-today",
+      "source": "Այսօր տաք է։",
+      "expect": [
+        "It is hot today.",
+        "It's hot today.",
+        "Today is hot."
+      ]
+    },
+    {
+      "sentence": "how-much-this",
+      "source": "Սա ինչքա՞ն արժե։",
+      "expect": [
+        "How much is this?"
+      ]
+    },
+    {
+      "sentence": "i-am-student",
+      "source": "Ես ուսանող եմ։",
+      "expect": [
+        "I am a student.",
+        "I'm a student.",
+        "I'm a pupil."
+      ]
+    },
+    {
+      "sentence": "like-coffee",
+      "source": "Ես սուրճ եմ սիրում։",
+      "expect": [
+        "I like coffee.",
+        "I love coffee."
+      ]
+    },
+    {
+      "sentence": "like-tea",
+      "source": "Ես թեյ եմ սիրում։",
+      "expect": [
+        "I like tea.",
+        "I love tea."
+      ]
+    },
+    {
+      "sentence": "speak-english",
+      "source": "Անգլերեն խոսու՞մ եք։",
+      "expect": [
+        "Do you speak English?",
+        "Speak English?"
+      ]
+    },
+    {
+      "sentence": "thank-you",
+      "source": "Շնորհակալություն։",
+      "expect": [
+        "Thank you.",
+        "Thanks."
+      ]
+    },
+    {
+      "sentence": "this-is-book",
+      "source": "Սա գիրք է։",
+      "expect": [
+        "This is a book.",
+        "It's a book."
+      ]
+    },
+    {
+      "sentence": "want-coffee",
+      "source": "Ես սուրճ եմ ուզում։",
+      "expect": [
+        "I want coffee.",
+        "I'd like coffee."
+      ]
+    },
+    {
+      "sentence": "where-going",
+      "source": "Որտե՞ղ ես գնում։",
+      "expect": [
+        "Where are you going?",
+        "Where do you go?",
+        "Where are you headed?",
+        "Where going?"
+      ]
+    }
+  ]
+}

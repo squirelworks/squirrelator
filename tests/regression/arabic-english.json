@@ -1,0 +1,108 @@
+{
+  "schema": "squirrelator-regression-pair/1",
+  "language": "arabic",
+  "into": "english",
+  "about": "Vendored from LanguageStudentDesk translation-learner/tests/arabic-english.json accept lists; source text rendered from the pinned meaning-matrix column.",
+  "cases": [
+    {
+      "sentence": "dont-understand",
+      "source": "أنا لا أفهم.",
+      "expect": [
+        "I don't understand.",
+        "I do not understand.",
+        "I didn't understand."
+      ]
+    },
+    {
+      "sentence": "drink-water",
+      "source": "أشرب الماء.",
+      "expect": [
+        "I drink water.",
+        "I'm drinking water.",
+        "I drank water.",
+        "I'll drink water.",
+        "Drinking water."
+      ]
+    },
+    {
+      "sentence": "from-egypt",
+      "source": "أنا من مصر.",
+      "expect": [
+        "I am from Egypt.",
+        "I'm from Egypt."
+      ]
+    },
+    {
+      "sentence": "good-morning",
+      "source": "صباح الخير.",
+      "expect": [
+        "Good morning."
+      ]
+    },
+    {
+      "sentence": "how-much-this",
+      "source": "بكم هذا؟",
+      "expect": [
+        "How much is this?"
+      ]
+    },
+    {
+      "sentence": "i-am-student",
+      "source": "أنا طالب.",
+      "expect": [
+        "I am a student.",
+        "I'm a student.",
+        "I'm a pupil."
+      ]
+    },
+    {
+      "sentence": "live-cairo",
+      "source": "أسكن في القاهرة.",
+      "expect": [
+        "I live in Cairo.",
+        "I'm living in Cairo.",
+        "Live in Cairo."
+      ]
+    },
+    {
+      "sentence": "speak-arabic",
+      "source": "هل تتكلم العربية؟",
+      "expect": [
+        "Do you speak Arabic?"
+      ]
+    },
+    {
+      "sentence": "thank-you",
+      "source": "شكرا.",
+      "expect": [
+        "Thank you.",
+        "Thanks."
+      ]
+    },
+    {
+      "sentence": "this-is-book",
+      "source": "هذا كتاب.",
+      "expect": [
+        "This is a book.",
+        "It's a book."
+      ]
+    },
+    {
+      "sentence": "want-coffee",
+      "source": "أريد قهوة.",
+      "expect": [
+        "I want coffee.",
+        "I'd like coffee.",
+        "Want coffee."
+      ]
+    },
+    {
+      "sentence": "where-station",
+      "source": "أين المحطة؟",
+      "expect": [
+        "Where is the station?",
+        "Where's the station?"
+      ]
+    }
+  ]
+}

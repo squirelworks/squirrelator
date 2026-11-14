@@ -1,0 +1,186 @@
+{
+  "schema": "squirrelator-regression-pair/1",
+  "language": "latin",
+  "into": "english",
+  "about": "Vendored from LanguageStudentDesk translation-learner/tests/latin-english.json accept lists; source text rendered from the pinned meaning-matrix column.",
+  "cases": [
+    {
+      "sentence": "bus-school",
+      "source": "Laophorō ad scholam eō.",
+      "expect": [
+        "I go to school by bus.",
+        "I take the bus to school.",
+        "I'm going to school by bus.",
+        "I take a bus to school",
+        "I am taking the bus to school",
+        "I ride the bus to school.",
+        "I will go to school by bus.",
+        "I went to school by bus.",
+        "Going to school by bus.",
+        "By bus, I go to school.",
+        "took a bus to school",
+        "Taking the bus to school."
+      ]
+    },
+    {
+      "sentence": "came-train",
+      "source": "Trāmine vēnī.",
+      "expect": [
+        "I came by train.",
+        "I came on the train.",
+        "Came by train.",
+        "I have come by train."
+      ]
+    },
+    {
+      "sentence": "go-school",
+      "source": "Ad scholam eō.",
+      "expect": [
+        "I go to school.",
+        "I'm going to school.",
+        "Going to school.",
+        "I went to school.",
+        "I'll go to school."
+      ]
+    },
+    {
+      "sentence": "drink-water",
+      "source": "Aquam bibō.",
+      "expect": [
+        "I drink water.",
+        "I'm drinking water.",
+        "I drank water.",
+        "I'll drink water.",
+        "Drinking water."
+      ]
+    },
+    {
+      "sentence": "i-am-student",
+      "source": "Discipulus sum.",
+      "expect": [
+        "I am a student.",
+        "I'm a student.",
+        "I'm a pupil.",
+        "A student."
+      ]
+    },
+    {
+      "sentence": "dont-understand",
+      "source": "Nōn intellegō.",
+      "expect": [
+        "I don't understand.",
+        "I do not understand.",
+        "I didn't understand.",
+        "Don't understand."
+      ]
+    },
+    {
+      "sentence": "go-tokyo",
+      "source": "Tōkium īre volō.",
+      "expect": [
+        "I want to go to Tokyo.",
+        "I'd like to go to Tokyo.",
+        "I wanna go to Tokyo.",
+        "Want to go to Tokyo."
+      ]
+    },
+    {
+      "sentence": "lunch-restaurant",
+      "source": "In caupōnā prandeō.",
+      "expect": [
+        "I eat lunch at a restaurant.",
+        "I have lunch at the restaurant.",
+        "I'll have lunch at a restaurant.",
+        "I ate lunch in a restaurant.",
+        "Eat lunch at a restaurant."
+      ]
+    },
+    {
+      "sentence": "met-friend",
+      "source": "Herī amīcō occurrī.",
+      "expect": [
+        "I met a friend yesterday.",
+        "Yesterday I met a friend.",
+        "I saw a friend yesterday.",
+        "Met a friend yesterday."
+      ]
+    },
+    {
+      "sentence": "like-coffee",
+      "source": "Cafēum mihi placet.",
+      "expect": [
+        "I like coffee.",
+        "I love coffee."
+      ]
+    },
+    {
+      "sentence": "dont-know",
+      "source": "Nesciō.",
+      "expect": [
+        "I don't know.",
+        "I do not know.",
+        "Don't know."
+      ]
+    },
+    {
+      "sentence": "where-going",
+      "source": "Quō īs?",
+      "expect": [
+        "Where are you going?",
+        "Where do you go?",
+        "Where are you headed?",
+        "Where going?"
+      ]
+    },
+    {
+      "sentence": "give-water",
+      "source": "Dā mihi aquam quaesō.",
+      "expect": [
+        "Please give me water.",
+        "Give me water, please."
+      ]
+    },
+    {
+      "sentence": "there-is-cat",
+      "source": "Fēlēs adest.",
+      "expect": [
+        "There is a cat.",
+        "There's a cat."
+      ]
+    },
+    {
+      "sentence": "speak-english",
+      "source": "Loquerisne Anglice?",
+      "expect": [
+        "Do you speak English?",
+        "Speak English?"
+      ]
+    },
+    {
+      "sentence": "want-coffee",
+      "source": "Cafēum volō.",
+      "expect": [
+        "I want coffee.",
+        "I'd like coffee.",
+        "Want coffee."
+      ]
+    },
+    {
+      "sentence": "hot-today",
+      "source": "Hodiē calidum est.",
+      "expect": [
+        "It is hot today.",
+        "It's hot today.",
+        "Today is hot."
+      ]
+    },
+    {
+      "sentence": "live-beijing",
+      "source": "Pekīnī habitō.",
+      "expect": [
+        "I live in Beijing.",
+        "Live in Beijing."
+      ]
+    }
+  ]
+}

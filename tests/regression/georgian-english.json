@@ -1,0 +1,153 @@
+{
+  "schema": "squirrelator-regression-pair/1",
+  "language": "georgian",
+  "into": "english",
+  "about": "Vendored from LanguageStudentDesk translation-learner/tests/georgian-english.json accept lists; source text rendered from the pinned meaning-matrix column.",
+  "cases": [
+    {
+      "sentence": "dont-know",
+      "source": "არ ვიცი.",
+      "expect": [
+        "I don't know.",
+        "I do not know.",
+        "Don't know."
+      ]
+    },
+    {
+      "sentence": "dont-understand",
+      "source": "არ მესმის.",
+      "expect": [
+        "I don't understand.",
+        "I do not understand.",
+        "I didn't understand.",
+        "Don't understand."
+      ]
+    },
+    {
+      "sentence": "drink-water",
+      "source": "წყალს ვსვამ.",
+      "expect": [
+        "I drink water.",
+        "I'm drinking water.",
+        "I drank water.",
+        "I'll drink water.",
+        "Drinking water."
+      ]
+    },
+    {
+      "sentence": "go-school",
+      "source": "სკოლაში მივდივარ.",
+      "expect": [
+        "I go to school.",
+        "I'm going to school.",
+        "Going to school.",
+        "I went to school.",
+        "I'll go to school."
+      ]
+    },
+    {
+      "sentence": "going-home",
+      "source": "სახლიში მივდივარ.",
+      "expect": [
+        "I am going home.",
+        "I'm going home.",
+        "I go home.",
+        "Going home."
+      ]
+    },
+    {
+      "sentence": "hello",
+      "source": "გამარჯობა.",
+      "expect": [
+        "Hello.",
+        "Hi."
+      ]
+    },
+    {
+      "sentence": "hot-today",
+      "source": "დღეს ცხელია.",
+      "expect": [
+        "It is hot today.",
+        "It's hot today.",
+        "Today is hot."
+      ]
+    },
+    {
+      "sentence": "how-much-this",
+      "source": "ეს რამდენი ღირს?",
+      "expect": [
+        "How much is this?"
+      ]
+    },
+    {
+      "sentence": "i-am-student",
+      "source": "მე სტუდენტი ვარ.",
+      "expect": [
+        "I am a student.",
+        "I'm a student.",
+        "I'm a pupil."
+      ]
+    },
+    {
+      "sentence": "like-coffee",
+      "source": "ყავა მომწონს.",
+      "expect": [
+        "I like coffee.",
+        "I love coffee.",
+        "Like coffee."
+      ]
+    },
+    {
+      "sentence": "like-tea",
+      "source": "ჩაი მომწონს.",
+      "expect": [
+        "I like tea.",
+        "I love tea.",
+        "Like tea."
+      ]
+    },
+    {
+      "sentence": "speak-english",
+      "source": "ინგლისურად ლაპარაკობთ?",
+      "expect": [
+        "Do you speak English?",
+        "Speak English?"
+      ]
+    },
+    {
+      "sentence": "thank-you",
+      "source": "მადლობა.",
+      "expect": [
+        "Thank you.",
+        "Thanks."
+      ]
+    },
+    {
+      "sentence": "this-is-book",
+      "source": "ეს წიგნია.",
+      "expect": [
+        "This is a book.",
+        "It's a book."
+      ]
+    },
+    {
+      "sentence": "want-coffee",
+      "source": "ყავა მინდა.",
+      "expect": [
+        "I want coffee.",
+        "I'd like coffee.",
+        "Want coffee."
+      ]
+    },
+    {
+      "sentence": "where-going",
+      "source": "სად მიდიხართ?",
+      "expect": [
+        "Where are you going?",
+        "Where do you go?",
+        "Where are you headed?",
+        "Where going?"
+      ]
+    }
+  ]
+}

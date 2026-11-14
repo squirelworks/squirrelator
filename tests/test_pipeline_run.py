@@ -67,3 +67,21 @@ def test_kanji_konnichiwa_is_hello_and_a_sentence_stays_today(root):
 def test_same_language_and_empty_source(root):
     assert run(" 学生 ", "japanese", "japanese", root=root).text == "学生"
     assert run("", "japanese", "english", root=root).text == ""
+
+
+def test_chinese_eat_food_and_what_time_round_trip(root):
+    # Issue #26 / FUTURE-WORK P1.4: 我吃饭 and 几点了？ were the last Chinese misses.
+    assert run("我吃饭。", "chinese", "english", root=root).text == "I eat the food."
+    assert run("几点了？", "chinese", "english", root=root).text == "What time is it?"
+    assert run("几点了", "chinese", "english", root=root).text == "What time is it?"
+
+
+def test_klingon_dont_understand_and_question_suffix(root):
+    # jIyajbe' is a gloss-only phrase card; the column is jI- + yaj + -be'.
+    assert run("jIyajbe'", "klingon", "english", root=root).text == "I don't understand."
+    # Full speak-klingon row; bare Dajatlh'a' has no klingon meaning in the
+    # data, so it glosses as a yes-no question about speaking.
+    assert run("tlhIngan Hol Dajatlh'a'", "klingon", "english", root=root).text == (
+        "Do you speak Klingon?"
+    )
+    assert run("Dajatlh'a'", "klingon", "english", root=root).text == "You speak?"

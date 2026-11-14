@@ -218,7 +218,9 @@ def _from_words(il: Interlingua, target: str, mx: Matrix, root) -> Candidate:
                 found = _uncapped(mx, target, found) if any(plan.words) else found
                 (before if placement(role) == "before" else after).append(found)
         pairs += before + words + after
-    question = "@question" in il.features
+    # A question suffix on the verb (Klingon -'a') is a question too, not
+    # only a clause-level question mark.
+    question = "@question" in il.features or any("@question" in u.roles for u in il.units)
     for feature in il.features:
         found = _word(mx, target, feature, root)
         if found:

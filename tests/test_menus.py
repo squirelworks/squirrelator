@@ -128,6 +128,18 @@ def test_translate_view_carries_rules_breakdown():
     assert view.breakdown[0].source == 'print("hello")'
 
 
+def test_translate_view_exposes_unknown_alpha_and_body():
+    try:
+        data.data_dir()
+    except data.DataNotFound:
+        pytest.skip("squirrel-lang-data not checked out")
+    view = translate_view("I like xyzzy.", "english", "japanese", PIPELINE)
+    assert view.body == view.result.split("\n\n")[0] or view.body
+    assert "xyzzy" in view.unknown
+    assert view.from_lang == "english"
+    assert isinstance(view.alpha, bool)
+
+
 def test_display_is_what_every_app_shows():
     from squirrelator import translate
     from squirrelator.menus import display, pipeline_label

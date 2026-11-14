@@ -8,9 +8,14 @@ from tkinter import ttk, scrolledtext
 from squirrelator.features import CUSTOM, Settings
 from squirrelator.menus import AUTO, ENGINES, PIPELINE, languages_for, translate_view
 from squirrelator.translate_ui import (
+    TextSegment,
     format_alternatives_lines,
     format_breakdown_rows,
+    is_natural_language,
     language_label,
+    result_footer_text,
+    segment_result_text,
+    segment_source_text,
     swap_translate_state,
 )
 
@@ -83,6 +88,7 @@ class SquirrelatorApp:
         self.source = scrolledtext.ScrolledText(source_shell, font=("Consolas", 13), wrap="word", height=12)
         self.source.grid(row=1, column=0, sticky="nsew")
         self.source.insert("1.0", "print hello")
+        self.source.tag_configure("unknown", background="#fff3cd")
 
         swap_col = ttk.Frame(body)
         swap_col.grid(row=0, column=1, sticky="ns", padx=6)
@@ -98,6 +104,12 @@ class SquirrelatorApp:
         to_row = ttk.Frame(result_shell)
         to_row.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         ttk.Label(to_row, text="To:").pack(side="left")
+        self.alpha_badge = tk.Label(
+            to_row, text="Alpha", bg="#5c4d00", fg="#ffc107",
+            font=("Segoe UI", 9, "bold"), padx=6, pady=1,
+        )
+        self.alpha_badge.pack(side="right")
+        self.alpha_badge.pack_forget()
         self.to_var = tk.StringVar(value="python")
         self.to_combo = ttk.Combobox(
             to_row, textvariable=self.to_var, values=self._langs(), state="readonly", width=20,
@@ -107,6 +119,8 @@ class SquirrelatorApp:
         self.result = scrolledtext.ScrolledText(result_shell, font=("Consolas", 13), wrap="word",
                                                 state="disabled", height=12)
         self.result.grid(row=1, column=0, sticky="nsew")
+        self.result.tag_configure("unknown", background="#fff3cd")
+        self.result.tag_configure("footer", foreground="gray")
 
         self.alt_frame = ttk.Frame(result_shell)
         self.alt_frame.grid(row=2, column=0, sticky="ew", pady=(8, 0))
@@ -201,9 +215,11 @@ class SquirrelatorApp:
         self.to_var.set(to if to in langs else (langs[1] if len(langs) > 1 else to))
         self.source.delete("1.0", "end")
         self.source.insert("1.0", src)
-        self._set_result(res)
+        self._set_result_text(res)
         self._set_alternatives(())
         self._set_breakdown(())
+        self._set_alpha_badge(False)
+        self._clear_source_highlight()
         self.status.config(
             text=f"Swapped — {language_label(self.from_var.get())} → {language_label(self.to_var.get())}"
         )
@@ -211,12 +227,65 @@ class SquirrelatorApp:
     def _result_text(self) -> str:
         return self.result.get("1.0", "end").rstrip("\n")
 
-    def _set_result(self, text: str):
+    def _insert_segments(self, widget: scrolledtext.ScrolledText, segments: list[TextSegment], tag: str):
+        for seg in segments:
+            if not seg.text:
+                continue
+            start = widget.index("end-1c")
+            widget.insert("end", seg.text)
+            if seg.highlight:
+                widget.tag_add(tag, start, "end-1c")
+
+    def _set_result_text(self, text: str):
         self.result.config(state="normal")
         self.result.delete("1.0", "end")
+        self.result.tag_remove("unknown", "1.0", "end")
+        self.result.tag_remove("footer", "1.0", "end")
         if text:
             self.result.insert("1.0", text)
         self.result.config(state="disabled")
+
+    def _set_alpha_badge(self, show: bool):
+        if show:
+            self.alpha_badge.pack(side="right")
+        else:
+            self.alpha_badge.pack_forget()
+
+    def _clear_source_highlight(self):
+        self.source.tag_remove("unknown", "1.0", "end")
+
+    def _highlight_source(self, source: str, unknown: tuple[str, ...]):
+        self._clear_source_highlight()
+        if not unknown:
+            return
+        for seg in segment_source_text(source, unknown):
+            if not seg.text or not seg.highlight:
+                continue
+            start = "1.0"
+            while True:
+                at = self.source.search(seg.text, start, stopindex="end", exact=True)
+                if not at:
+                    break
+                end = f"{at}+{len(seg.text)}c"
+                self.source.tag_add("unknown", at, end)
+                start = end
+
+    def _set_result_view(self, view):
+        body = view.body or view.result
+        footer = result_footer_text(view.result, body)
+        self.result.config(state="normal")
+        self.result.delete("1.0", "end")
+        self.result.tag_remove("unknown", "1.0", "end")
+        self.result.tag_remove("footer", "1.0", "end")
+        self._insert_segments(self.result, segment_result_text(body, view.unknown), "unknown")
+        if footer:
+            if self.result.index("end-1c") != "1.0":
+                self.result.insert("end", "\n\n")
+            foot_start = self.result.index("end-1c")
+            self.result.insert("end", footer)
+            self.result.tag_add("footer", foot_start, "end-1c")
+        self.result.config(state="disabled")
+        self._set_alpha_badge(view.alpha)
 
     def _set_alternatives(self, alternatives):
         lines = format_alternatives_lines(alternatives)
@@ -349,18 +418,24 @@ class SquirrelatorApp:
             engine = self.engine_var.get()
             frm, to = self.from_var.get(), self.to_var.get()
             view = translate_view(src, frm, to, engine)
-            self._set_result(view.result)
+            self._set_result_view(view)
             self._set_alternatives(view.alternatives)
             self._set_breakdown(view.breakdown)
+            if is_natural_language(frm) and view.unknown:
+                self._highlight_source(src, view.unknown)
+            else:
+                self._clear_source_highlight()
             self.status.config(text=f"Translated {language_label(frm)} → {language_label(to)} with {view.engine}")
         except Exception as e:
             self.status.config(text=f"Error: {e}")
 
     def clear(self):
         self.source.delete("1.0", "end")
-        self._set_result("")
+        self._set_result_text("")
         self._set_alternatives(())
         self._set_breakdown(())
+        self._set_alpha_badge(False)
+        self._clear_source_highlight()
         self.status.config(text="Cleared")
 
 

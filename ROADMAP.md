@@ -2,10 +2,18 @@
 
 Each phase is a series of one-seam PRs. Phases can overlap once the previous
 phase's foundations have merged. Tick a box when the PR that finishes it
-merges, and name the PR on the line. Status as of 2026-11-05; the platform
-handoff brief is LanguageStudentDesk's
-[`docs/HANDOFF.md`](https://github.com/squirelworks/LanguageStudentDesk/blob/main/docs/HANDOFF.md).
+merges, and name the PR on the line. Status as of 2026-11-14, with `data/`
+at squirrel-lang-data **v0.1.5** (#49). Every unticked box is open for the
+next agent (Cursor or Codex). The platform handoff brief is LanguageStudentDesk's
+[`docs/HANDOFF.md`](https://github.com/squirelworks/LanguageStudentDesk/blob/main/docs/HANDOFF.md),
+and the suggested order, risks and working lessons are in its
+[`docs/FUTURE-WORK.md`](https://github.com/squirelworks/LanguageStudentDesk/blob/main/docs/FUTURE-WORK.md).
 Open issues: #25 (phone app) and #26 (Pipeline vs Rules coverage).
+
+How to work, learned the hard way: open **few, sizeable PRs here, one theme
+each, and merge them one after another**. A data change goes to
+squirrel-lang-data first; `data/` moves only to a published data tag, in its
+own PR, after LanguageStudentDesk's pin bump.
 
 ## Phase 0: Bootstrap the repo so it's safe to work in
 
@@ -24,16 +32,17 @@ Open issues: #25 (phone app) and #26 (Pipeline vs Rules coverage).
 - [x] **Rank:** score candidates with a note (#19, #23, #28)
 - [x] `Translation(text, alternatives, breakdown, unknown, confidence, alpha)` and `translate_full()`; `translate()` still returns the text (#12)
 - [x] `translate(engine="pipeline")` (#22), then `engine="auto"` as the default: code pairs stay on Rules, human-language pairs go to the Pipeline (#27)
-- [x] The `squirrel-lang-data` submodule at `data/` (#9), found through `SQUIRREL_LANG_DATA` or `data/`; CI fails unless it's pinned to a tagged data release on `main` (#11); pinned to v0.1.3 (#38)
+- [x] The `squirrel-lang-data` submodule at `data/` (#9), found through `SQUIRREL_LANG_DATA` or `data/`; CI fails unless it's pinned to a tagged data release on `main` (#11); pinned to v0.1.3 (#38), v0.1.4 (#41) and v0.1.5 (#49)
 
 ## Phase 2: Human-language translation
 
 - [ ] Pairs with the most data first. Status per pair is in #26:
-  - [ ] English↔Japanese (89-row column; 71–79/89 to English)
-  - [ ] English↔Chinese (89-row column; 80/89 to English)
-  - [ ] English↔Korean (89-row column; 86/89 to English)
-  - [ ] English↔Latin (declension and conjugation from the data, #36)
-  - [ ] English↔Klingon (8 of 17 rows right; not looked into)
+  - [ ] English↔Japanese (full column; above the 90% bar since #28, #47; alpha label still on)
+  - [ ] English↔Chinese (101 of 103 rows to English; open: 吃饭 and 几点了)
+  - [ ] English↔Korean (103 of 103 both ways on the matrix rows; alpha label still on)
+  - [ ] English↔Latin (declension and conjugation from the data, #36; full column since data v0.1.5, #49)
+  - [ ] English↔Klingon (15 of 17 rows right; open: jIyajbe' and Dajatlh'a')
+  - [ ] English↔French, German, Italian, Greek and Russian (full columns since data v0.1.5; at the bar on the matrix rows per #26, alpha label still on)
   - [ ] English↔Taiwanese (no matrix column yet)
   - [ ] The rest of the languages, as their matrix columns arrive in squirrel-lang-data
 - [ ] Language-to-language pairs go through the interlingua, not through English strings
@@ -86,12 +95,12 @@ Depends on LanguageStudentDesk#188: only scripts whose stroke data passes the fi
 - [ ] An **intent grammar** from English (and later other languages through the interlingua): output, variables, arithmetic and comparison, if/else, loops, functions, lists and maps, input, files
 - [ ] Generators in LSD's order: modern (Python, C, C++, C#, JavaScript, Rust, Go, BASIC and Visual Basic, modern Delphi and Pascal, SQL, shell), then older (QuickBASIC, COBOL, Fortran, Z80), then joke (brainFOOD, LOLCODE). Keyword maps live as data in squirrel-lang-data.
 - [ ] Code back to prose, and code to code through the intent graph, replacing today's regex mapping
-- [ ] **Code explained in your language:** Rules explains code in English, the Pipeline takes it into any language with a column. Needs the code pack (squirrel-lang-data#56, in data v0.1.4); then the explanation templates switch to the pack's English rows.
+- [x] **Code explained in your language:** Rules explains code in English, the Pipeline takes it into any language with a column, using the code pack's English rows (#46, closes squirrel-lang-data#56). Klingon has no code-pack column yet (#26).
 - [ ] Every generated program CI can run is run in the tests, with its output checked
 - [ ] A sentence it can't map becomes a comment saying it wasn't understood
 
 ## Phase 5: Evaluation and integration with LSD
 
-- [ ] A regression report from every pair's test set and every code target's tests, generated in CI
+- [ ] A regression report from every pair's test set and every code target's tests, generated in CI. **Do this first in Phase 5:** a per-column table (rows back to English as the top result, each direction) written as a CI artifact, and the alpha labels driven by it (#26).
 - [ ] LSD's translation learner and meaning network call squirrelator for checking and alternatives (LanguageStudentDesk#193, #194), with a PR in each repo naming the other
 - [x] Package releases (wheel) go to GitHub Releases (the hand-started Draft release workflow, #1)

@@ -17,6 +17,7 @@
   label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.2rem; }
   select, textarea, button { font: inherit; }
   select { width: 100%; padding: 0.5rem; background: var(--card); color: var(--text); border: 1px solid #333; border-radius: 6px; }
+  select optgroup { color: var(--muted); font-weight: 600; font-style: normal; }
   textarea { width: 100%; flex: 1; min-height: 220px; padding: 0.7rem; background: var(--card); color: var(--text); border: 1px solid #333; border-radius: 6px; resize: vertical; }
   button { background: var(--accent); color: #000; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
   button:hover { filter: brightness(1.1); }
@@ -157,25 +158,40 @@ const LANG_LABELS = {
 const SUPPORTED = Object.keys(LANG_LABELS);
 
 function visibleLangs() {
-  return SUPPORTED.filter((id) => SquirrelFeatures.allowsLanguage(id));
+  return RULES_LANG_ORDER.filter(
+    (id) => SUPPORTED.includes(id) && SquirrelFeatures.allowsLanguage(id),
+  );
+}
+
+function appendPickerOptions(select, entries) {
+  let group = null;
+  for (const entry of entries) {
+    if (entry.kind === "header") {
+      group = document.createElement("optgroup");
+      group.label = entry.value;
+      select.appendChild(group);
+      continue;
+    }
+    const opt = document.createElement("option");
+    opt.value = entry.value;
+    opt.textContent = LANG_LABELS[entry.value] || languageLabel(entry.value);
+    (group || select).appendChild(opt);
+  }
 }
 
 function fillSelects(keep) {
   const langs = visibleLangs();
+  const entries = buildLanguagePickerEntries(langs);
+  const langIds = langs;
   for (const id of ["from", "to"]) {
     const sel = document.getElementById(id);
     const prev = keep && sel.value;
     sel.innerHTML = "";
-    langs.forEach((lang) => {
-      const opt = document.createElement("option");
-      opt.value = lang;
-      opt.textContent = LANG_LABELS[lang] || languageLabel(lang);
-      sel.appendChild(opt);
-    });
-    if (prev && langs.includes(prev)) sel.value = prev;
-    else if (id === "from" && langs.includes("english")) sel.value = "english";
-    else if (id === "to" && langs.includes("python")) sel.value = "python";
-    else if (langs.length) sel.value = langs[0];
+    appendPickerOptions(sel, entries);
+    if (prev && langIds.includes(prev)) sel.value = prev;
+    else if (id === "from" && langIds.includes("english")) sel.value = "english";
+    else if (id === "to" && langIds.includes("python")) sel.value = "python";
+    else if (langIds.length) sel.value = langIds[0];
   }
 }
 

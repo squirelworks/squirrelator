@@ -5,6 +5,16 @@ const CODE_LANGS = new Set([
   "z80", "sql", "shell",
 ]);
 
+const CODE_PICKER_GROUP = "Code";
+
+/** Rules-engine language order (mirrors squirrelator.translate_ui.RULES_LANG_ORDER). */
+const RULES_LANG_ORDER = [
+  "english", "klingon", "latin", "pseudocode",
+  "javascript", "python", "shell", "sql",
+  "quickbasic", "z80",
+  "brainfood", "lolcode",
+];
+
 const LANG_LABELS = {
   brainfood: "brainFOOD",
   javascript: "JavaScript",
@@ -19,6 +29,26 @@ const LANG_LABELS = {
 function isNaturalLanguage(langId) {
   if (!langId) return false;
   return !CODE_LANGS.has(String(langId).toLowerCase());
+}
+
+function partitionPickerLanguages(langs) {
+  const human = [];
+  const code = [];
+  for (const lang of langs) {
+    if (isNaturalLanguage(lang)) human.push(lang);
+    else code.push(lang);
+  }
+  return [human, code];
+}
+
+function buildLanguagePickerEntries(langs) {
+  const [human, code] = partitionPickerLanguages(langs);
+  const entries = human.map((value) => ({ kind: "language", value }));
+  if (code.length) {
+    entries.push({ kind: "header", value: CODE_PICKER_GROUP });
+    code.forEach((value) => entries.push({ kind: "language", value }));
+  }
+  return entries;
 }
 
 function languageLabel(langId) {

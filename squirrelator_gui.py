@@ -9,10 +9,14 @@ from squirrelator.features import CUSTOM, Settings
 from squirrelator.menus import AUTO, ENGINES, PIPELINE, languages_for, translate_view
 from squirrelator.translate_ui import (
     TextSegment,
+    build_language_picker_entries,
     format_alternatives_lines,
     format_breakdown_rows,
     is_natural_language,
+    is_picker_header,
     language_label,
+    picker_combobox_values,
+    picker_language_ids,
     result_footer_text,
     segment_result_text,
     segment_source_text,
@@ -81,7 +85,7 @@ class SquirrelatorApp:
         ttk.Label(from_row, text="From:").pack(side="left")
         self.from_var = tk.StringVar(value="english")
         self.from_combo = ttk.Combobox(
-            from_row, textvariable=self.from_var, values=self._langs(), state="readonly", width=20,
+            from_row, textvariable=self.from_var, values=(), state="readonly", width=20,
         )
         self.from_combo.pack(side="left", padx=6, fill="x", expand=True)
 
@@ -112,9 +116,11 @@ class SquirrelatorApp:
         self.alpha_badge.pack_forget()
         self.to_var = tk.StringVar(value="python")
         self.to_combo = ttk.Combobox(
-            to_row, textvariable=self.to_var, values=self._langs(), state="readonly", width=20,
+            to_row, textvariable=self.to_var, values=(), state="readonly", width=20,
         )
         self.to_combo.pack(side="left", padx=6, fill="x", expand=True)
+        self._configure_picker_combo(self.from_combo, self.from_var)
+        self._configure_picker_combo(self.to_combo, self.to_var)
 
         self.result = scrolledtext.ScrolledText(result_shell, font=("Consolas", 13), wrap="word",
                                                 state="disabled", height=12)
@@ -171,9 +177,38 @@ class SquirrelatorApp:
         self.root.bind("<Control-Return>", lambda e: self.do_translate())
         self._settings_win = None
         self.settings.on_change(lambda _s: self.refresh_languages())
+        self._bind_picker_combo(self.from_combo, self.from_var)
+        self._bind_picker_combo(self.to_combo, self.to_var)
 
     def _langs(self):
         return languages_for(self.engine_var.get(), self.settings)
+
+    def _picker_lang_ids(self) -> list[str]:
+        return picker_language_ids(build_language_picker_entries(self._langs()))
+
+    def _configure_picker_combo(self, combo, var):
+        entries = build_language_picker_entries(self._langs())
+        lang_ids = picker_language_ids(entries)
+        combo.config(values=picker_combobox_values(entries))
+        cur = var.get()
+        if is_picker_header(cur) or cur not in lang_ids:
+            var.set(cur if cur in lang_ids else (lang_ids[0] if lang_ids else ""))
+        if var.get() in lang_ids:
+            combo._sq_last_lang = var.get()  # type: ignore[attr-defined]
+
+    def _bind_picker_combo(self, combo, var):
+        def on_select(_event=None):
+            if is_picker_header(var.get()):
+                fallback = getattr(combo, "_sq_last_lang", None)
+                ids = self._picker_lang_ids()
+                if fallback in ids:
+                    var.set(fallback)
+                elif ids:
+                    var.set(ids[0])
+            else:
+                combo._sq_last_lang = var.get()  # type: ignore[attr-defined]
+
+        combo.bind("<<ComboboxSelected>>", on_select, add="+")
 
     def dismiss_notice(self):
         self.settings.notice_dismissed = True
@@ -182,23 +217,23 @@ class SquirrelatorApp:
 
     def refresh_languages(self):
         """Keep From/To in sync when Settings hide or show a language group."""
-        langs = self._langs()
+        lang_ids = self._picker_lang_ids()
         for combo, var in ((self.from_combo, self.from_var), (self.to_combo, self.to_var)):
-            combo.config(values=langs)
-            if var.get() not in langs:
-                var.set(langs[0] if langs else "")
+            self._configure_picker_combo(combo, var)
+            if var.get() not in lang_ids:
+                var.set(lang_ids[0] if lang_ids else "")
 
     def engine_changed(self):
         """Fill From and To with the chosen engine's languages and pick a
         pair that shows what the engine does."""
         engine = self.engine_var.get()
-        langs = self._langs()
+        lang_ids = self._picker_lang_ids()
         defaults = ("japanese", "english") if engine == PIPELINE else ("english", "python")
         for combo, var, default in ((self.from_combo, self.from_var, defaults[0]),
                                     (self.to_combo, self.to_var, defaults[1])):
-            combo.config(values=langs)
-            var.set(default if default in langs else (langs[0] if langs else ""))
-        if engine == PIPELINE and not langs:
+            self._configure_picker_combo(combo, var)
+            var.set(default if default in lang_ids else (lang_ids[0] if lang_ids else ""))
+        if engine == PIPELINE and not lang_ids:
             self.status.config(text="Pipeline has no languages: the language data is missing.")
         else:
             self.status.config(text=f"Engine: {engine}")
@@ -210,9 +245,9 @@ class SquirrelatorApp:
             self.source.get("1.0", "end").rstrip("\n"),
             self._result_text(),
         )
-        langs = self._langs()
-        self.from_var.set(frm if frm in langs else (langs[0] if langs else frm))
-        self.to_var.set(to if to in langs else (langs[1] if len(langs) > 1 else to))
+        lang_ids = self._picker_lang_ids()
+        self.from_var.set(frm if frm in lang_ids else (lang_ids[0] if lang_ids else frm))
+        self.to_var.set(to if to in lang_ids else (lang_ids[1] if len(lang_ids) > 1 else to))
         self.source.delete("1.0", "end")
         self.source.insert("1.0", src)
         self._set_result_text(res)

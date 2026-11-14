@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from typing import Literal
 
 from .result import Step
 
@@ -22,6 +23,24 @@ _LABELS = {
     "sql": "SQL",
     "z80": "Z80 Assembly",
 }
+
+CODE_PICKER_GROUP = "Code"
+
+# Rules-engine languages in menu order (mirrors menus._RULES_ORDER for the web twin).
+RULES_LANG_ORDER: tuple[str, ...] = (
+    "english", "klingon", "latin", "pseudocode",
+    "javascript", "python", "shell", "sql",
+    "quickbasic", "z80",
+    "brainfood", "lolcode",
+)
+
+
+@dataclass(frozen=True)
+class PickerEntry:
+    """One row in a From/To picker: a language id or a non-selectable group header."""
+
+    kind: Literal["language", "header"]
+    value: str
 
 
 def is_natural_language(lang_id: str) -> bool:
@@ -47,6 +66,47 @@ def language_label(lang_id: str) -> str:
     if key in _LABELS:
         return _LABELS[key]
     return lang_id.replace("_", " ").title()
+
+
+def partition_picker_languages(langs: list[str]) -> tuple[list[str], list[str]]:
+    """Split ordered language ids into human/natural targets and programming code."""
+    human = [lang for lang in langs if is_natural_language(lang)]
+    code = [lang for lang in langs if not is_natural_language(lang)]
+    return human, code
+
+
+def build_language_picker_entries(langs: list[str]) -> list[PickerEntry]:
+    """Human languages first (order preserved), then an optional Code section."""
+    human, code = partition_picker_languages(langs)
+    entries = [PickerEntry("language", lang) for lang in human]
+    if code:
+        entries.append(PickerEntry("header", CODE_PICKER_GROUP))
+        entries.extend(PickerEntry("language", lang) for lang in code)
+    return entries
+
+
+def picker_language_ids(entries: list[PickerEntry]) -> list[str]:
+    return [entry.value for entry in entries if entry.kind == "language"]
+
+
+def picker_header_display(label: str = CODE_PICKER_GROUP) -> str:
+    return f"— {label} —"
+
+
+def is_picker_header(value: str) -> bool:
+    text = (value or "").strip()
+    return text.startswith("— ") and text.endswith(" —")
+
+
+def picker_combobox_values(entries: list[PickerEntry]) -> list[str]:
+    """Values for a readonly ttk.Combobox (headers plus language ids)."""
+    out: list[str] = []
+    for entry in entries:
+        if entry.kind == "header":
+            out.append(picker_header_display(entry.value))
+        else:
+            out.append(entry.value)
+    return out
 
 
 def format_alternatives_lines(alternatives: tuple[str, ...] | list[str]) -> list[str]:

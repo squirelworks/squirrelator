@@ -75,6 +75,18 @@ def test_a_vocab_card_with_only_a_gloss_splits_into_meanings(french):
     assert words("l'eau", "french") == [("l'", "prefix"), ("eau", "")]
 
 
+def test_french_est_il_follows_the_rows_reading(french):
+    # est-il is @copula+he in who-is-he and @copula in what-time; the
+    # hyphenated form must still match the row wording ("est il").
+    assert translate_full("Qui est-il?", "french", "english").text == "Who is he?"
+    assert translate_full("Quelle heure est-il?", "french", "english").text == (
+        "What time is it?"
+    )
+    assert translate_full(
+        "Quelle heure est-il maintenant?", "french", "english"
+    ).text == "What time is it now?"
+
+
 def test_every_french_column_row_reads_back_as_its_english(french):
     rows = {}
     for line in (french / "meaning" / "sentences.jsonl").read_text(encoding="utf-8").splitlines()[1:]:
@@ -89,6 +101,4 @@ def test_every_french_column_row_reads_back_as_its_english(french):
         got = translate_full(source, "french", "english").text
         if got not in (rows[r["sentence"]]["en"], *rows[r["sentence"]].get("also", ())):
             misses.append((source, got))
-    # est-il is both "is it" and "is he", and C'est both "it is" and "this
-    # is", so a few rows read as their neighbour.
-    assert len(misses) <= 3, misses
+    assert misses == []

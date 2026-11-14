@@ -98,7 +98,14 @@ def _row_reading(mx: Matrix, row_id: str, language: str, text: str) -> list[str]
 
 
 def _in(text: str, wording: str) -> bool:
-    return f" {text.casefold()} " in wording
+    """Whether text appears in wording. Hyphens become spaces in wording
+    (est-il → "est il"), so a hyphenated token also matches its pieces."""
+    folded = text.casefold()
+    if f" {folded} " in wording:
+        return True
+    pieces = "".join(c if c.isalnum() or c in "'’" else " " for c in folded)
+    pieces = " ".join(pieces.split())
+    return bool(pieces) and pieces != folded and f" {pieces} " in wording
 
 
 PERSONS = ("@first-person", "@second-person")
@@ -145,6 +152,33 @@ def _as_row(unit: Unit, meanings) -> Unit:
     return replace(unit, meaning=alt, alternatives=others)
 
 
+def _from_column(unit: Unit, mx: Matrix, row_id: str, language: str) -> Unit:
+    """unit reading as this row's column writes the same source text.
+
+    French est-il is @copula+he in who-is-he and @copula in what-time; once
+    a row wins, the word follows that row so "Quelle heure est-il?" does
+    not keep the leftover "he" from the other reading.
+    """
+    rendering = mx.columns.get(language, {}).get(row_id) if language != "english" else None
+    if not rendering or not unit.text:
+        return unit
+    for text, _, ms in rendering.tokens:
+        if text.strip("-") != unit.text and text != unit.text:
+            continue
+        parts = ms.split("+")
+        content = [p for p in parts if not p.startswith("@")]
+        # Keep marker roles from the parse (Japanese で / に). Only the
+        # head's content meaning follows the row; est-il drops a leftover
+        # "he" when this row writes @copula alone.
+        return replace(
+            unit,
+            meaning=content[0] if content else "",
+            also=tuple(content[1:]),
+            alternatives=(),
+        )
+    return unit
+
+
 def interlingua(clause: Clause, language: str, *, root=None) -> Interlingua:
     """Meaning units, roles and matching matrix rows for one parsed clause."""
     mx = matrix(root)
@@ -185,7 +219,8 @@ def interlingua(clause: Clause, language: str, *, root=None) -> Interlingua:
     matches = tuple(f[1] for f in found)
     implied, explained = (found[0][2], found[0][3]) if found else (None, set())
     if found:
-        units = found[0][4]
+        row_id = found[0][1]
+        units = tuple(_from_column(u, mx, row_id, language) for u in found[0][4])
     unknown = tuple(u.text for u in units if not u.meaning and u.text not in explained)
     implied_units = tuple(Unit(m, "", implied=True) for m in implied or ())
     return Interlingua(implied_units + tuple(units), clause.features, matches, unknown, language)

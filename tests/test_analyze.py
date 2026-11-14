@@ -144,3 +144,19 @@ def test_words_with_a_meaning_win_over_a_bare_vocab_word():
     assert words(analyze("今日は暑いです。", "japanese")) == ["今日", "は", "暑い", "です"]
     # A vocab word still beats a split into three or more pieces.
     assert words(analyze("ありがとうございます", "japanese")) == ["ありがとう", "ございます"]
+
+
+def test_column_row_surface_keeps_the_rows_tokens():
+    # 吃饭 is also a vocab word meaning eat, but the eat-food row writes
+    # 我吃饭 as 我+吃+饭. A restaurant row still keeps 吃饭 as one word.
+    assert words(analyze("我吃饭。", "chinese")) == ["我", "吃", "饭"]
+    assert words(analyze("我在饭馆吃饭。", "chinese")) == ["我", "在", "饭馆", "吃饭"]
+
+
+def test_gloss_only_vocab_yields_to_a_full_affix_split():
+    # jIyajbe' is a phrase card with only a gloss; the column writes
+    # jI- + yaj + -be', and every piece has a meaning.
+    assert words(analyze("jIyajbe'", "klingon")) == ["jI", "yaj", "be'"]
+    assert [t.affix for t in analyze("jIyajbe'", "klingon") if t.kind == "word"] == [
+        "prefix", "", "suffix",
+    ]

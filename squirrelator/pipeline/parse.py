@@ -164,6 +164,15 @@ def _clause(tokens: list[Token], default: str | None, sides: dict, near: dict) -
         elif t.kind == "word" and _acts_as_marker(t, words, i, default, sides, last, near):
             role = _role(t)
             side = sides.get(role, default)
+            # Prefer the side the matrix column writes this marker on: Chinese
+            # 了 sits after 点 / 下雨 even though the language's default is before.
+            if last is not None and "content" in near.get((t.text, role, "after"), ()):
+                side = "after"
+            elif i + 1 < len(words):
+                nxt = words[i + 1]
+                key = "content" if not nxt.affix and not is_marker(nxt) else nxt.text
+                if key in near.get((t.text, role, "before"), ()):
+                    side = "before"
             if side == "before":
                 waiting.append(t)
                 last = None

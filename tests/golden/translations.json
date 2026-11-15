@@ -1029,7 +1029,7 @@
     "source": "sort the list",
     "from": "english",
     "to": "klingon",
-    "expected": "# Could not match a known pattern for klingon\n# Source: sort the list"
+    "expected": "tetlh yISar"
   },
   {
     "source": "sort the list",

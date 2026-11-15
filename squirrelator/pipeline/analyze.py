@@ -304,10 +304,40 @@ def _column_utterance(text: str, tokens: list[Token], language: str, lex: Lexico
     return out
 
 
+def _english_do_support(tokens: list[Token]) -> list[Token]:
+    """I do not X → I not X. Auxiliary do/does/did before not is support, not
+    content; leaving it unknown blocked don't-style rows (jIyajbe'). Prefer
+    the 'not' meaning over 'none' when the surface is bare not."""
+    out: list[Token] = []
+    i = 0
+    while i < len(tokens):
+        t = tokens[i]
+        if (t.kind == "word" and fold(t.text) in ("do", "does", "did")
+                and i + 2 < len(tokens)
+                and tokens[i + 1].kind == "space"
+                and tokens[i + 2].kind == "word"
+                and fold(tokens[i + 2].text) == "not"):
+            not_tok = tokens[i + 2]
+            preferred = tuple(e for e in not_tok.entries if e.meaning == "not") or not_tok.entries
+            out.append(Token(not_tok.text, not_tok.start, not_tok.end, "word", preferred))
+            i += 3
+            continue
+        if t.kind == "word" and fold(t.text) == "not" and t.entries:
+            preferred = tuple(e for e in t.entries if e.meaning == "not") or t.entries
+            out.append(Token(t.text, t.start, t.end, "word", preferred, t.affix))
+            i += 1
+            continue
+        out.append(t)
+        i += 1
+    return out
+
+
 def analyze(text: str, language: str, *, lex: Lexicon | None = None, root=None) -> list[Token]:
     """Tokens for text in a squirrel-lang-data language. Offsets cover the
     whole text, so joining every token's text gives the source back."""
     lex = lex or lexicon(language, root)
     tokens = (_spaced if lex.spaced else _unspaced)(text, lex)
+    if language == "english":
+        tokens = _english_do_support(tokens)
     tokens = _whole_utterance(text, tokens, lex)
     return _column_utterance(text, tokens, language, lex, root)

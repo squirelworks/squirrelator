@@ -277,6 +277,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "vbnet": f'Console.WriteLine("{msg}")',
             "fortran": f'print *, "{msg}"',
             "cobol": f'DISPLAY "{msg}"',
+            "basic": f'PRINT "{msg}"',
             "latin": f'# Latin: Salve / {msg}\nprint("{msg}")  # or: dic "{msg}"',
             "klingon": (
                 f"# Klingon: {msg}\n"
@@ -334,6 +335,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"PERFORM VARYING I FROM {start} BY 1 UNTIL I > {end}\n"
                 f"  DISPLAY I\n"
                 f"END-PERFORM"
+            ),
+            "basic": (
+                f"FOR I = {start} TO {end}\n"
+                f"  PRINT I\n"
+                f"NEXT I"
             ),
             "c": (
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
@@ -400,6 +406,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "vbnet": f"Dim {var} = {val}",
             "fortran": f"{var} = {val}",
             "cobol": f"MOVE {val} TO {var}",
+            "basic": f"LET {var} = {val}",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -439,6 +446,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "vbnet": f"Dim {var} = Console.ReadLine()",
             "fortran": f"read *, {var}",
             "cobol": f"ACCEPT {var}",
+            "basic": f"INPUT {var}",
             "latin": f'# Latin: lege {var}\n{var} = input()',
             "klingon": f"# Klingon: yIlaD {var}\n{var} = input()",
         }
@@ -543,6 +551,14 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f"\nELSE\n{alt}"
             return out + "\nEND-IF"
+        if to_lang == "basic":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            b_op = "=" if op == "==" else op
+            out = f"IF {var} {b_op} {val} THEN\n{body}"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f"\nELSE\n{alt}"
+            return out + "\nEND IF"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -595,6 +611,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "cobol":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"{fname.upper()}.\n{body}"
+        if to_lang == "basic":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"SUB {fname}\n{body}\nEND SUB"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -643,6 +662,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "vbnet": f"{fname}()",
             "fortran": f"call {fname}()",
             "cobol": f"PERFORM {fname}",
+            "basic": f"CALL {fname}",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -689,6 +709,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             return f"{var} = [{py_items}]"
         if to_lang == "cobol":
             return f"* list {var}: {py_items}"
+        if to_lang == "basic":
+            return f"DIM {var}({len(items) - 1})\n* {py_items}"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"int {var}[] = {{{py_items}}};"
@@ -762,6 +784,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "cobol":
             body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
             return f"* map {var}: {body}"
+        if to_lang == "basic":
+            body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
+            return f"' map {var}: {body}"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -870,6 +895,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "cobol":
                 return f'* read {path} into {var}'
+            if to_lang == "basic":
+                return f'OPEN "{path}" FOR INPUT AS #1\nINPUT #1, {var}\nCLOSE #1'
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -931,6 +958,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "cobol":
                 return f'* write {path}: {content}'
+            if to_lang == "basic":
+                return f'OPEN "{path}" FOR OUTPUT AS #1\nPRINT #1, "{content}"\nCLOSE #1'
             if to_lang == "c":
                 return (
                     f'FILE *f = fopen("{path}", "w");\n'

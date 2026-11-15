@@ -492,6 +492,36 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "basic") == 'PRINT "hi"'
+    assert generate(Intent("loop", start="1", end="3"), "basic") == (
+        "FOR I = 1 TO 3\n  PRINT I\nNEXT I"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "basic") == "LET x = 3 + 5"
+    assert generate(Intent("input", name="n"), "basic") == "INPUT n"
+    assert generate(fn, "basic") == (
+        'SUB greet\n  PRINT "hello"\nEND SUB'
+    )
+    assert generate(Intent("call", name="greet"), "basic") == "CALL greet"
+    assert generate(lst, "basic") == 'DIM items(2)\n* "a", "b", "c"'
+    assert generate(mp, "basic") == '\' map ages: "alice" => 30, "bob" => 40'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "basic") == (
+        'OPEN "data.txt" FOR INPUT AS #1\nINPUT #1, text\nCLOSE #1'
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "basic") == (
+        'OPEN "out.txt" FOR OUTPUT AS #1\nPRINT #1, "hi"\nCLOSE #1'
+    )
+    assert generate(iff, "basic") == (
+        'IF x > 5 THEN\n  PRINT "ready"\nEND IF'
+    )
+    assert generate(ifelse, "basic") == (
+        "IF x > 5 THEN\n"
+        '  PRINT "ready"\n'
+        "ELSE\n"
+        '  PRINT "wait"\n'
+        "END IF"
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

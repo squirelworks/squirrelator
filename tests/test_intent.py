@@ -565,6 +565,53 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "turbopascal") == "WriteLn('hi');"
+    assert generate(Intent("loop", start="1", end="3"), "turbopascal") == (
+        "for i := 1 to 3 do\n  WriteLn(i);"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "turbopascal") == (
+        "x := 3 + 5;"
+    )
+    assert generate(Intent("input", name="n"), "turbopascal") == "ReadLn(n);"
+    assert generate(fn, "turbopascal") == (
+        "procedure greet;\nbegin\n  WriteLn('hello');\nend;"
+    )
+    assert generate(Intent("call", name="greet"), "turbopascal") == "greet;"
+    assert generate(lst, "turbopascal") == (
+        "var items: array[0..2] of string = ('a', 'b', 'c');"
+    )
+    assert generate(mp, "turbopascal") == '(* map ages: "alice" => 30, "bob" => 40 *)'
+    assert generate(
+        Intent("file", name="data.txt", start="read", end="text"), "turbopascal"
+    ) == (
+        "Assign(f, 'data.txt');\n"
+        "Reset(f);\n"
+        "ReadLn(f, text);\n"
+        "Close(f);"
+    )
+    assert generate(
+        Intent("file", name="out.txt", start="write", end="hi"), "turbopascal"
+    ) == (
+        "Assign(f, 'out.txt');\n"
+        "Rewrite(f);\n"
+        "WriteLn(f, 'hi');\n"
+        "Close(f);"
+    )
+    assert generate(iff, "turbopascal") == (
+        "if x > 5 then\nbegin\n  WriteLn('ready');\nend;"
+    )
+    assert generate(ifelse, "turbopascal") == (
+        "if x > 5 then\n"
+        "begin\n"
+        "  WriteLn('ready');\n"
+        "end\n"
+        "else\n"
+        "begin\n"
+        "  WriteLn('wait');\n"
+        "end;"
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

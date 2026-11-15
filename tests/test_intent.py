@@ -118,22 +118,39 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("input", name="name"), "shell") == "read name"
     assert generate(Intent("input", name="name"), "cobol") is None
     assert generate(Intent("output", name="hi"), "cobol") is None
+    assert generate(Intent("output", name="hi"), "c") == 'printf("hi\\n");'
+    assert generate(Intent("loop", start="1", end="3"), "c") == (
+        'for (int i = 1; i <= 3; i++) {\n  printf("%d\\n", i);\n}'
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "c") == "int x = 3 + 5;"
+    assert generate(Intent("assignment", name="name", start='"ada"'), "c") == (
+        'char *name = "ada";'
+    )
+    assert generate(Intent("input", name="n"), "c") == 'int n;\nscanf("%d", &n);'
     fn = Intent("function", name="greet", body=Intent("output", name="hello"))
     assert generate(fn, "python") == 'def greet():\n    print("hello")'
     assert generate(fn, "javascript") == 'function greet() {\n  console.log("hello");\n}'
     assert generate(fn, "shell") == 'greet() {\n  echo "hello"\n}'
+    assert generate(fn, "c") == 'void greet(void) {\n  printf("hello\\n");\n}'
     assert generate(fn, "cobol") is None
     assert generate(Intent("call", name="greet"), "python") == "greet()"
     assert generate(Intent("call", name="greet"), "javascript") == "greet();"
+    assert generate(Intent("call", name="greet"), "c") == "greet();"
     assert generate(Intent("call", name="greet"), "cobol") is None
     lst = Intent("list", name="items", start="a,b,c")
     assert generate(lst, "python") == 'items = ["a", "b", "c"]'
     assert generate(lst, "javascript") == 'let items = ["a", "b", "c"];'
     assert generate(Intent("list", name="nums", start="1,2,3"), "python") == "nums = [1, 2, 3]"
+    assert generate(Intent("list", name="nums", start="1,2,3"), "c") == "int nums[] = {1, 2, 3};"
+    assert generate(lst, "c") == 'const char *items[] = {"a", "b", "c"};'
     assert generate(lst, "cobol") is None
     mp = Intent("map", name="ages", start="alice=30;bob=40")
     assert generate(mp, "python") == 'ages = {"alice": 30, "bob": 40}'
     assert generate(mp, "javascript") == 'let ages = {"alice": 30, "bob": 40};'
+    assert generate(mp, "c") == (
+        'const char *ages_keys[] = {"alice", "bob"};\n'
+        "int ages_vals[] = {30, 40};"
+    )
     assert generate(mp, "cobol") is None
     assert generate(Intent("file", name="data.txt", start="read", end="text"), "python") == (
         'text = open("data.txt").read()'
@@ -141,10 +158,16 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("file", name="out.txt", start="write", end="hello"), "python") == (
         'open("out.txt", "w").write("hello")'
     )
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "c") == (
+        'char text[1024];\n'
+        'FILE *f = fopen("data.txt", "r");\n'
+        "if (f) { fgets(text, sizeof text, f); fclose(f); }"
+    )
     assert generate(Intent("file", name="data.txt", start="read", end="text"), "cobol") is None
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
+    assert generate(iff, "c") == 'if (x > 5) {\n  printf("ready\\n");\n}'
     ifelse = Intent(
         "if",
         name="x",
@@ -162,6 +185,10 @@ def test_generate_python_matches_rules_shapes():
     )
     assert generate(ifelse, "shell") == (
         'if [ "$x" -gt 5 ]; then\n  echo "ready"\nelse\n  echo "wait"\nfi'
+    )
+    assert generate(ifelse, "c") == (
+        'if (x > 5) {\n  printf("ready\\n");\n}'
+        ' else {\n  printf("wait\\n");\n}'
     )
 
 

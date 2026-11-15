@@ -612,6 +612,16 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "moderndelphi") == "WriteLn('hi');"
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "moderndelphi") == (
+        "x := 3 + 5;"
+    )
+    assert generate(fn, "moderndelphi") == (
+        "procedure greet;\nbegin\n  WriteLn('hello');\nend;"
+    )
+
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

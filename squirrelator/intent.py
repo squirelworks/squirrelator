@@ -242,6 +242,8 @@ def _normalize_arith(expr: str) -> str:
 
 def generate(intent: Intent, to_lang: str) -> str | None:
     """Emit code for to_lang from intent, or None when that target has no mapping."""
+    if to_lang == "moderndelphi":
+        to_lang = "delphi"
     if intent.kind == "output":
         msg = intent.name
         rules = {

@@ -10,7 +10,12 @@ are never moved, reused or deleted.
 - [x] **v0.1.0** (2026-11-04): Phase 0, the `data/` submodule pinned to
       data v0.1.0, golden tests and CI.
 
-## Drafted, not published: v0.1.1
+- [x] **v0.1.1** (2026-11-15): published, but the tag pointed at the older
+      release-PR commit (`560ea3e`), not current `main`.
+- [ ] **v0.1.2**: ship from current `main` (Phase 4 intent fills and later
+      notes).
+
+## Was: drafted v0.1.1
 
 - [x] `data/` moved to squirrel-lang-data **v0.1.4** (#41), then **v0.1.5**
       (#49).
@@ -30,11 +35,9 @@ are never moved, reused or deleted.
 - [ ] The owner publishes. Nothing is published without the owner's
       "release".
 
-## Next (open): refresh the draft, then publish
+## Next (open): publish v0.1.2 from current main
 
-The `v0.1.1` tag does not exist yet. `release-notes/v0.1.1.md` now names
-data v0.1.5 and lists what landed since the stale draft. After that notes
-PR is on `main`:
+`v0.1.1` is published on the wrong commit. Remaining steps for **v0.1.2**:
 
 - [x] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk
       (both v0.1.5 today).

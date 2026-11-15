@@ -261,6 +261,30 @@ def test_generate_python_matches_rules_shapes():
         ' else {\n  print("wait")\n}'
     )
 
+    assert generate(Intent("output", name="hi"), "typescript") == 'console.log("hi");'
+    assert generate(Intent("loop", start="1", end="3"), "typescript") == (
+        "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "typescript") == "let x = 3 + 5;"
+    assert generate(Intent("input", name="n"), "typescript") == "let n = prompt();"
+    assert generate(fn, "typescript") == (
+        'function greet() {\n  console.log("hello");\n}'
+    )
+    assert generate(Intent("call", name="greet"), "typescript") == "greet();"
+    assert generate(lst, "typescript") == 'let items = ["a", "b", "c"];'
+    assert generate(mp, "typescript") == 'let ages = {"alice": 30, "bob": 40};'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "typescript") == (
+        'const fs = require("fs");\n'
+        'let text = fs.readFileSync("data.txt", "utf8");'
+    )
+    assert generate(iff, "typescript") == (
+        'if (x > 5) {\n  console.log("ready");\n}'
+    )
+    assert generate(ifelse, "typescript") == (
+        'if (x > 5) {\n  console.log("ready");\n}'
+        ' else {\n  console.log("wait");\n}'
+    )
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

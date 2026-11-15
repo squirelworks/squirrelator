@@ -247,6 +247,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f'print("{msg}")',
             "javascript": f'console.log("{msg}");',
+            "typescript": f'console.log("{msg}");',
             "c": f'printf("{msg}\\n");',
             "cpp": f'std::cout << "{msg}" << std::endl;',
             "csharp": f'Console.WriteLine("{msg}");',
@@ -284,6 +285,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f"for i in range({start}, {int(end)+1}):\n    print(i)",
             "javascript": (
+                f"for (let i = {start}; i <= {end}; i++) {{\n"
+                f"  console.log(i);\n}}"
+            ),
+            "typescript": (
                 f"for (let i = {start}; i <= {end}; i++) {{\n"
                 f"  console.log(i);\n}}"
             ),
@@ -344,6 +349,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f"{var} = {val}",
             "javascript": f"let {var} = {val};",
+            "typescript": f"let {var} = {val};",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -365,6 +371,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f'{var} = input()',
             "javascript": f'let {var} = prompt();',
+            "typescript": f'let {var} = prompt();',
             "c": f'int {var};\nscanf("%d", &{var});',
             "cpp": f"int {var};\nstd::cin >> {var};",
             "csharp": f"int {var} = int.Parse(Console.ReadLine());",
@@ -396,7 +403,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"    {ln}" for ln in else_lines)
                 out += f"\nelse:\n{alt}"
             return out
-        if to_lang == "javascript":
+        if to_lang in ("javascript", "typescript"):
             body = "\n".join(f"  {ln}" for ln in then_lines)
             out = f"if ({var} {op} {val}) {{\n{body}\n}}"
             if else_lines is not None:
@@ -438,7 +445,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "python":
             body = "\n".join(f"    {ln}" for ln in body_lines)
             return f"def {fname}():\n{body}"
-        if to_lang == "javascript":
+        if to_lang in ("javascript", "typescript"):
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"function {fname}() {{\n{body}\n}}"
         if to_lang == "c":
@@ -481,6 +488,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f"{fname}()",
             "javascript": f"{fname}();",
+            "typescript": f"{fname}();",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -508,7 +516,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         sh_items = " ".join(_lit(x) for x in items)
         if to_lang == "python":
             return f"{var} = [{py_items}]"
-        if to_lang == "javascript":
+        if to_lang in ("javascript", "typescript"):
             return f"let {var} = [{py_items}];"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
@@ -557,7 +565,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "python":
             body = ", ".join(f"{_lit(k)}: {_lit(v)}" for k, v in pairs)
             return f"{var} = {{{body}}}"
-        if to_lang == "javascript":
+        if to_lang in ("javascript", "typescript"):
             body = ", ".join(f"{_lit(k)}: {_lit(v)}" for k, v in pairs)
             return f"let {var} = {{{body}}};"
         if to_lang == "c":
@@ -638,7 +646,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             var = intent.end or "text"
             if to_lang == "python":
                 return f'{var} = open("{path}").read()'
-            if to_lang == "javascript":
+            if to_lang in ("javascript", "typescript"):
                 return (
                     f'const fs = require("fs");\n'
                     f'let {var} = fs.readFileSync("{path}", "utf8");'
@@ -677,7 +685,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             content = intent.end or ""
             if to_lang == "python":
                 return f'open("{path}", "w").write("{content}")'
-            if to_lang == "javascript":
+            if to_lang in ("javascript", "typescript"):
                 return (
                     f'const fs = require("fs");\n'
                     f'fs.writeFileSync("{path}", "{content}");'

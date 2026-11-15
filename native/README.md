@@ -61,6 +61,18 @@ uploads nothing.
 
 ## Try it on a phone
 
+Each squirrelator release has the phone app as `Squirrelator.apk`. The
+newest one is always at
+<https://github.com/squirelworks/squirrelator/releases/latest/download/Squirrelator.apk>.
+Copy it to the phone, tap it and allow installing from that app when Android
+asks. It needs Android 7.0 or newer. Releases are signed with the APK signing
+key when the repo has one in its secrets (`APK_KEYSTORE_BASE64`,
+`APK_STORE_PASSWORD`, `APK_KEY_ALIAS`, `APK_KEY_PASSWORD`). Without it they
+fall back to a one-off debug key, and the release notes say so. Never the
+Play upload key.
+
+### A test APK from main
+
 A test APK is built by hand on GitHub, so you don't need any of the tools above.
 
 1. Open [Actions, Native test APK](https://github.com/squirelworks/squirrelator/actions/workflows/native-test-apk.yml)

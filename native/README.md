@@ -81,7 +81,7 @@ A test APK is built by hand on GitHub, so you don't need any of the tools above.
 2. Wait for the run to get a green tick, about 5 to 10 minutes. Open the run.
 3. Under **Artifacts** at the bottom, download `Squirrelator-test-…`. GitHub
    hands it over as a zip; unzip it to get the `.apk`. The download lasts
-   14 days.
+   7 days.
 4. Copy the `.apk` to the phone (or download it there directly), tap it, and
    allow installing from that app when Android asks. It needs Android 7.0
    or newer.

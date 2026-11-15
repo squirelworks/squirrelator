@@ -2,7 +2,7 @@ name: Native test APK
 
 # The only way to get a squirrelator APK for now. Started by hand
 # (Actions -> Native test APK -> Run workflow). It builds a debug APK and
-# keeps it as a run artifact that expires after 14 days. It never creates a
+# keeps it as a run artifact that expires after 7 days. It never creates a
 # release, a tag or a commit, and uses no signing key or secret: the APK is
 # signed with a throwaway debug key made on the runner, which Android needs
 # before it will install anything. See native/README.md, "Try it on a phone".
@@ -47,5 +47,5 @@ jobs:
         with:
           name: ${{ env.APK_NAME }}
           path: ${{ runner.temp }}/apk/${{ env.APK_NAME }}.apk
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: error

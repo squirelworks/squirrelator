@@ -17,6 +17,18 @@ def test_parse_loop_and_assignment():
     assert parse_intent("make name = 'Ada'") == Intent(
         "assignment", name="name", start="'ada'"
     )
+    assert parse_intent("set x to 3 plus 5") == Intent(
+        "assignment", name="x", start="3 + 5"
+    )
+    assert parse_intent("set y to 10 minus 2") == Intent(
+        "assignment", name="y", start="10 - 2"
+    )
+    assert parse_intent("let z = 4 times 3") == Intent(
+        "assignment", name="z", start="4 * 3"
+    )
+    assert parse_intent("set q to 8 divided by 2") == Intent(
+        "assignment", name="q", start="8 / 2"
+    )
 
 
 def test_parse_unknown_is_none():
@@ -157,6 +169,7 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"
     assert _match_natural("set x to 1", "python") == ("assignment", "x = 1")
+    assert _match_natural("set x to 3 plus 5", "python") == ("assignment", "x = 3 + 5")
     assert _match_natural("ask for name", "python") == ("input", "name = input()")
     assert _match_natural(
         "define a function greet that prints hello", "python"

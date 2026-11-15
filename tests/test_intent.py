@@ -402,6 +402,41 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "vbnet") == 'Console.WriteLine("hi")'
+    assert generate(Intent("loop", start="1", end="3"), "vbnet") == (
+        "For i As Integer = 1 To 3\n"
+        "  Console.WriteLine(i)\n"
+        "Next"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "vbnet") == "Dim x = 3 + 5"
+    assert generate(Intent("input", name="n"), "vbnet") == "Dim n = Console.ReadLine()"
+    assert generate(fn, "vbnet") == (
+        "Sub greet()\n  Console.WriteLine(\"hello\")\nEnd Sub"
+    )
+    assert generate(Intent("call", name="greet"), "vbnet") == "greet()"
+    assert generate(lst, "vbnet") == 'Dim items = {"a", "b", "c"}'
+    assert generate(mp, "vbnet") == (
+        'Dim ages As New Dictionary(Of Object, Object) From '
+        '{{"alice", 30}, {"bob", 40}}'
+    )
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "vbnet") == (
+        'Dim text = System.IO.File.ReadAllText("data.txt")'
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "vbnet") == (
+        'System.IO.File.WriteAllText("out.txt", "hi")'
+    )
+    assert generate(iff, "vbnet") == (
+        "If x > 5 Then\n  Console.WriteLine(\"ready\")\nEnd If"
+    )
+    assert generate(ifelse, "vbnet") == (
+        "If x > 5 Then\n"
+        "  Console.WriteLine(\"ready\")\n"
+        "Else\n"
+        "  Console.WriteLine(\"wait\")\n"
+        "End If"
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

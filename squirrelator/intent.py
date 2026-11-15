@@ -274,6 +274,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "shell": f'echo "{msg}"',
             "sql": f"SELECT '{msg}' AS message;",
             "html": f'document.write("{msg}");',
+            "vbnet": f'Console.WriteLine("{msg}")',
             "latin": f'# Latin: Salve / {msg}\nprint("{msg}")  # or: dic "{msg}"',
             "klingon": (
                 f"# Klingon: {msg}\n"
@@ -316,6 +317,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"for (let i = {start}; i <= {end}; i++) {{\n"
                 f"  document.write(i + '<br>');\n"
                 f"}}"
+            ),
+            "vbnet": (
+                f"For i As Integer = {start} To {end}\n"
+                f"  Console.WriteLine(i)\n"
+                f"Next"
             ),
             "c": (
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
@@ -379,6 +385,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "perl": f"my ${var} = {val};",
             "sql": f"-- set {var}\nSELECT {val} AS {var};",
             "html": f"let {var} = {val};",
+            "vbnet": f"Dim {var} = {val}",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -415,6 +422,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "lolcode": f"GIMMEH {var}",
             "shell": f"read {var}",
             "html": f"let {var} = prompt();",
+            "vbnet": f"Dim {var} = Console.ReadLine()",
             "latin": f'# Latin: lege {var}\n{var} = input()',
             "klingon": f"# Klingon: yIlaD {var}\n{var} = input()",
         }
@@ -494,6 +502,14 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f" else {{\n{alt}\n}}"
             return out
+        if to_lang == "vbnet":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            vb_op = "=" if op == "==" else op
+            out = f"If {var} {vb_op} {val} Then\n{body}"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f"\nElse\n{alt}"
+            return out + "\nEnd If"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -537,6 +553,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "html":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"function {fname}() {{\n{body}\n}}"
+        if to_lang == "vbnet":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"Sub {fname}()\n{body}\nEnd Sub"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -582,6 +601,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "perl": f"{fname}();",
             "sql": f"SELECT {fname}();",
             "html": f"{fname}();",
+            "vbnet": f"{fname}()",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -622,6 +642,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             return f"-- list {var}\nSELECT * FROM (VALUES ({sql_items})) AS {var};"
         if to_lang == "html":
             return f"let {var} = [{py_items}];"
+        if to_lang == "vbnet":
+            return f"Dim {var} = {{{py_items}}}"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"int {var}[] = {{{py_items}}};"
@@ -686,6 +708,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "html":
             body = ", ".join(f"{_lit(k)}: {_lit(v)}" for k, v in pairs)
             return f"let {var} = {{{body}}};"
+        if to_lang == "vbnet":
+            body = ", ".join(f"{{{_lit(k)}, {_lit(v)}}}" for k, v in pairs)
+            return f"Dim {var} As New Dictionary(Of Object, Object) From {{{body}}}"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -784,6 +809,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f'// read {path}\n'
                     f'fetch("{path}").then(r => r.text()).then(t => {{ {var} = t; }});'
                 )
+            if to_lang == "vbnet":
+                return f'Dim {var} = System.IO.File.ReadAllText("{path}")'
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -835,6 +862,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f"-- write {path}\n-- \\copy (SELECT '{content}') TO '{path}';"
             if to_lang == "html":
                 return f'// write {path}: {content}'
+            if to_lang == "vbnet":
+                return f'System.IO.File.WriteAllText("{path}", "{content}")'
             if to_lang == "c":
                 return (
                     f'FILE *f = fopen("{path}", "w");\n'

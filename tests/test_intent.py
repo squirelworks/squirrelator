@@ -122,6 +122,7 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("output", name="hi"), "cpp") == (
         'std::cout << "hi" << std::endl;'
     )
+    assert generate(Intent("output", name="hi"), "csharp") == 'Console.WriteLine("hi");'
     assert generate(Intent("loop", start="1", end="3"), "c") == (
         'for (int i = 1; i <= 3; i++) {\n  printf("%d\\n", i);\n}'
     )
@@ -145,6 +146,9 @@ def test_generate_python_matches_rules_shapes():
     assert generate(fn, "cpp") == (
         'void greet() {\n  std::cout << "hello" << std::endl;\n}'
     )
+    assert generate(fn, "csharp") == (
+        'void greet() {\n  Console.WriteLine("hello");\n}'
+    )
     assert generate(fn, "cobol") is None
     assert generate(Intent("call", name="greet"), "python") == "greet()"
     assert generate(Intent("call", name="greet"), "javascript") == "greet();"
@@ -161,6 +165,9 @@ def test_generate_python_matches_rules_shapes():
         "std::vector<int> nums = {1, 2, 3};"
     )
     assert generate(lst, "cpp") == 'std::vector<std::string> items = {"a", "b", "c"};'
+    assert generate(lst, "csharp") == (
+        'var items = new List<string> { "a", "b", "c" };'
+    )
     assert generate(lst, "cobol") is None
     mp = Intent("map", name="ages", start="alice=30;bob=40")
     assert generate(mp, "python") == 'ages = {"alice": 30, "bob": 40}'
@@ -171,6 +178,9 @@ def test_generate_python_matches_rules_shapes():
     )
     assert generate(mp, "cpp") == (
         'std::map<std::string, int> ages = {{"alice", 30}, {"bob", 40}};'
+    )
+    assert generate(mp, "csharp") == (
+        'var ages = new Dictionary<string, int> { { "alice", 30 }, { "bob", 40 } };'
     )
     assert generate(mp, "cobol") is None
     assert generate(Intent("file", name="data.txt", start="read", end="text"), "python") == (

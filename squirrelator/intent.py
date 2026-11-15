@@ -3,7 +3,7 @@
 parse_intent() turns a short English instruction into an Intent. Generators
 read the Intent and emit code. The Rules engine's English→code path uses
 this so the regex patterns and the generators stay in one place; later
-intents (if/else, functions, …) grow here without new ad-hoc matchers.
+intents (functions, lists, …) grow here without new ad-hoc matchers.
 """
 
 from __future__ import annotations
@@ -13,7 +13,21 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-Kind = Literal["output", "loop", "assignment"]
+Kind = Literal["output", "loop", "assignment", "if"]
+
+_OPS = {
+    ">": ">",
+    ">=": ">=",
+    "<": "<",
+    "<=": "<=",
+    "=": "==",
+    "==": "==",
+    "!=": "!=",
+    "greater than": ">",
+    "less than": "<",
+    "equal to": "==",
+    "equals": "==",
+}
 
 
 @dataclass(frozen=True)
@@ -21,12 +35,14 @@ class Intent:
     """One recognised English instruction."""
 
     kind: Kind
-    # output: message text; loop: unused; assignment: variable name
+    # output: message; loop: unused; assignment/if: variable name
     name: str = ""
-    # output: unused; loop: start; assignment: value expression as written
+    # loop: start; assignment: value; if: comparison operator
     start: str = ""
-    # loop: end inclusive
+    # loop: end; if: compare value
     end: str = ""
+    # if: then-branch (usually output)
+    body: Intent | None = None
 
 
 def parse_intent(text: str) -> Intent | None:
@@ -35,8 +51,30 @@ def parse_intent(text: str) -> Intent | None:
     if not t:
         return None
 
+    # if x > 5 print hi  /  if x is greater than 5 then print hi
+    m = re.search(
+        r"if\s+(\w+)\s*(>=|<=|==|!=|>|<|=)\s*(\S+)\s+"
+        r"(?:then\s+)?(?:print|show|display|output)\s+['\"]?(.+?)['\"]?$",
+        t,
+    )
+    if not m:
+        m = re.search(
+            r"if\s+(\w+)\s+is\s+(greater than|less than|equal to|equals)\s+(\S+)\s+"
+            r"(?:then\s+)?(?:print|show|display|output)\s+['\"]?(.+?)['\"]?$",
+            t,
+        )
+    if m:
+        op = _OPS[m.group(2)]
+        return Intent(
+            "if",
+            name=m.group(1),
+            start=op,
+            end=m.group(3).strip("\"'"),
+            body=Intent("output", name=m.group(4).strip("\"'")),
+        )
+
     m = re.search(r"(?:print|show|display|output)\s+['\"]?(.+?)['\"]?$", t)
-    if m or "hello" in t:
+    if m or ("hello" in t and not t.startswith("if ")):
         msg = m.group(1).strip("\"'") if m else "Hello"
         return Intent("output", name=msg)
 
@@ -125,5 +163,29 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "klingon": f"# Klingon: {var} {val} 'oH\n{var} = {val}",
         }
         return rules.get(to_lang)
+
+    if intent.kind == "if" and intent.body is not None:
+        var, op, val = intent.name, intent.start, intent.end
+        then = generate(intent.body, to_lang)
+        if then is None:
+            return None
+        then_lines = then.splitlines()
+        if to_lang == "python":
+            body = "\n".join(f"    {ln}" for ln in then_lines)
+            return f"if {var} {op} {val}:\n{body}"
+        if to_lang == "javascript":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            return f"if ({var} {op} {val}) {{\n{body}\n}}"
+        if to_lang == "quickbasic":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            return f"IF {var} {op} {val} THEN\n{body}\nEND IF"
+        if to_lang == "shell":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            sh_ops = {">": "-gt", ">=": "-ge", "<": "-lt", "<=": "-le", "==": "-eq", "!=": "-ne"}
+            sh_op = sh_ops.get(op)
+            if sh_op is None:
+                return None
+            return f'if [ "${var}" {sh_op} {val} ]; then\n{body}\nfi'
+        return None
 
     return None

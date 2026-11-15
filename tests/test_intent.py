@@ -24,6 +24,15 @@ def test_parse_unknown_is_none():
     assert parse_intent("") is None
 
 
+def test_parse_if_then_print():
+    got = parse_intent("if x > 5 print ready")
+    assert got == Intent(
+        "if", name="x", start=">", end="5", body=Intent("output", name="ready")
+    )
+    got = parse_intent("if count is greater than 10 then print full")
+    assert got.kind == "if" and got.start == ">" and got.body.name == "full"
+
+
 def test_generate_python_matches_rules_shapes():
     assert generate(Intent("output", name="hello"), "python") == 'print("hello")'
     assert generate(Intent("loop", start="1", end="5"), "python") == (
@@ -31,6 +40,9 @@ def test_generate_python_matches_rules_shapes():
     )
     assert generate(Intent("assignment", name="total", start="42"), "python") == "total = 42"
     assert generate(Intent("output", name="hi"), "cobol") is None
+    iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
+    assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
+    assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
 
 
 def test_match_natural_uses_intent_without_changing_outputs():
@@ -38,3 +50,7 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"
     assert _match_natural("set x to 1", "python") == ("assignment", "x = 1")
     assert _match_natural("sort the list", "python")[0] is None
+    assert _match_natural("if x > 5 print ready", "python") == (
+        "if",
+        'if x > 5:\n    print("ready")',
+    )

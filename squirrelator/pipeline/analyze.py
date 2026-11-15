@@ -19,11 +19,13 @@ from dataclasses import dataclass
 
 from ..lexicon import Entry, Lexicon, fold, lexicon
 
-# Between two letters these stay inside the word: apostrophes, hyphens and
-# the Armenian emphasis, exclamation and question marks (ի՞նչ).
-JOINERS = set("'’-՛՜՞")
+# Between two letters these stay inside the word: apostrophes, hyphens, the
+# Armenian emphasis, exclamation and question marks (ի՞նչ), the Tibetan
+# syllable dots (tsheg, ཕྲུ་གུ) and the zero-width non-joiner and joiner that
+# Indic scripts write inside words (ರೆಸ್ಟೋರೆಂಟ್‌ನಲ್ಲಿ, ශිෂ්‍යයෙක්).
+JOINERS = set("'’-՛՜՞\u0f0b\u0f0c\u200c\u200d")
 # How many words a phrase in a spaced language's word list can span.
-MAX_PHRASE = 4
+MAX_PHRASE = 6
 # Segmenting cost of a character no word covers, against 1 per known word.
 UNKNOWN_COST = 3
 # Segmenting cost of a word only the vocab list has, with no meaning unit.

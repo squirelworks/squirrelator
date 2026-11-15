@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from squirrelator import data
+from squirrelator import data, translate
 from squirrelator.lexicon import available, fold, lexicon
 from squirrelator.pipeline.analyze import analyze
 
@@ -93,108 +93,6 @@ def coarsens(got, expected):
     return i == len(expected)
 
 
-# Rows that still fail the strict segmentation check on data v0.1.6. Clear
-# entries as the analyzer (or the column cells) improve; tracking #132.
-EXPECTED_SEGMENT_FAILURES = frozenset({
-    ("bengali", "nice-to-meet-you"),
-    ("kannada", "lunch-restaurant"),
-    ("kannada", "eat-restaurant"),
-    ("kannada", "bus-school"),
-    ("kannada", "live-beijing"),
-    ("malayalam", "live-cairo"),
-    ("odia", "nice-to-meet-you"),
-    ("punjabi", "nice-to-meet-you"),
-    ("sinhala", "i-am-student"),
-    ("sinhala", "speak-english"),
-    ("sinhala", "print-word"),
-    ("sinhala", "print-screen"),
-    ("sinhala", "create-variable"),
-    ("sinhala", "run-program"),
-    ("telugu", "lunch-restaurant"),
-    ("telugu", "eat-restaurant"),
-    ("telugu", "live-beijing"),
-    ("telugu", "print-screen"),
-    ("telugu", "start-loop"),
-    ("telugu", "end-loop"),
-    ("telugu", "run-program"),
-    ("tibetan", "i-am-student"),
-    ("tibetan", "name-tanaka"),
-    ("tibetan", "name-minjun"),
-    ("tibetan", "name-anna"),
-    ("tibetan", "name-ravi"),
-    ("tibetan", "name-sami"),
-    ("tibetan", "name-wang-ming"),
-    ("tibetan", "your-name"),
-    ("tibetan", "hello"),
-    ("tibetan", "nice-to-meet-you"),
-    ("tibetan", "good-morning"),
-    ("tibetan", "thank-you"),
-    ("tibetan", "thank-you-very-much"),
-    ("tibetan", "success"),
-    ("tibetan", "dont-understand"),
-    ("tibetan", "speak-english"),
-    ("tibetan", "speak-chinese"),
-    ("tibetan", "speak-arabic"),
-    ("tibetan", "speak-klingon"),
-    ("tibetan", "speak-hindi"),
-    ("tibetan", "study-korean"),
-    ("tibetan", "like-sushi"),
-    ("tibetan", "like-coffee"),
-    ("tibetan", "love-you"),
-    ("tibetan", "met-friend"),
-    ("tibetan", "where-live"),
-    ("tibetan", "from-egypt"),
-    ("tibetan", "we-are-klingons"),
-    ("tibetan", "want-coffee"),
-    ("tibetan", "eat-rice"),
-    ("tibetan", "lunch-restaurant"),
-    ("tibetan", "eat-restaurant"),
-    ("tibetan", "hot-today"),
-    ("tibetan", "cold-today"),
-    ("tibetan", "weather-hot"),
-    ("tibetan", "weather-good"),
-    ("tibetan", "raining"),
-    ("tibetan", "monday"),
-    ("tibetan", "what-time"),
-    ("tibetan", "what-time-now"),
-    ("tibetan", "no-time"),
-    ("tibetan", "there-is-cat"),
-    ("tibetan", "have-cat"),
-    ("tibetan", "book-on-table"),
-    ("tibetan", "house-big"),
-    ("tibetan", "car-new"),
-    ("tibetan", "delicious"),
-    ("tibetan", "food-tasty"),
-    ("tibetan", "head-hurts"),
-    ("tibetan", "give-water"),
-    ("tibetan", "wait-moment"),
-    ("tibetan", "sit-down"),
-    ("tibetan", "where-station"),
-    ("tibetan", "where-toilet"),
-    ("tibetan", "where-hotel"),
-    ("tibetan", "how-much-this"),
-    ("tibetan", "how-much-is-it"),
-    ("tibetan", "how-much-cost"),
-    ("tibetan", "bill-please"),
-    ("tibetan", "go-school"),
-    ("tibetan", "bus-school"),
-    ("tibetan", "go-tokyo"),
-    ("tibetan", "came-train"),
-    ("tibetan", "where-going"),
-    ("tibetan", "we-going-home"),
-    ("tibetan", "live-moscow"),
-    ("tibetan", "live-cairo"),
-    ("tibetan", "live-beijing"),
-    ("tibetan", "we-fight"),
-    ("tibetan", "child-sleeps"),
-    ("tibetan", "officer-sees-child"),
-    ("tibetan", "captain-sees-ship"),
-    ("tibetan", "print-screen"),
-    ("tibetan", "create-variable"),
-    ("tibetan", "run-program"),
-})
-
-
 def test_every_column_sentence_segments_back_into_its_tokens():
     """Each sentence of the meaning matrix, written out, segments into the
     tokens the data lists, or into longer words the word list also has.
@@ -212,11 +110,8 @@ def test_every_column_sentence_segments_back_into_its_tokens():
             # Spaced languages may split a phrase into known words (לבית ספר);
             # unspaced ones must find the listed words or longer ones.
             if (not sep and not coarsens(got, expected)) or not all(t.known for t in tokens):
-                failures.append((path.stem, row["sentence"]))
-    unexpected = sorted(set(failures) - EXPECTED_SEGMENT_FAILURES)
-    missing = sorted(EXPECTED_SEGMENT_FAILURES - set(failures))
-    assert unexpected == [], f"new segmentation failures (not in #132 list): {unexpected[:10]}"
-    assert missing == [], f"expected #132 failures now pass; remove from list: {missing[:10]}"
+                failures.append((path.stem, row["sentence"], expected, got))
+    assert failures == []
 
 
 def test_english_do_not_keeps_source_text():
@@ -229,6 +124,15 @@ def test_english_do_not_keeps_source_text():
         assert aux.known and aux.affix == "prefix"
         not_tok = next(t for t in tokens if t.kind == "word" and fold(t.text) == "not")
         assert any(e.meaning == "not" for e in not_tok.entries)
+    assert translate("I do not understand", "english", "klingon") == "jIyajbe'"
+
+
+def test_joiners_inside_words_keep_the_word_whole():
+    """A Tibetan tsheg and an Indic zero-width non-joiner sit inside a word."""
+    for text, language in [("ཕྲུ་གུ", "tibetan"), ("ರೆಸ್ಟೋರೆಂಟ್\u200cನಲ್ಲಿ", "kannada")]:
+        tokens = analyze(text, language)
+        assert "".join(t.text for t in tokens) == text
+        assert all(t.kind == "word" and t.known for t in tokens)
 
 
 def test_affixes_split_off_only_when_every_part_is_known():

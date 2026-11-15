@@ -748,3 +748,8 @@ def _rust_assignment(var: str, val: str) -> str:
 def _go_assignment(var: str, val: str) -> str:
     """Pick a simple Go short declaration for an assignment teaching fragment."""
     return f"{var} := {val}"
+
+
+def _kotlin_assignment(var: str, val: str) -> str:
+    """Pick a simple Kotlin binding for an assignment teaching fragment."""
+    return f"val {var} = {val}"

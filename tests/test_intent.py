@@ -127,6 +127,7 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("output", name="hi"), "rust") == 'println!("hi");'
     assert generate(Intent("output", name="hi"), "go") == 'fmt.Println("hi")'
     assert generate(Intent("output", name="hi"), "kotlin") == 'println("hi")'
+    assert generate(Intent("output", name="hi"), "swift") == 'print("hi")'
     assert generate(Intent("loop", start="1", end="3"), "c") == (
         'for (int i = 1; i <= 3; i++) {\n  printf("%d\\n", i);\n}'
     )
@@ -238,6 +239,27 @@ def test_generate_python_matches_rules_shapes():
         ' else {\n  printf("wait\\n");\n}'
     )
 
+
+    assert generate(Intent("loop", start="1", end="3"), "swift") == (
+        "for i in 1...3 {\n  print(i)\n}"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "swift") == "var x = 3 + 5"
+    assert generate(Intent("input", name="n"), "swift") == 'let n = readLine() ?? ""'
+    assert generate(fn, "swift") == 'func greet() {\n  print("hello")\n}'
+    assert generate(Intent("call", name="greet"), "swift") == "greet()"
+    assert generate(lst, "swift") == 'let items = ["a", "b", "c"]'
+    assert generate(mp, "swift") == 'let ages = ["alice": 30, "bob": 40]'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "swift") == (
+        'let text = try! String(contentsOfFile: "data.txt")'
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "swift") == (
+        'try! "hi".write(toFile: "out.txt", atomically: true, encoding: .utf8)'
+    )
+    assert generate(iff, "swift") == 'if (x > 5) {\n  print("ready")\n}'
+    assert generate(ifelse, "swift") == (
+        'if (x > 5) {\n  print("ready")\n}'
+        ' else {\n  print("wait")\n}'
+    )
 
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')

@@ -275,6 +275,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "sql": f"SELECT '{msg}' AS message;",
             "html": f'document.write("{msg}");',
             "vbnet": f'Console.WriteLine("{msg}")',
+            "fortran": f'print *, "{msg}"',
             "latin": f'# Latin: Salve / {msg}\nprint("{msg}")  # or: dic "{msg}"',
             "klingon": (
                 f"# Klingon: {msg}\n"
@@ -322,6 +323,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"For i As Integer = {start} To {end}\n"
                 f"  Console.WriteLine(i)\n"
                 f"Next"
+            ),
+            "fortran": (
+                f"do i = {start}, {end}\n"
+                f"  print *, i\n"
+                f"end do"
             ),
             "c": (
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
@@ -386,6 +392,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "sql": f"-- set {var}\nSELECT {val} AS {var};",
             "html": f"let {var} = {val};",
             "vbnet": f"Dim {var} = {val}",
+            "fortran": f"{var} = {val}",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -423,6 +430,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "shell": f"read {var}",
             "html": f"let {var} = prompt();",
             "vbnet": f"Dim {var} = Console.ReadLine()",
+            "fortran": f"read *, {var}",
             "latin": f'# Latin: lege {var}\n{var} = input()',
             "klingon": f"# Klingon: yIlaD {var}\n{var} = input()",
         }
@@ -510,6 +518,15 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f"\nElse\n{alt}"
             return out + "\nEnd If"
+        if to_lang == "fortran":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            ft_op = "==" if op == "==" else op
+            # Fortran uses == in free form for comparisons in if
+            out = f"if ({var} {ft_op} {val}) then\n{body}"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f"\nelse\n{alt}"
+            return out + "\nend if"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -556,6 +573,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "vbnet":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"Sub {fname}()\n{body}\nEnd Sub"
+        if to_lang == "fortran":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"subroutine {fname}()\n{body}\nend subroutine {fname}"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -602,6 +622,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "sql": f"SELECT {fname}();",
             "html": f"{fname}();",
             "vbnet": f"{fname}()",
+            "fortran": f"call {fname}()",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -644,6 +665,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             return f"let {var} = [{py_items}];"
         if to_lang == "vbnet":
             return f"Dim {var} = {{{py_items}}}"
+        if to_lang == "fortran":
+            return f"{var} = [{py_items}]"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"int {var}[] = {{{py_items}}};"
@@ -711,6 +734,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "vbnet":
             body = ", ".join(f"{{{_lit(k)}, {_lit(v)}}}" for k, v in pairs)
             return f"Dim {var} As New Dictionary(Of Object, Object) From {{{body}}}"
+        if to_lang == "fortran":
+            body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
+            return f"! map {var}: {body}"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -811,6 +837,12 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "vbnet":
                 return f'Dim {var} = System.IO.File.ReadAllText("{path}")'
+            if to_lang == "fortran":
+                return (
+                    f'open(10, file="{path}", status="old")\n'
+                    f'read(10, *) {var}\n'
+                    f"close(10)"
+                )
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -864,6 +896,12 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f'// write {path}: {content}'
             if to_lang == "vbnet":
                 return f'System.IO.File.WriteAllText("{path}", "{content}")'
+            if to_lang == "fortran":
+                return (
+                    f'open(10, file="{path}", status="replace")\n'
+                    f'write(10, *) "{content}"\n'
+                    f"close(10)"
+                )
             if to_lang == "c":
                 return (
                     f'FILE *f = fopen("{path}", "w");\n'

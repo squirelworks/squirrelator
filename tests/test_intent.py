@@ -437,6 +437,40 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "fortran") == 'print *, "hi"'
+    assert generate(Intent("loop", start="1", end="3"), "fortran") == (
+        "do i = 1, 3\n  print *, i\nend do"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "fortran") == "x = 3 + 5"
+    assert generate(Intent("input", name="n"), "fortran") == "read *, n"
+    assert generate(fn, "fortran") == (
+        'subroutine greet()\n  print *, "hello"\nend subroutine greet'
+    )
+    assert generate(Intent("call", name="greet"), "fortran") == "call greet()"
+    assert generate(Intent("list", name="items", start="1,2,3"), "fortran") == "items = [1, 2, 3]"
+    assert generate(mp, "fortran") == '! map ages: "alice" => 30, "bob" => 40'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "fortran") == (
+        'open(10, file="data.txt", status="old")\n'
+        "read(10, *) text\n"
+        "close(10)"
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "fortran") == (
+        'open(10, file="out.txt", status="replace")\n'
+        'write(10, *) "hi"\n'
+        "close(10)"
+    )
+    assert generate(iff, "fortran") == (
+        'if (x > 5) then\n  print *, "ready"\nend if'
+    )
+    assert generate(ifelse, "fortran") == (
+        'if (x > 5) then\n'
+        '  print *, "ready"\n'
+        "else\n"
+        '  print *, "wait"\n'
+        "end if"
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

@@ -620,6 +620,61 @@ def test_generate_python_matches_rules_shapes():
         "procedure greet;\nbegin\n  WriteLn('hello');\nend;"
     )
 
+    assert "CALL print_string" in generate(Intent("output", name="hi"), "z80")
+    assert generate(Intent("loop", start="1", end="3"), "z80") == (
+        "    ; count from 1 to 3\n"
+        "    LD   B, 3 - 1 + 1\n"
+        "    LD   A, 1\n"
+        "loop: CALL print_a\n"
+        "    INC  A\n"
+        "    DJNZ loop"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "z80") == (
+        "    LD   A, 3 + 5  ; x := 3 + 5"
+    )
+    assert generate(Intent("input", name="n"), "z80") == (
+        "    ; read n\n    CALL read_char\n    LD   (n), A"
+    )
+    assert generate(fn, "z80") == (
+        "greet:\n"
+        '        ; print "hello" (conceptual)\n'
+        "        LD   HL, msg\n"
+        "        CALL print_string\n"
+        '    msg: DEFM "hello"\n'
+        "         DEFB 0\n"
+        "    RET"
+    )
+    assert generate(Intent("call", name="greet"), "z80") == "    CALL greet"
+    assert generate(lst, "z80") == "    ; list items: a, b, c\nitems: DEFB a, b, c"
+    assert generate(mp, "z80") == '    ; map ages: "alice" => 30, "bob" => 40'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "z80") == (
+        "    ; read data.txt into text\n    CALL load_file"
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "z80") == (
+        '    ; write "hi" to out.txt\n    CALL save_file'
+    )
+    assert generate(iff, "z80") == (
+        "    ; if x > 5\n"
+        '        ; print "ready" (conceptual)\n'
+        "        LD   HL, msg\n"
+        "        CALL print_string\n"
+        '    msg: DEFM "ready"\n'
+        "         DEFB 0"
+    )
+    assert generate(ifelse, "z80") == (
+        "    ; if x > 5\n"
+        '        ; print "ready" (conceptual)\n'
+        "        LD   HL, msg\n"
+        "        CALL print_string\n"
+        '    msg: DEFM "ready"\n'
+        "         DEFB 0\n"
+        "    ; else\n"
+        '        ; print "wait" (conceptual)\n'
+        "        LD   HL, msg\n"
+        "        CALL print_string\n"
+        '    msg: DEFM "wait"\n'
+        "         DEFB 0"
+    )
 
 
 def test_match_natural_uses_intent_without_changing_outputs():

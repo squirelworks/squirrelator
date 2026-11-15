@@ -353,6 +353,14 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"for i := {start} to {end} do\n"
                 f"  WriteLn(i);"
             ),
+            "z80": (
+                f"    ; count from {start} to {end}\n"
+                f"    LD   B, {end} - {start} + 1\n"
+                f"    LD   A, {start}\n"
+                f"loop: CALL print_a\n"
+                f"    INC  A\n"
+                f"    DJNZ loop"
+            ),
             "c": (
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
                 f'  printf("%d\\n", i);\n}}'
@@ -421,6 +429,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "basic": f"LET {var} = {val}",
             "delphi": f"{var} := {val};",
             "turbopascal": f"{var} := {val};",
+            "z80": f"    LD   A, {val}  ; {var} := {val}",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -463,6 +472,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "basic": f"INPUT {var}",
             "delphi": f"ReadLn({var});",
             "turbopascal": f"ReadLn({var});",
+            "z80": f"    ; read {var}\n    CALL read_char\n    LD   ({var}), A",
             "latin": f'# Latin: lege {var}\n{var} = input()',
             "klingon": f"# Klingon: yIlaD {var}\n{var} = input()",
         }
@@ -591,6 +601,15 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f"\nelse\nbegin\n{alt}\nend"
             return out + ";"
+        if to_lang == "z80":
+            # Teaching fragment: compare-and-branch shape without a full
+            # condition table (JR flags differ by operator).
+            body = "\n".join(f"    {ln}" for ln in then_lines)
+            out = f"    ; if {var} {op} {val}\n{body}"
+            if else_lines is not None:
+                alt = "\n".join(f"    {ln}" for ln in else_lines)
+                out += f"\n    ; else\n{alt}"
+            return out
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -652,6 +671,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "turbopascal":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"procedure {fname};\nbegin\n{body}\nend;"
+        if to_lang == "z80":
+            body = "\n".join(f"    {ln}" for ln in body_lines)
+            return f"{fname}:\n{body}\n    RET"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -703,6 +725,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "basic": f"CALL {fname}",
             "delphi": f"{fname};",
             "turbopascal": f"{fname};",
+            "z80": f"    CALL {fname}",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -777,6 +800,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"var {var}: array[0..{len(items) - 1}] of {elem} = "
                 f"({pas_items});"
             )
+        if to_lang == "z80":
+            joined = ", ".join(items)
+            return f"    ; list {var}: {joined}\n{var}: DEFB {joined}"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"int {var}[] = {{{py_items}}};"
@@ -859,6 +885,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "turbopascal":
             body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
             return f"(* map {var}: {body} *)"
+        if to_lang == "z80":
+            body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
+            return f"    ; map {var}: {body}"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -983,6 +1012,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f"ReadLn(f, {var});\n"
                     f"Close(f);"
                 )
+            if to_lang == "z80":
+                return f"    ; read {path} into {var}\n    CALL load_file"
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -1060,6 +1091,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f"WriteLn(f, '{content}');\n"
                     f"Close(f);"
                 )
+            if to_lang == "z80":
+                return f'    ; write "{content}" to {path}\n    CALL save_file'
             if to_lang == "c":
                 return (
                     f'FILE *f = fopen("{path}", "w");\n'

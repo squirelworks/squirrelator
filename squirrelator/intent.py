@@ -247,6 +247,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f'print("{msg}")',
             "javascript": f'console.log("{msg}");',
+            "c": f'printf("{msg}\\n");',
             "quickbasic": f'PRINT "{msg}"',
             "lolcode": f'VISIBLE "{msg}"',
             "brainfood": (
@@ -279,6 +280,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"for (let i = {start}; i <= {end}; i++) {{\n"
                 f"  console.log(i);\n}}"
             ),
+            "c": (
+                f"for (int i = {start}; i <= {end}; i++) {{\n"
+                f'  printf("%d\\n", i);\n}}'
+            ),
             "quickbasic": f"FOR i = {start} TO {end}\n  PRINT i\nNEXT i",
             "lolcode": (
                 f"IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN {end}\n"
@@ -304,6 +309,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f"{var} = {val}",
             "javascript": f"let {var} = {val};",
+            "c": _c_assignment(var, val),
             "quickbasic": f"{var} = {val}",
             "lolcode": f"I HAS A {var} ITZ {val}",
             "shell": f"{var}={val}",
@@ -317,6 +323,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f'{var} = input()',
             "javascript": f'let {var} = prompt();',
+            "c": f'int {var};\nscanf("%d", &{var});',
             "quickbasic": f"INPUT {var}",
             "lolcode": f"GIMMEH {var}",
             "shell": f"read {var}",
@@ -341,6 +348,13 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 out += f"\nelse:\n{alt}"
             return out
         if to_lang == "javascript":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            out = f"if ({var} {op} {val}) {{\n{body}\n}}"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f" else {{\n{alt}\n}}"
+            return out
+        if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             out = f"if ({var} {op} {val}) {{\n{body}\n}}"
             if else_lines is not None:
@@ -378,6 +392,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "javascript":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"function {fname}() {{\n{body}\n}}"
+        if to_lang == "c":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"void {fname}(void) {{\n{body}\n}}"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"SUB {fname}\n{body}\nEND SUB"
@@ -394,6 +411,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f"{fname}()",
             "javascript": f"{fname}();",
+            "c": f"{fname}();",
             "quickbasic": f"CALL {fname}",
             "shell": f"{fname}",
             "lolcode": f"I IZ {fname} MKAY",
@@ -415,6 +433,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             return f"{var} = [{py_items}]"
         if to_lang == "javascript":
             return f"let {var} = [{py_items}];"
+        if to_lang == "c":
+            if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
+                return f"int {var}[] = {{{py_items}}};"
+            return f"const char *{var}[] = {{{py_items}}};"
         if to_lang == "shell":
             return f"{var}=({sh_items})"
         if to_lang == "quickbasic":
@@ -442,6 +464,18 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "javascript":
             body = ", ".join(f"{_lit(k)}: {_lit(v)}" for k, v in pairs)
             return f"let {var} = {{{body}}};"
+        if to_lang == "c":
+            keys = ", ".join(_lit(k) for k, _ in pairs)
+            vals = ", ".join(_lit(v) for _, v in pairs)
+            if all(re.fullmatch(r"-?\d+(?:\.\d+)?", v) for _, v in pairs):
+                return (
+                    f"const char *{var}_keys[] = {{{keys}}};\n"
+                    f"int {var}_vals[] = {{{vals}}};"
+                )
+            return (
+                f"const char *{var}_keys[] = {{{keys}}};\n"
+                f"const char *{var}_vals[] = {{{vals}}};"
+            )
         if to_lang == "shell":
             # declare associative array when bash is available
             assigns = " ".join(f"[{_lit(k)}]={_lit(v)}" for k, v in pairs)
@@ -460,6 +494,12 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f'const fs = require("fs");\n'
                     f'let {var} = fs.readFileSync("{path}", "utf8");'
                 )
+            if to_lang == "c":
+                return (
+                    f'char {var}[1024];\n'
+                    f'FILE *f = fopen("{path}", "r");\n'
+                    f"if (f) {{ fgets({var}, sizeof {var}, f); fclose(f); }}"
+                )
             if to_lang == "shell":
                 return f'{var}=$(cat "{path}")'
             return None
@@ -472,9 +512,21 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f'const fs = require("fs");\n'
                     f'fs.writeFileSync("{path}", "{content}");'
                 )
+            if to_lang == "c":
+                return (
+                    f'FILE *f = fopen("{path}", "w");\n'
+                    f'if (f) {{ fputs("{content}", f); fclose(f); }}'
+                )
             if to_lang == "shell":
                 return f'printf "%s" "{content}" > "{path}"'
             return None
         return None
 
     return None
+
+
+def _c_assignment(var: str, val: str) -> str:
+    """Pick a simple C type for an assignment teaching fragment."""
+    if re.fullmatch(r"'[^']*'|\"[^\"]*\"", val):
+        return f"char *{var} = {val};"
+    return f"int {var} = {val};"

@@ -15,7 +15,16 @@ from typing import Literal
 
 
 Kind = Literal[
-    "output", "loop", "assignment", "if", "input", "function", "list", "map", "file"
+    "output",
+    "loop",
+    "assignment",
+    "if",
+    "input",
+    "function",
+    "call",
+    "list",
+    "map",
+    "file",
 ]
 
 _OPS = {
@@ -79,6 +88,14 @@ def parse_intent(text: str) -> Intent | None:
             name=m.group(1),
             body=Intent("output", name=m.group(2).strip("\"'")),
         )
+
+    # call greet  /  run the function greet  /  invoke sayhi
+    m = re.search(
+        r"(?:call|run|invoke)\s+(?:the\s+)?(?:function\s+)?(\w+)$",
+        t,
+    )
+    if m and m.group(1) not in {"the", "a", "an", "function"}:
+        return Intent("call", name=m.group(1))
 
     # make a list called items with a, b, c  /  create list nums of 1 2 3
     m = re.search(
@@ -360,6 +377,17 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"HOW IZ I {fname}\n{body}\nIF U SAY SO"
         return None
+
+    if intent.kind == "call":
+        fname = intent.name
+        rules = {
+            "python": f"{fname}()",
+            "javascript": f"{fname}();",
+            "quickbasic": f"CALL {fname}",
+            "shell": f"{fname}",
+            "lolcode": f"I IZ {fname} MKAY",
+        }
+        return rules.get(to_lang)
 
     if intent.kind == "list":
         var = intent.name

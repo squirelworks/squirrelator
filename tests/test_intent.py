@@ -369,6 +369,39 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "html") == 'document.write("hi");'
+    assert generate(Intent("loop", start="1", end="3"), "html") == (
+        "for (let i = 1; i <= 3; i++) {\n"
+        "  document.write(i + '<br>');\n"
+        "}"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "html") == "let x = 3 + 5;"
+    assert generate(Intent("input", name="n"), "html") == "let n = prompt();"
+    assert generate(fn, "html") == (
+        "function greet() {\n  document.write(\"hello\");\n}"
+    )
+    assert generate(Intent("call", name="greet"), "html") == "greet();"
+    assert generate(lst, "html") == 'let items = ["a", "b", "c"];'
+    assert generate(mp, "html") == 'let ages = {"alice": 30, "bob": 40};'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "html") == (
+        '// read data.txt\n'
+        'fetch("data.txt").then(r => r.text()).then(t => { text = t; });'
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "html") == (
+        "// write out.txt: hi"
+    )
+    assert generate(iff, "html") == (
+        "if (x > 5) {\n  document.write(\"ready\");\n}"
+    )
+    assert generate(ifelse, "html") == (
+        "if (x > 5) {\n"
+        "  document.write(\"ready\");\n"
+        "} else {\n"
+        "  document.write(\"wait\");\n"
+        "}"
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

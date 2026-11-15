@@ -620,6 +620,10 @@ def test_generate_python_matches_rules_shapes():
         "procedure greet;\nbegin\n  WriteLn('hello');\nend;"
     )
 
+    assert generate(Intent("output", name="hi"), "bash") == 'echo "hi"'
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "bash") == "x=3 + 5"
+    assert generate(fn, "bash") == 'greet() {\n  echo "hello"\n}'
+
     assert "CALL print_string" in generate(Intent("output", name="hi"), "z80")
     assert generate(Intent("loop", start="1", end="3"), "z80") == (
         "    ; count from 1 to 3\n"

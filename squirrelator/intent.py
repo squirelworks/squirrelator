@@ -224,9 +224,20 @@ def parse_intent(text: str) -> Intent | None:
 
     m = re.search(r"(?:set|let|make)\s+(\w+)\s+(?:to|=)\s+(.+)", t)
     if m:
-        return Intent("assignment", name=m.group(1), start=m.group(2).strip())
+        return Intent(
+            "assignment", name=m.group(1), start=_normalize_arith(m.group(2).strip())
+        )
 
     return None
+
+
+def _normalize_arith(expr: str) -> str:
+    """Turn English arithmetic words into + - * / operators."""
+    expr = re.sub(r"\s+plus\s+", " + ", expr)
+    expr = re.sub(r"\s+minus\s+", " - ", expr)
+    expr = re.sub(r"\s+(?:times|multiplied by)\s+", " * ", expr)
+    expr = re.sub(r"\s+divided by\s+", " / ", expr)
+    return re.sub(r"\s+", " ", expr).strip()
 
 
 def generate(intent: Intent, to_lang: str) -> str | None:

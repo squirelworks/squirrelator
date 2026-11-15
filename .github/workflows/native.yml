@@ -1,8 +1,10 @@
 name: Native apps
 
 # Compile and test only: proves the Compose screens, the desktop build and the
-# Android app still build on every PR and push to main. It uploads nothing,
-# signs nothing and needs no secrets. Releases are a separate, later step.
+# Android app still build on every PR and push to main. It uploads nothing
+# and needs no secrets. A release APK is built with LanguageStudentDesk's
+# shared debug key only to check the signer, then deleted. Releases are a
+# separate, later step.
 on:
   push:
     branches: [main]
@@ -66,3 +68,24 @@ jobs:
       # debug-signed, which Play refuses, and it isn't uploaded anywhere.
       - name: Build the Play bundle (not signed for Play, not uploaded)
         run: gradle --no-daemon :android:bundleRelease
+      # Same shared debug key as LanguageStudentDesk's release APKs. The APK
+      # is deleted here: PR and push CI never upload one.
+      - name: Check the release APK signer (not uploaded)
+        env:
+          UPLOAD_STORE_FILE: ${{ runner.temp }}/lsd-debug.keystore
+          UPLOAD_STORE_PASSWORD: android
+          UPLOAD_KEY_ALIAS: androiddebugkey
+          UPLOAD_KEY_PASSWORD: android
+        run: |
+          curl -fsSL --retry 5 -o "$UPLOAD_STORE_FILE" \
+            https://raw.githubusercontent.com/squirelworks/LanguageStudentDesk/main/SquirrelGo-Apps/lsd-suite/android/app/debug.keystore
+          keytool -list -keystore "$UPLOAD_STORE_FILE" -storepass android -alias androiddebugkey > /dev/null
+          gradle --no-daemon :android:assembleRelease
+          APKSIGNER=$(printf '%s\n' "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          APK=android/build/outputs/apk/release/android-release.apk
+          CERTS=$("$APKSIGNER" verify --print-certs "$APK")
+          echo "$CERTS" | grep -E 'Signer #1 certificate (DN|SHA-256)'
+          # LanguageStudentDesk shared debug cert (squirrelgo-v0.1.5 APKs).
+          echo "$CERTS" | grep -qiE 'SHA-256 digest: cdec9f5cd92ed1608c0c9457699a25ad2101bd1e52accd11197beaf672ddb369' \
+            || { echo "release APK cert does not match LanguageStudentDesk's shared debug key"; exit 1; }
+          rm -f "$APK" "$UPLOAD_STORE_FILE"

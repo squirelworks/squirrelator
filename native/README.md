@@ -68,8 +68,9 @@ Copy it to the phone, tap it and allow installing from that app when Android
 asks. It needs Android 7.0 or newer. Releases are signed with the APK signing
 key when the repo has one in its secrets (`APK_KEYSTORE_BASE64`,
 `APK_STORE_PASSWORD`, `APK_KEY_ALIAS`, `APK_KEY_PASSWORD`). Without it they
-fall back to a one-off debug key, and the release notes say so. Never the
-Play upload key.
+are signed with LanguageStudentDesk's shared debug key (the same one the
+SquirrelGo release APKs use), so a new release installs over an earlier one.
+Never the Play upload key.
 
 ### A test APK from main
 

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-Kind = Literal["output", "loop", "assignment", "if", "input", "function", "list"]
+Kind = Literal["output", "loop", "assignment", "if", "input", "function", "list", "map"]
 
 _OPS = {
     ">": ">",
@@ -48,6 +48,17 @@ class Intent:
     alt: Intent | None = None
 
 
+def _parse_map_pairs(raw: str) -> list[tuple[str, str]]:
+    """Parse 'alice 30 bob 40' or 'alice:30, bob:85' into (key, value) pairs."""
+    tagged = re.findall(r"(\w+)\s*[=:]\s*([^\s,]+)", raw)
+    if tagged:
+        return [(k, v.strip("\"'")) for k, v in tagged]
+    toks = [p.strip("\"'") for p in re.split(r"\s+", raw) if p.strip("\"'")]
+    if len(toks) >= 2 and len(toks) % 2 == 0:
+        return [(toks[i], toks[i + 1]) for i in range(0, len(toks), 2)]
+    return []
+
+
 def parse_intent(text: str) -> Intent | None:
     """Parse a short English instruction into an Intent, or None."""
     t = text.strip().lower()
@@ -78,6 +89,21 @@ def parse_intent(text: str) -> Intent | None:
         parts = [p.strip("\"'") for p in re.split(r"\s*,\s*|\s+", raw) if p.strip("\"'")]
         if parts:
             return Intent("list", name=m.group(1), start=",".join(parts))
+
+    # make a map called ages with alice 30 bob 40  /  create dictionary scores of math:90, english:85
+    m = re.search(
+        r"(?:make|create|define)\s+(?:a\s+)?(?:map|dict|dictionary)\s+"
+        r"(?:called\s+|named\s+)?(\w+)\s+(?:with|of|:)\s+(.+)$",
+        t,
+    )
+    if m:
+        pairs = _parse_map_pairs(m.group(2).strip())
+        if pairs:
+            return Intent(
+                "map",
+                name=m.group(1),
+                start=";".join(f"{k}={v}" for k, v in pairs),
+            )
 
     # ask for name / ask the user for name / input name / read name from the user
     m = re.search(
@@ -323,6 +349,32 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "quickbasic":
             joined = ", ".join(items)
             return f"' list {var}: {joined}\nDIM {var}({len(items) - 1})"
+        return None
+
+    if intent.kind == "map":
+        var = intent.name
+        pairs = []
+        for part in intent.start.split(";") if intent.start else []:
+            if "=" not in part:
+                continue
+            k, v = part.split("=", 1)
+            pairs.append((k, v))
+        if not pairs:
+            return None
+
+        def _lit(x: str) -> str:
+            return x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f'"{x}"'
+
+        if to_lang == "python":
+            body = ", ".join(f"{_lit(k)}: {_lit(v)}" for k, v in pairs)
+            return f"{var} = {{{body}}}"
+        if to_lang == "javascript":
+            body = ", ".join(f"{_lit(k)}: {_lit(v)}" for k, v in pairs)
+            return f"let {var} = {{{body}}};"
+        if to_lang == "shell":
+            # declare associative array when bash is available
+            assigns = " ".join(f"[{_lit(k)}]={_lit(v)}" for k, v in pairs)
+            return f"declare -A {var}=({assigns})"
         return None
 
     return None

@@ -247,7 +247,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         rules = {
             "python": f'print("{msg}")',
             "javascript": f'console.log("{msg}");',
-            "c": f'printf("{msg}\");',
+            "c": f'printf("{msg}\\n");',
             "cpp": f'std::cout << "{msg}" << std::endl;',
             "csharp": f'Console.WriteLine("{msg}");',
             "quickbasic": f'PRINT "{msg}"',

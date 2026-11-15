@@ -249,6 +249,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "javascript": f'console.log("{msg}");',
             "typescript": f'console.log("{msg}");',
             "php": f'echo "{msg}\\n";',
+            "perl": f'print "{msg}\\n";',
             "c": f'printf("{msg}\\n");',
             "cpp": f'std::cout << "{msg}" << std::endl;',
             "csharp": f'Console.WriteLine("{msg}");',
@@ -296,6 +297,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "php": (
                 f"for ($i = {start}; $i <= {end}; $i++) {{\n"
                 f'  echo "$i\\n";\n}}'
+            ),
+            "perl": (
+                f"for (my $i = {start}; $i <= {end}; $i++) {{\n"
+                f'  print "$i\\n";\n}}'
             ),
             "c": (
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
@@ -356,6 +361,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "javascript": f"let {var} = {val};",
             "typescript": f"let {var} = {val};",
             "php": f"${var} = {val};",
+            "perl": f"my ${var} = {val};",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -379,6 +385,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "javascript": f'let {var} = prompt();',
             "typescript": f'let {var} = prompt();',
             "php": f'${var} = trim(fgets(STDIN));',
+            "perl": f'chomp(my ${var} = <>);',
             "c": f'int {var};\nscanf("%d", &{var});',
             "cpp": f"int {var};\nstd::cin >> {var};",
             "csharp": f"int {var} = int.Parse(Console.ReadLine());",
@@ -431,6 +438,13 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f" else {{\n{alt}\n}}"
             return out
+        if to_lang == "perl":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            out = f"if (${var} {op} {val}) {{\n{body}\n}}"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f" else {{\n{alt}\n}}"
+            return out
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -465,6 +479,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "php":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"function {fname}() {{\n{body}\n}}"
+        if to_lang == "perl":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"sub {fname} {{\n{body}\n}}"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -507,6 +524,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "javascript": f"{fname}();",
             "typescript": f"{fname}();",
             "php": f"{fname}();",
+            "perl": f"{fname}();",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -538,6 +556,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             return f"let {var} = [{py_items}];"
         if to_lang == "php":
             return f"${var} = [{py_items}];"
+        if to_lang == "perl":
+            return f"my @{var} = ({py_items});"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"int {var}[] = {{{py_items}}};"
@@ -591,6 +611,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "php":
             body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
             return f"${var} = [{body}];"
+        if to_lang == "perl":
+            body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
+            return f"my %{var} = ({body});"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -676,6 +699,12 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "php":
                 return f'${var} = file_get_contents("{path}");'
+            if to_lang == "perl":
+                return (
+                    f'open my $fh, "<", "{path}" or die $!;\n'
+                    f'local $/; my ${var} = <$fh>;\n'
+                    f"close $fh;"
+                )
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -717,6 +746,12 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "php":
                 return f'file_put_contents("{path}", "{content}");'
+            if to_lang == "perl":
+                return (
+                    f'open my $fh, ">", "{path}" or die $!;\n'
+                    f'print $fh "{content}";\n'
+                    f"close $fh;"
+                )
             if to_lang == "c":
                 return (
                     f'FILE *f = fopen("{path}", "w");\n'

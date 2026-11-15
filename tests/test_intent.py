@@ -625,21 +625,29 @@ def test_generate_python_matches_rules_shapes():
     assert generate(fn, "bash") == 'greet() {\n  echo "hello"\n}'
 
     assert generate(iff, "lolcode") == (
-        "BTW if x > 5\n"
-        "BOTH SAEM x AN 5\n"
+        "DIFFRINT x AN SMALLR OF x AN 5\n"
         "O RLY?\n"
         "  YA RLY\n"
         '    VISIBLE "ready"\n'
         "OIC"
     )
     assert generate(ifelse, "lolcode") == (
-        "BTW if x > 5\n"
-        "BOTH SAEM x AN 5\n"
+        "DIFFRINT x AN SMALLR OF x AN 5\n"
         "O RLY?\n"
         "  YA RLY\n"
         '    VISIBLE "ready"\n'
         "  NO WAI\n"
         '    VISIBLE "wait"\n'
+        "OIC"
+    )
+    assert generate(
+        Intent("if", name="x", start="==", end="5", body=Intent("output", name="yes")),
+        "lolcode",
+    ) == (
+        "BOTH SAEM x AN 5\n"
+        "O RLY?\n"
+        "  YA RLY\n"
+        '    VISIBLE "yes"\n'
         "OIC"
     )
     assert generate(lst, "lolcode") == (

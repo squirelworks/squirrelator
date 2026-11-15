@@ -613,17 +613,24 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 out += f"\n    ; else\n{alt}"
             return out
         if to_lang == "lolcode":
-            # Teaching fragment: YA RLY / NO WAI shape; BOTH SAEM stands in
-            # for the compare, with a BTW when the operator is not equality.
             body = "\n".join(f"    {ln}" for ln in then_lines)
-            head = "" if op == "==" else f"BTW if {var} {op} {val}\n"
-            out = (
-                f"{head}"
-                f"BOTH SAEM {var} AN {val}\n"
-                f"O RLY?\n"
-                f"  YA RLY\n"
-                f"{body}"
-            )
+            # Real LOLCODE compares (1.2): BOTH SAEM / DIFFRINT with
+            # BIGGR OF / SMALLR OF for ordered relations.
+            if op == "==":
+                cond = f"BOTH SAEM {var} AN {val}"
+            elif op == "!=":
+                cond = f"DIFFRINT {var} AN {val}"
+            elif op == ">":
+                cond = f"DIFFRINT {var} AN SMALLR OF {var} AN {val}"
+            elif op == ">=":
+                cond = f"BOTH SAEM {var} AN BIGGR OF {var} AN {val}"
+            elif op == "<":
+                cond = f"DIFFRINT {var} AN BIGGR OF {var} AN {val}"
+            elif op == "<=":
+                cond = f"BOTH SAEM {var} AN SMALLR OF {var} AN {val}"
+            else:
+                return None
+            out = f"{cond}\nO RLY?\n  YA RLY\n{body}"
             if else_lines is not None:
                 alt = "\n".join(f"    {ln}" for ln in else_lines)
                 out += f"\n  NO WAI\n{alt}"

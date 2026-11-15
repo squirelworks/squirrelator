@@ -305,9 +305,14 @@ def _column_utterance(text: str, tokens: list[Token], language: str, lex: Lexico
 
 
 def _english_do_support(tokens: list[Token]) -> list[Token]:
-    """I do not X → I not X. Auxiliary do/does/did before not is support, not
-    content; leaving it unknown blocked don't-style rows (jIyajbe'). Prefer
-    the 'not' meaning over 'none' when the surface is bare not."""
+    """Mark auxiliary do/does/did before not as known support (keep the text).
+
+    Leaving do unknown blocked don't-style matrix rows (jIyajbe'). Dropping
+    the token would break analyze()'s promise that joining every token's text
+    recovers the source. A known prefix with no content meaning waits on the
+    next head in parse(), so do attaches to not and the source stays intact.
+    Prefer the 'not' meaning over 'none' when the surface is bare not.
+    """
     out: list[Token] = []
     i = 0
     while i < len(tokens):
@@ -317,9 +322,13 @@ def _english_do_support(tokens: list[Token]) -> list[Token]:
                 and tokens[i + 1].kind == "space"
                 and tokens[i + 2].kind == "word"
                 and fold(tokens[i + 2].text) == "not"):
+            support = (Entry(word=t.text, meaning="", source="support"),)
+            out.append(Token(t.text, t.start, t.end, "word", support, "prefix"))
+            out.append(tokens[i + 1])
             not_tok = tokens[i + 2]
             preferred = tuple(e for e in not_tok.entries if e.meaning == "not") or not_tok.entries
-            out.append(Token(not_tok.text, not_tok.start, not_tok.end, "word", preferred))
+            out.append(Token(not_tok.text, not_tok.start, not_tok.end, "word",
+                             preferred, not_tok.affix))
             i += 3
             continue
         if t.kind == "word" and fold(t.text) == "not" and t.entries:

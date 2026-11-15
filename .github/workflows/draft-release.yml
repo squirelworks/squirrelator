@@ -1,8 +1,11 @@
 name: Draft release
 
 # Started by hand (see RELEASE_PLAN.md). Runs the tests, builds the wheel and
-# source archive, and makes or refreshes a DRAFT GitHub Release. It never
-# publishes, and never creates, moves or deletes a tag: publishing does that.
+# source archive, makes or refreshes a DRAFT GitHub Release, then builds the
+# phone app's release APK and attaches it, and writes SHA256SUMS.txt over
+# everything on the draft last. It never publishes, and never creates, moves
+# or deletes a tag: publishing does that. No AAB is built or attached here;
+# Play bundles never leave LanguageStudentDesk's Play runner.
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +18,7 @@ on:
         default: main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: draft-release-${{ inputs.version }}
@@ -24,6 +27,10 @@ concurrency:
 jobs:
   draft:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.notes.outputs.sha }}
     env:
       VERSION: ${{ inputs.version }}
       GH_TOKEN: ${{ github.token }}
@@ -55,12 +62,14 @@ jobs:
           python -m pip install -q pytest build
           python -m pytest -q
 
+      # SHA256SUMS.txt is written by the last job, once the APK is on too.
       - name: Build wheel and source archive
-        run: |
-          python -m build --outdir dist
-          (cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt)
+        run: python -m build --outdir dist
 
       - name: Write the notes
+        id: notes
+        env:
+          HAS_KEY: ${{ secrets.APK_KEYSTORE_BASE64 != '' }}
         run: |
           SHA=$(git rev-parse HEAD)
           DATA=$(git ls-tree HEAD data 2>/dev/null | awk '{print $3}')
@@ -75,6 +84,12 @@ jobs:
             echo
             echo "Built from \`$SHA\`, with squirrel-lang-data at \`${DATA:-not included}\`."
             echo
+            if [ "$HAS_KEY" = true ]; then
+              echo "The APK is signed with the squirrelator APK signing key."
+            else
+              echo "The APK is signed with a one-off debug key, so uninstall an earlier squirrelator APK before installing this one."
+            fi
+            echo
             PREV=$(git tag --list 'v*' --sort=-v:refname | head -1)
             if [ -n "$PREV" ]; then
               echo "### Changes since $PREV"
@@ -82,14 +97,146 @@ jobs:
             fi
           } > notes.md
           echo "SHA=$SHA" >> "$GITHUB_ENV"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
       - name: Make or refresh the draft release
         run: |
           TITLE="squirrelator $VERSION"
           if gh release view "$VERSION" >/dev/null 2>&1; then
             gh release edit "$VERSION" --draft --target "$SHA" --title "$TITLE" --notes-file notes.md
+            # The old checksums would be wrong until the last job rewrites them.
+            gh release delete-asset "$VERSION" SHA256SUMS.txt --yes 2>/dev/null || true
             gh release upload "$VERSION" dist/* --clobber
           else
             gh release create "$VERSION" dist/* --draft --target "$SHA" --title "$TITLE" --notes-file notes.md
           fi
           gh release view "$VERSION" --json url -q .url
+
+  # The phone app (native/android) as a signed release APK, attached to the
+  # draft. With the APK signing key in secrets (APK_KEYSTORE_BASE64,
+  # APK_STORE_PASSWORD, APK_KEY_ALIAS, APK_KEY_PASSWORD) it's release-signed;
+  # without it, native/android/build.gradle.kts falls back to the runner's
+  # debug key. The Play upload key is never used here.
+  apk:
+    needs: draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+      GRADLE_VERSION: "8.14.3"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.draft.outputs.sha }}
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      # The key covers only what decides the downloads: the Gradle version and
+      # the plugin and library versions and repositories in native/'s Gradle
+      # files, minus any versionCode/versionName line, so a version bump
+      # keeps the cache.
+      - name: Gradle cache key
+        id: gradle-key
+        run: |
+          FP=$( { echo "gradle $GRADLE_VERSION"; git ls-files 'native/*.gradle.kts' 'native/**/*.gradle.kts' 'native/gradle.properties' \
+            | LC_ALL=C sort -u | while read -r F; do echo "== $F"; grep -vE '^[[:space:]]*version(Code|Name)([[:space:]=(]|$)' "$F" || true; done; } \
+            | sha256sum | cut -c1-40)
+          echo "key=sqtr-gradle-deps-v1-$RUNNER_OS-$FP" | tee -a "$GITHUB_OUTPUT"
+      - name: Restore Gradle cache
+        id: gradle-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/dists
+          key: ${{ steps.gradle-key.outputs.key }}
+          restore-keys: |
+            sqtr-gradle-deps-v1-${{ runner.os }}-
+      # Same Gradle as native.yml; no wrapper jar is committed. Its own cache
+      # is off: the step above is the one shared cache.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+          cache-disabled: true
+      - name: Install Android SDK packages
+        run: |
+          SDKMANAGER=$(printf '%s\n' "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)
+          yes | "$SDKMANAGER" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0" > /dev/null
+      - name: APK signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.APK_KEYSTORE_BASE64 }}
+          STORE_PW: ${{ secrets.APK_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.APK_KEY_ALIAS }}
+          KEY_PW: ${{ secrets.APK_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/apk.keystore"
+            {
+              echo "UPLOAD_STORE_FILE=$RUNNER_TEMP/apk.keystore"
+              echo "UPLOAD_STORE_PASSWORD=$STORE_PW"
+              echo "UPLOAD_KEY_ALIAS=$KEY_ALIAS"
+              echo "UPLOAD_KEY_PASSWORD=$KEY_PW"
+            } >> "$GITHUB_ENV"
+            echo "signing with the APK signing key"
+          else
+            echo "::warning::APK_KEYSTORE_BASE64 is not set in this repo's secrets; the APK is signed with the runner's debug key"
+          fi
+      - name: Build the release APK
+        working-directory: native
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          gradle --no-daemon \
+            -Dorg.gradle.internal.repository.max.retries=6 -Dorg.gradle.internal.repository.initial.backoff=2000 \
+            :android:assembleRelease
+          mkdir -p "$RUNNER_TEMP/apk"
+          cp android/build/outputs/apk/release/android-release.apk "$RUNNER_TEMP/apk/Squirrelator.apk"
+          APKSIGNER=$(printf '%s\n' "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs "$RUNNER_TEMP/apk/Squirrelator.apk" | grep -E 'Signer #1 certificate (DN|SHA-256)'
+      - name: Remove the signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/apk.keystore"
+      # The file name stays the same every release, so
+      # releases/latest/download/Squirrelator.apk keeps working.
+      - name: Attach the APK to the draft
+        run: |
+          gh release upload "$VERSION" "$RUNNER_TEMP/apk/Squirrelator.apk#squirrelator ${VERSION#v} (Android)" \
+            --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Tidy the Gradle cache before saving
+        if: steps.gradle-cache.outputs.cache-hit != 'true'
+        run: rm -f ~/.gradle/caches/modules-2/*.lock ~/.gradle/caches/modules-2/gc.properties
+      - if: steps.gradle-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/dists
+          key: ${{ steps.gradle-key.outputs.key }}
+
+  # Last, so the checksums cover the wheel, the source archive and the APK.
+  sums:
+    needs: [draft, apk]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Write SHA256SUMS.txt
+        run: |
+          mkdir assets && cd assets
+          gh release download "$VERSION" --repo "$GITHUB_REPOSITORY"
+          rm -f SHA256SUMS.txt
+          if ls ./*.aab > /dev/null 2>&1; then
+            echo "::error::AABs never go on a GitHub release"; exit 1
+          fi
+          ls ./*.apk ./*.whl ./*.tar.gz > /dev/null
+          sha256sum -- * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload "$VERSION" SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"
+          gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" --json url,isDraft,assets \
+            -q '"\(.url) draft=\(.isDraft) assets=\([.assets[].name] | join(", "))"'

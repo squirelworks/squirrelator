@@ -59,8 +59,11 @@ app's version comes from `pyproject.toml`, so the release PR doesn't touch
 
 1. After the release PR merges, run **Actions → Draft release → Run
    workflow** with the version. It runs the tests, builds the wheel and the
-   source archive, writes `SHA256SUMS.txt`, and creates or refreshes a
-   **draft** release targeting that commit. It never creates or moves a tag.
+   source archive, and creates or refreshes a **draft** release targeting
+   that commit. Then it builds the phone app's release APK
+   (`Squirrelator.apk`) and attaches it, and finally writes `SHA256SUMS.txt`
+   over every file on the draft. It never builds or attaches an AAB, and it
+   never creates or moves a tag.
 2. The owner clicks **Publish**, which creates the tag.
 
 ## Between releases

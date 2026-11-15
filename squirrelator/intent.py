@@ -14,7 +14,9 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-Kind = Literal["output", "loop", "assignment", "if", "input", "function", "list", "map"]
+Kind = Literal[
+    "output", "loop", "assignment", "if", "input", "function", "list", "map", "file"
+]
 
 _OPS = {
     ">": ">",
@@ -104,6 +106,36 @@ def parse_intent(text: str) -> Intent | None:
                 name=m.group(1),
                 start=";".join(f"{k}={v}" for k, v in pairs),
             )
+
+    # read file data.txt [into text]  /  write hello to file out.txt
+    m = re.search(
+        r"read\s+(?:from\s+)?(?:the\s+)?file\s+(\S+)(?:\s+into\s+(\w+))?$",
+        t,
+    )
+    if m:
+        return Intent("file", name=m.group(1).strip("\"'"), start="read", end=m.group(2) or "text")
+    m = re.search(
+        r"write\s+(.+?)\s+to\s+(?:the\s+)?file\s+(\S+)$",
+        t,
+    )
+    if m:
+        return Intent(
+            "file",
+            name=m.group(2).strip("\"'"),
+            start="write",
+            end=m.group(1).strip("\"'"),
+        )
+    m = re.search(
+        r"write\s+(?:to\s+)?(?:the\s+)?file\s+(\S+)\s+(?:with|:)\s+(.+)$",
+        t,
+    )
+    if m:
+        return Intent(
+            "file",
+            name=m.group(1).strip("\"'"),
+            start="write",
+            end=m.group(2).strip("\"'"),
+        )
 
     # ask for name / ask the user for name / input name / read name from the user
     m = re.search(
@@ -375,6 +407,35 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             # declare associative array when bash is available
             assigns = " ".join(f"[{_lit(k)}]={_lit(v)}" for k, v in pairs)
             return f"declare -A {var}=({assigns})"
+        return None
+
+    if intent.kind == "file":
+        path = intent.name
+        mode = intent.start
+        if mode == "read":
+            var = intent.end or "text"
+            if to_lang == "python":
+                return f'{var} = open("{path}").read()'
+            if to_lang == "javascript":
+                return (
+                    f'const fs = require("fs");\n'
+                    f'let {var} = fs.readFileSync("{path}", "utf8");'
+                )
+            if to_lang == "shell":
+                return f'{var}=$(cat "{path}")'
+            return None
+        if mode == "write":
+            content = intent.end or ""
+            if to_lang == "python":
+                return f'open("{path}", "w").write("{content}")'
+            if to_lang == "javascript":
+                return (
+                    f'const fs = require("fs");\n'
+                    f'fs.writeFileSync("{path}", "{content}");'
+                )
+            if to_lang == "shell":
+                return f'printf "%s" "{content}" > "{path}"'
+            return None
         return None
 
     return None

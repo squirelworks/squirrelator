@@ -137,6 +137,8 @@ def _match_natural(text: str, to_lang: str) -> tuple[str | None, str]:
             return None, f"# no list mapping for {to_lang}"
         if intent.kind == "map":
             return None, f"# no map mapping for {to_lang}"
+        if intent.kind == "file":
+            return None, f"# no file mapping for {to_lang}"
         return None, f"# no mapping for {to_lang}"
     return intent.kind, code
 
@@ -315,6 +317,7 @@ _PATTERN_WHY = {
     "function": "defining a function that prints something",
     "list": "making a list of values",
     "map": "making a map of keys to values",
+    "file": "reading from or writing to a file",
 }
 
 

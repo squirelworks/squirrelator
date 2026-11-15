@@ -54,6 +54,18 @@ def test_parse_map():
     assert got == Intent("map", name="scores", start="math=90;english=85")
 
 
+def test_parse_file():
+    assert parse_intent("read file data.txt") == Intent(
+        "file", name="data.txt", start="read", end="text"
+    )
+    assert parse_intent("read file data.txt into body") == Intent(
+        "file", name="data.txt", start="read", end="body"
+    )
+    assert parse_intent("write hello to file out.txt") == Intent(
+        "file", name="out.txt", start="write", end="hello"
+    )
+
+
 def test_parse_if_then_print():
     got = parse_intent("if x > 5 print ready")
     assert got == Intent(
@@ -102,6 +114,13 @@ def test_generate_python_matches_rules_shapes():
     assert generate(mp, "python") == 'ages = {"alice": 30, "bob": 40}'
     assert generate(mp, "javascript") == 'let ages = {"alice": 30, "bob": 40};'
     assert generate(mp, "cobol") is None
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "python") == (
+        'text = open("data.txt").read()'
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hello"), "python") == (
+        'open("out.txt", "w").write("hello")'
+    )
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "cobol") is None
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
@@ -140,6 +159,10 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("make a map called ages with alice 30 bob 40", "python") == (
         "map",
         'ages = {"alice": 30, "bob": 40}',
+    )
+    assert _match_natural("read file data.txt", "python") == (
+        "file",
+        'text = open("data.txt").read()',
     )
     assert _match_natural("sort the list", "python")[0] is None
     assert _match_natural("if x > 5 print ready", "python") == (

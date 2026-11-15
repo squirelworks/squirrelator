@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from squirrelator import data
+from squirrelator import data, translate
 from squirrelator.lexicon import available, fold, lexicon
 from squirrelator.pipeline.analyze import analyze
 
@@ -93,15 +93,6 @@ def coarsens(got, expected):
     return i == len(expected)
 
 
-# Columns tuned with the analyzer through data v0.1.5. Newer full columns on
-# v0.1.6 still need segmentation follow-up; they are covered by coverage.py.
-_SEGMENT_STRICT = frozenset({
-    "arabic", "armenian", "bengali", "chinese", "cyrillic", "french",
-    "georgian", "german", "greek", "hangul", "hebrew", "hindi", "italian",
-    "japanese", "klingon", "latin", "tamil", "thai",
-})
-
-
 def test_every_column_sentence_segments_back_into_its_tokens():
     """Each sentence of the meaning matrix, written out, segments into the
     tokens the data lists, or into longer words the word list also has.
@@ -109,8 +100,6 @@ def test_every_column_sentence_segments_back_into_its_tokens():
     root = data.data_dir()
     failures = []
     for path in sorted((root / "meaning" / "columns").glob("*.jsonl")):
-        if path.stem not in _SEGMENT_STRICT:
-            continue
         lines = path.read_text(encoding="utf-8").splitlines()
         sep = json.loads(lines[0]).get("sep", " ")
         for line in lines[1:]:
@@ -119,22 +108,8 @@ def test_every_column_sentence_segments_back_into_its_tokens():
             tokens = analyze(surface(expected, sep), path.stem)
             got = words(tokens)
             # Spaced languages may split a phrase into known words (לבית ספר);
-            # unspaced ones must find the listed words or longer ones. A single
-            # multi-word column cell may also segment into known pieces, or the
-            # full cell itself may be a known lexicon entry.
-            join = sep if sep is not None else " "
-            phrase_known = False
-            if sep and len(expected) == 1 and surface(got, sep) == expected[0]:
-                from squirrelator.lexicon import lexicon as load_lex
-                phrase_known = any(
-                    e.source in ("column", "vocab", "meanings")
-                    for e in load_lex(path.stem).lookup(expected[0])
-                )
-            ok = (all(t.known for t in tokens) or phrase_known) and (
-                got == expected or coarsens(got, expected)
-                or surface(got, join) == surface(expected, join) or phrase_known
-            )
-            if not ok:
+            # unspaced ones must find the listed words or longer ones.
+            if (not sep and not coarsens(got, expected)) or not all(t.known for t in tokens):
                 failures.append((path.stem, row["sentence"], expected, got))
     assert failures == []
 
@@ -185,3 +160,27 @@ def test_gloss_only_vocab_yields_to_a_full_affix_split():
     assert [t.affix for t in analyze("jIyajbe'", "klingon") if t.kind == "word"] == [
         "prefix", "", "suffix",
     ]
+
+
+@pytest.mark.parametrize("text", ["I do not understand", "I did not see it", "you do not know"])
+def test_do_support_keeps_every_word_of_the_source(text):
+    """Auxiliary do before not stays in the tokens, so joining them gives the
+    source back, but it is support: known, and not a word to match."""
+    tokens = analyze(text, "english")
+    assert "".join(t.text for t in tokens) == text
+    assert all(text[t.start:t.end] == t.text for t in tokens)
+    assert all(t.known for t in tokens)
+    aux = [t for t in tokens if t.support]
+    assert [fold(t.text) for t in aux] in (["do"], ["did"])
+
+
+def test_do_support_still_matches_dont_rows():
+    assert translate("I do not understand", "english", "klingon") == "jIyajbe'"
+
+
+def test_joiners_inside_words_keep_the_word_whole():
+    """A Tibetan tsheg and an Indic zero-width non-joiner sit inside a word."""
+    for text, language in [("ཕྲུ་གུ", "tibetan"), ("ರೆಸ್ಟೋರೆಂಟ್\u200cನಲ್ಲಿ", "kannada")]:
+        tokens = analyze(text, language)
+        assert "".join(t.text for t in tokens) == text
+        assert all(t.kind == "word" and t.known for t in tokens)

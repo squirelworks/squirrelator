@@ -308,6 +308,33 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "perl") == 'print "hi\\n";'
+    assert generate(Intent("loop", start="1", end="3"), "perl") == (
+        'for (my $i = 1; $i <= 3; $i++) {\n  print "$i\\n";\n}'
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "perl") == "my $x = 3 + 5;"
+    assert generate(Intent("input", name="n"), "perl") == "chomp(my $n = <>);"
+    assert generate(fn, "perl") == 'sub greet {\n  print "hello\\n";\n}'
+    assert generate(Intent("call", name="greet"), "perl") == "greet();"
+    assert generate(lst, "perl") == 'my @items = ("a", "b", "c");'
+    assert generate(mp, "perl") == 'my %ages = ("alice" => 30, "bob" => 40);'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "perl") == (
+        'open my $fh, "<", "data.txt" or die $!;\n'
+        'local $/; my $text = <$fh>;\n'
+        "close $fh;"
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "perl") == (
+        'open my $fh, ">", "out.txt" or die $!;\n'
+        'print $fh "hi";\n'
+        "close $fh;"
+    )
+    assert generate(iff, "perl") == 'if ($x > 5) {\n  print "ready\\n";\n}'
+    assert generate(ifelse, "perl") == (
+        'if ($x > 5) {\n  print "ready\\n";\n}'
+        ' else {\n  print "wait\\n";\n}'
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

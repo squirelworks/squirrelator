@@ -52,6 +52,26 @@ jobs:
           path: coverage-report.md
           if-no-files-found: error
 
+  regression:
+    # Golden translations always; pair accepts from the pinned data under
+    # testing/translation-pairs/ when that folder exists (ROADMAP Phase 5).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -e .
+      - name: Generate regression report
+        run: python3 .github/scripts/regression_report.py -o regression-report.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: regression-report.md
+          if-no-files-found: error
+
   data-pin:
     # data/ may only point at a tagged squirrel-lang-data release on its main.
     runs-on: ubuntu-latest

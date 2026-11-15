@@ -102,6 +102,6 @@ Depends on LanguageStudentDesk#188: only scripts whose stroke data passes the fi
 ## Phase 5: Evaluation and integration with LSD
 
 - [x] A per-column Pipeline coverage table (rows back to English as the top result, each direction) written as a CI artifact, with Pipeline alpha labels driven by it (#26, #51, and the pair_is_alpha follow-up)
-- [ ] A regression report from every pair's fuller test set and every code target's tests, generated in CI
+- [x] A regression report from every pair's fuller test set and every code target's tests, generated in CI (golden translations always; pair accepts from pinned `data/testing/translation-pairs/` when present, source text from the matrix; artifact on every run)
 - [ ] LSD's translation learner and meaning network call squirrelator for checking and alternatives (LanguageStudentDesk#193, #194), with a PR in each repo naming the other
 - [x] Package releases (wheel) go to GitHub Releases (the hand-started Draft release workflow, #1)

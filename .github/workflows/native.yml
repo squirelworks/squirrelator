@@ -97,7 +97,7 @@ jobs:
           test -n "$APKSIGNER" && test -x "$APKSIGNER" && test -f "$APK"
           # Print certs to the log (do not trap stdout; a failed verify must be visible).
           "$APKSIGNER" verify --print-certs "$APK" | tee "$RUNNER_TEMP/apk-certs.txt"
-          grep -E 'Signer #1 certificate (DN|SHA-256)' "$RUNNER_TEMP/apk-certs.txt"
+          grep -E 'certificate (DN|SHA-256 digest):' "$RUNNER_TEMP/apk-certs.txt"
           # LanguageStudentDesk shared debug cert (squirrelgo-v0.1.5 APKs).
           grep -qiE 'SHA-256 digest: cdec9f5cd92ed1608c0c9457699a25ad2101bd1e52accd11197beaf672ddb369' "$RUNNER_TEMP/apk-certs.txt" \
             || { echo "release APK cert does not match LanguageStudentDesk's shared debug key"; exit 1; }

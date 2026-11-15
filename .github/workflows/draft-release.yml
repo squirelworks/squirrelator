@@ -210,7 +210,7 @@ jobs:
           cp android/build/outputs/apk/release/android-release.apk "$RUNNER_TEMP/apk/Squirrelator.apk"
           APKSIGNER=$(printf '%s\n' "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           "$APKSIGNER" verify --print-certs "$RUNNER_TEMP/apk/Squirrelator.apk" | tee "$RUNNER_TEMP/apk-certs.txt"
-          grep -E 'Signer #1 certificate (DN|SHA-256)' "$RUNNER_TEMP/apk-certs.txt"
+          grep -E 'certificate (DN|SHA-256 digest):' "$RUNNER_TEMP/apk-certs.txt"
           # LanguageStudentDesk shared debug cert (squirrelgo-v0.1.5 APKs).
           if [ "$signing" = lsd-debug ]; then
             grep -qiE 'SHA-256 digest: cdec9f5cd92ed1608c0c9457699a25ad2101bd1e52accd11197beaf672ddb369' "$RUNNER_TEMP/apk-certs.txt" \

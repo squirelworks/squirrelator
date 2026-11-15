@@ -31,6 +31,15 @@ def test_parse_input():
     assert parse_intent("read line from the user") == Intent("input", name="line")
 
 
+def test_parse_function_that_prints():
+    got = parse_intent("define a function greet that prints hello")
+    assert got == Intent(
+        "function", name="greet", body=Intent("output", name="hello")
+    )
+    got = parse_intent("create function sayhi that shows hi")
+    assert got.kind == "function" and got.name == "sayhi" and got.body.name == "hi"
+
+
 def test_parse_if_then_print():
     got = parse_intent("if x > 5 print ready")
     assert got == Intent(
@@ -65,6 +74,11 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("input", name="name"), "shell") == "read name"
     assert generate(Intent("input", name="name"), "cobol") is None
     assert generate(Intent("output", name="hi"), "cobol") is None
+    fn = Intent("function", name="greet", body=Intent("output", name="hello"))
+    assert generate(fn, "python") == 'def greet():\n    print("hello")'
+    assert generate(fn, "javascript") == 'function greet() {\n  console.log("hello");\n}'
+    assert generate(fn, "shell") == 'greet() {\n  echo "hello"\n}'
+    assert generate(fn, "cobol") is None
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
@@ -93,6 +107,9 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"
     assert _match_natural("set x to 1", "python") == ("assignment", "x = 1")
     assert _match_natural("ask for name", "python") == ("input", "name = input()")
+    assert _match_natural(
+        "define a function greet that prints hello", "python"
+    ) == ("function", 'def greet():\n    print("hello")')
     assert _match_natural("sort the list", "python")[0] is None
     assert _match_natural("if x > 5 print ready", "python") == (
         "if",

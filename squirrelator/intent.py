@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-Kind = Literal["output", "loop", "assignment", "if", "input"]
+Kind = Literal["output", "loop", "assignment", "if", "input", "function"]
 
 _OPS = {
     ">": ">",
@@ -36,13 +36,13 @@ class Intent:
     """One recognised English instruction."""
 
     kind: Kind
-    # output: message; loop: unused; assignment/if/input: variable name
+    # output: message; loop: unused; assignment/if/input/function: name
     name: str = ""
     # loop: start; assignment: value; if: comparison operator
     start: str = ""
     # loop: end; if: compare value
     end: str = ""
-    # if: then-branch (usually output)
+    # if/function: then-branch or body (usually output)
     body: Intent | None = None
     # if: else-branch (usually output)
     alt: Intent | None = None
@@ -53,6 +53,19 @@ def parse_intent(text: str) -> Intent | None:
     t = text.strip().lower()
     if not t:
         return None
+
+    # define a function greet that prints hello
+    m = re.search(
+        r"(?:define|create|make)\s+(?:a\s+)?(?:function|def|procedure)\s+(\w+)\s+"
+        r"that\s+(?:prints?|shows?|displays?|outputs?)\s+['\"]?(.+?)['\"]?$",
+        t,
+    )
+    if m:
+        return Intent(
+            "function",
+            name=m.group(1),
+            body=Intent("output", name=m.group(2).strip("\"'")),
+        )
 
     # ask for name / ask the user for name / input name / read name from the user
     m = re.search(
@@ -253,6 +266,29 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f"\nelse\n{alt}"
             return out + "\nfi"
+        return None
+
+    if intent.kind == "function" and intent.body is not None:
+        fname = intent.name
+        body_code = generate(intent.body, to_lang)
+        if body_code is None:
+            return None
+        body_lines = body_code.splitlines()
+        if to_lang == "python":
+            body = "\n".join(f"    {ln}" for ln in body_lines)
+            return f"def {fname}():\n{body}"
+        if to_lang == "javascript":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"function {fname}() {{\n{body}\n}}"
+        if to_lang == "quickbasic":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"SUB {fname}\n{body}\nEND SUB"
+        if to_lang == "shell":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"{fname}() {{\n{body}\n}}"
+        if to_lang == "lolcode":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"HOW IZ I {fname}\n{body}\nIF U SAY SO"
         return None
 
     return None

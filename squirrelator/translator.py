@@ -131,6 +131,8 @@ def _match_natural(text: str, to_lang: str) -> tuple[str | None, str]:
             return None, f"# no assignment mapping for {to_lang}"
         if intent.kind == "input":
             return None, f"# no input mapping for {to_lang}"
+        if intent.kind == "function":
+            return None, f"# no function mapping for {to_lang}"
         return None, f"# no mapping for {to_lang}"
     return intent.kind, code
 
@@ -306,6 +308,7 @@ _PATTERN_WHY = {
     "assignment": "setting a variable to a value",
     "if": "a condition that prints something when it is true",
     "input": "reading a value from the user into a variable",
+    "function": "defining a function that prints something",
 }
 
 

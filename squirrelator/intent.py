@@ -279,6 +279,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cobol": f'DISPLAY "{msg}"',
             "basic": f'PRINT "{msg}"',
             "delphi": f"WriteLn('{msg}');",
+            "turbopascal": f"WriteLn('{msg}');",
             "latin": f'# Latin: Salve / {msg}\nprint("{msg}")  # or: dic "{msg}"',
             "klingon": (
                 f"# Klingon: {msg}\n"
@@ -343,6 +344,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"NEXT I"
             ),
             "delphi": (
+                f"for i := {start} to {end} do\n"
+                f"  WriteLn(i);"
+            ),
+            "turbopascal": (
                 f"for i := {start} to {end} do\n"
                 f"  WriteLn(i);"
             ),
@@ -413,6 +418,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cobol": f"MOVE {val} TO {var}",
             "basic": f"LET {var} = {val}",
             "delphi": f"{var} := {val};",
+            "turbopascal": f"{var} := {val};",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -454,6 +460,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cobol": f"ACCEPT {var}",
             "basic": f"INPUT {var}",
             "delphi": f"ReadLn({var});",
+            "turbopascal": f"ReadLn({var});",
             "latin": f'# Latin: lege {var}\n{var} = input()',
             "klingon": f"# Klingon: yIlaD {var}\n{var} = input()",
         }
@@ -574,6 +581,14 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f"\nelse\nbegin\n{alt}\nend"
             return out + ";"
+        if to_lang == "turbopascal":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            tp_op = "=" if op == "==" else op
+            out = f"if {var} {tp_op} {val} then\nbegin\n{body}\nend"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f"\nelse\nbegin\n{alt}\nend"
+            return out + ";"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -632,6 +647,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "delphi":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"procedure {fname};\nbegin\n{body}\nend;"
+        if to_lang == "turbopascal":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"procedure {fname};\nbegin\n{body}\nend;"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -682,6 +700,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cobol": f"PERFORM {fname}",
             "basic": f"CALL {fname}",
             "delphi": f"{fname};",
+            "turbopascal": f"{fname};",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -731,6 +750,19 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "basic":
             return f"DIM {var}({len(items) - 1})\n* {py_items}"
         if to_lang == "delphi":
+            pas_items = ", ".join(
+                x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f"'{x}'" for x in items
+            )
+            elem = (
+                "Integer"
+                if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items)
+                else "string"
+            )
+            return (
+                f"var {var}: array[0..{len(items) - 1}] of {elem} = "
+                f"({pas_items});"
+            )
+        if to_lang == "turbopascal":
             pas_items = ", ".join(
                 x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f"'{x}'" for x in items
             )
@@ -822,6 +854,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "delphi":
             body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
             return f"// map {var}: {body}"
+        if to_lang == "turbopascal":
+            body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
+            return f"(* map {var}: {body} *)"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -939,6 +974,13 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f"ReadLn(f, {var});\n"
                     f"CloseFile(f);"
                 )
+            if to_lang == "turbopascal":
+                return (
+                    f"Assign(f, '{path}');\n"
+                    f"Reset(f);\n"
+                    f"ReadLn(f, {var});\n"
+                    f"Close(f);"
+                )
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -1008,6 +1050,13 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f"Rewrite(f);\n"
                     f"WriteLn(f, '{content}');\n"
                     f"CloseFile(f);"
+                )
+            if to_lang == "turbopascal":
+                return (
+                    f"Assign(f, '{path}');\n"
+                    f"Rewrite(f);\n"
+                    f"WriteLn(f, '{content}');\n"
+                    f"Close(f);"
                 )
             if to_lang == "c":
                 return (

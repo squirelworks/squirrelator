@@ -612,6 +612,22 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"    {ln}" for ln in else_lines)
                 out += f"\n    ; else\n{alt}"
             return out
+        if to_lang == "lolcode":
+            # Teaching fragment: YA RLY / NO WAI shape; BOTH SAEM stands in
+            # for the compare, with a BTW when the operator is not equality.
+            body = "\n".join(f"    {ln}" for ln in then_lines)
+            head = "" if op == "==" else f"BTW if {var} {op} {val}\n"
+            out = (
+                f"{head}"
+                f"BOTH SAEM {var} AN {val}\n"
+                f"O RLY?\n"
+                f"  YA RLY\n"
+                f"{body}"
+            )
+            if else_lines is not None:
+                alt = "\n".join(f"    {ln}" for ln in else_lines)
+                out += f"\n  NO WAI\n{alt}"
+            return out + "\nOIC"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -830,6 +846,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             return f"let {var} = [{py_items}]"
         if to_lang == "shell":
             return f"{var}=({sh_items})"
+        if to_lang == "lolcode":
+            joined = " AN ".join(
+                x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f'"{x}"' for x in items
+            )
+            return f"I HAS A {var} ITZ A BUKKIT\nBTW items: {joined}"
         if to_lang == "quickbasic":
             joined = ", ".join(items)
             return f"' list {var}: {joined}\nDIM {var}({len(items) - 1})"
@@ -959,6 +980,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             # declare associative array when bash is available
             assigns = " ".join(f"[{_lit(k)}]={_lit(v)}" for k, v in pairs)
             return f"declare -A {var}=({assigns})"
+        if to_lang == "lolcode":
+            body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
+            return f"I HAS A {var} ITZ A BUKKIT\nBTW map: {body}"
         return None
 
     if intent.kind == "file":
@@ -1045,6 +1069,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f'let {var} = try! String(contentsOfFile: "{path}")'
             if to_lang == "shell":
                 return f'{var}=$(cat "{path}")'
+            if to_lang == "lolcode":
+                return f'BTW read {path} into {var}'
             return None
         if mode == "write":
             content = intent.end or ""
@@ -1122,6 +1148,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "shell":
                 return f'printf "%s" "{content}" > "{path}"'
+            if to_lang == "lolcode":
+                return f'BTW write "{content}" to {path}'
             return None
         return None
 

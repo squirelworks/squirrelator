@@ -624,6 +624,37 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("assignment", name="x", start="3 + 5"), "bash") == "x=3 + 5"
     assert generate(fn, "bash") == 'greet() {\n  echo "hello"\n}'
 
+    assert generate(iff, "lolcode") == (
+        "BTW if x > 5\n"
+        "BOTH SAEM x AN 5\n"
+        "O RLY?\n"
+        "  YA RLY\n"
+        '    VISIBLE "ready"\n'
+        "OIC"
+    )
+    assert generate(ifelse, "lolcode") == (
+        "BTW if x > 5\n"
+        "BOTH SAEM x AN 5\n"
+        "O RLY?\n"
+        "  YA RLY\n"
+        '    VISIBLE "ready"\n'
+        "  NO WAI\n"
+        '    VISIBLE "wait"\n'
+        "OIC"
+    )
+    assert generate(lst, "lolcode") == (
+        'I HAS A items ITZ A BUKKIT\nBTW items: "a" AN "b" AN "c"'
+    )
+    assert generate(mp, "lolcode") == (
+        'I HAS A ages ITZ A BUKKIT\nBTW map: "alice" => 30, "bob" => 40'
+    )
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "lolcode") == (
+        "BTW read data.txt into text"
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "lolcode") == (
+        'BTW write "hi" to out.txt'
+    )
+
     assert "CALL print_string" in generate(Intent("output", name="hi"), "z80")
     assert generate(Intent("loop", start="1", end="3"), "z80") == (
         "    ; count from 1 to 3\n"

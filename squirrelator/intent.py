@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-Kind = Literal["output", "loop", "assignment", "if", "input", "function"]
+Kind = Literal["output", "loop", "assignment", "if", "input", "function", "list"]
 
 _OPS = {
     ">": ">",
@@ -66,6 +66,18 @@ def parse_intent(text: str) -> Intent | None:
             name=m.group(1),
             body=Intent("output", name=m.group(2).strip("\"'")),
         )
+
+    # make a list called items with a, b, c  /  create list nums of 1 2 3
+    m = re.search(
+        r"(?:make|create|define)\s+(?:a\s+)?list\s+(?:called\s+|named\s+)?(\w+)\s+"
+        r"(?:with|of|:)\s+(.+)$",
+        t,
+    )
+    if m:
+        raw = m.group(2).strip()
+        parts = [p.strip("\"'") for p in re.split(r"\s*,\s*|\s+", raw) if p.strip("\"'")]
+        if parts:
+            return Intent("list", name=m.group(1), start=",".join(parts))
 
     # ask for name / ask the user for name / input name / read name from the user
     m = re.search(
@@ -289,6 +301,28 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "lolcode":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"HOW IZ I {fname}\n{body}\nIF U SAY SO"
+        return None
+
+    if intent.kind == "list":
+        var = intent.name
+        items = intent.start.split(",") if intent.start else []
+        if not items:
+            return None
+
+        def _lit(x: str) -> str:
+            return x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f'"{x}"'
+
+        py_items = ", ".join(_lit(x) for x in items)
+        sh_items = " ".join(_lit(x) for x in items)
+        if to_lang == "python":
+            return f"{var} = [{py_items}]"
+        if to_lang == "javascript":
+            return f"let {var} = [{py_items}];"
+        if to_lang == "shell":
+            return f"{var}=({sh_items})"
+        if to_lang == "quickbasic":
+            joined = ", ".join(items)
+            return f"' list {var}: {joined}\nDIM {var}({len(items) - 1})"
         return None
 
     return None

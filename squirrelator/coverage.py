@@ -6,7 +6,9 @@ The numbers are generated, never hand-edited into docs or issues.
 
 A pair meets the alpha bar in #26 when at least ALPHA_BAR of its column
 rows match top-1 both ways. Product Pipeline alpha labels follow that bar
-via pair_is_alpha(), which reads the same measurements as this report.
+via pair_is_alpha(), which reads the same measurements as this report. A
+column listed in squirrelator.review stays alpha even at the bar, until a
+person has reviewed it.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from pathlib import Path
 from .matrix import Matrix, matrix
 from .pipeline import run
 from .pipeline.generate import render
+from .review import pending_human_review
 
 # Issue #26: drop "alpha" when at least this share of column rows come back
 # as the top English result in both directions.
@@ -202,14 +205,16 @@ def pair_is_alpha(
 
     Same-language is never alpha. Otherwise every non-English side must
     clear the coverage bar; if any side has no column or is under the bar,
-    the pair stays alpha. Driven by column_meets_alpha_bar(), not a
-    hand-edited list.
+    the pair stays alpha. A side still waiting for a person's review
+    (squirrelator.review) keeps the pair alpha even at the bar.
     """
     if from_lang == to_lang:
         return False
     sides = {from_lang, to_lang} - {"english"}
     if not sides:
         return False
+    if any(pending_human_review(lang) for lang in sides):
+        return True
     return not all(
         column_meets_alpha_bar(lang, root=root, bar=bar, report=report)
         for lang in sides
@@ -229,20 +234,28 @@ def format_markdown(report: CoverageReport) -> str:
         "",
         f"Alpha bar (#26): ≥{bar_pct}% top-1 both ways. "
         "Pipeline product alpha labels follow this bar "
-        "(squirrelator.coverage.pair_is_alpha).",
+        "(squirrelator.coverage.pair_is_alpha), except that a column "
+        "waiting for a person's review stays alpha (squirrelator.review).",
         "",
     ]
     if report.data_pin:
         lines += [f"Data pin: `{report.data_pin}`", ""]
     lines += [
-        "| Column | Rows | → en (top 1) | en → (top 1) | ≥ bar |",
-        "|---|---|---|---|---|",
+        "| Column | Rows | → en (top 1) | en → (top 1) | ≥ bar | Alpha |",
+        "|---|---|---|---|---|---|",
     ]
     for c in report.columns:
-        flag = "yes" if c.meets_alpha_bar(report.bar) else "no"
+        meets = c.meets_alpha_bar(report.bar)
+        flag = "yes" if meets else "no"
+        if not meets:
+            alpha = "yes"
+        elif pending_human_review(c.language):
+            alpha = "yes (awaiting human review)"
+        else:
+            alpha = "no"
         lines.append(
             f"| {c.language} | {c.rows} | {c.to_english}/{c.rows} | "
-            f"{c.from_english}/{c.rows} | {flag} |"
+            f"{c.from_english}/{c.rows} | {flag} | {alpha} |"
         )
     passing = report.passing()
     lines += [

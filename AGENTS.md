@@ -34,6 +34,9 @@ conflicts work is in `.github/MERGING.md`.
 - Every language pair is labeled **alpha** until its test set passes.
   Pipeline pairs use the meaning-matrix coverage bar in
   `squirrelator.coverage` (#26); do not hand-edit which pairs are alpha.
+  The one exception is `squirrelator/review.py`: columns the owner keeps
+  alpha until a person has reviewed them. Remove a column there only after a
+  person's review is logged in squirrel-lang-data.
 - `translate(source, from_lang, to_lang, *, style=None)` keeps working,
   because LSD calls it. New features go behind new functions or keyword
   arguments. A breaking change needs the owner's OK.

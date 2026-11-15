@@ -71,7 +71,8 @@ rule-based engine for code and every other pair it supports, and the
 pipeline for a pair the rules don't support but the pipeline does.
 Pipeline pairs carry an alpha flag until their meaning-matrix column
 clears the coverage bar (#26); the CI coverage report is the source of
-those numbers. The pipeline reads every word from squirrel-lang-data and
+those numbers. A column whose rows still wait for a person's review keeps
+the flag even at the bar. The pipeline reads every word from squirrel-lang-data and
 marks what the data doesn't cover instead of guessing:
 
 ```python

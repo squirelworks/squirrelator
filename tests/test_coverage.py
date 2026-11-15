@@ -14,6 +14,7 @@ from squirrelator.coverage import (
     pair_is_alpha,
     write_report,
 )
+from squirrelator.review import PENDING_HUMAN_REVIEW, pending_human_review
 
 try:
     data.data_dir()
@@ -73,9 +74,9 @@ def test_format_markdown_table_shape():
     )
     md = format_markdown(report)
     assert md.startswith("# Pipeline coverage report")
-    assert "| Column | Rows | → en (top 1) | en → (top 1) | ≥ bar |" in md
-    assert "| chinese | 103 | 101/103 | 103/103 | yes |" in md
-    assert "| hangul | 103 | 103/103 | 103/103 | yes |" in md
+    assert "| Column | Rows | → en (top 1) | en → (top 1) | ≥ bar | Alpha |" in md
+    assert "| chinese | 103 | 101/103 | 103/103 | yes | no |" in md
+    assert "| hangul | 103 | 103/103 | 103/103 | yes | no |" in md
     assert "Columns at the bar: 2 of 2" in md
     assert "chinese → en: eat-food, what-time" in md
     assert "pair_is_alpha" in md
@@ -105,6 +106,48 @@ def test_write_report_produces_every_column(root, tmp_path):
         assert f"| {c.language} |" in text
     assert report.data_pin
     assert report.data_pin.startswith("v") or len(report.data_pin) >= 7
-    # Product alpha for a passing column follows the same measurement.
+    # Product alpha for a passing column follows the same measurement,
+    # unless the column is still waiting for a person's review.
     for c in report.passing():
-        assert not pair_is_alpha("english", c.language, report=report)
+        expected = pending_human_review(c.language)
+        assert pair_is_alpha("english", c.language, report=report) is expected
+
+
+def test_pending_review_list_is_sorted_and_names_real_columns(root):
+    from squirrelator.matrix import matrix
+
+    names = list(PENDING_HUMAN_REVIEW)
+    assert names == sorted(names)
+    columns = set(matrix(root).columns)
+    for lang, why in PENDING_HUMAN_REVIEW.items():
+        assert lang in columns, lang
+        assert why.strip()
+
+
+def test_pending_review_keeps_alpha_at_the_bar():
+    report = CoverageReport(
+        (
+            ColumnCoverage("aramaic", 100, 100, 100),
+            ColumnCoverage("hangul", 100, 100, 100),
+        ),
+        bar=0.90,
+    )
+    assert pending_human_review("aramaic")
+    assert not pending_human_review("hangul")
+    # The column clears the bar, but alpha stays until a person reviews it.
+    assert column_meets_alpha_bar("aramaic", report=report)
+    assert pair_is_alpha("english", "aramaic", report=report)
+    assert pair_is_alpha("aramaic", "english", report=report)
+    assert pair_is_alpha("hangul", "aramaic", report=report)
+    assert not pair_is_alpha("aramaic", "aramaic", report=report)
+    assert not pair_is_alpha("english", "hangul", report=report)
+    md = format_markdown(report)
+    assert "| aramaic | 100 | 100/100 | 100/100 | yes | yes (awaiting human review) |" in md
+    assert "| hangul | 100 | 100/100 | 100/100 | yes | no |" in md
+
+
+def test_pending_review_columns_are_alpha_in_the_pipeline(root):
+    from squirrelator.pipeline import run
+
+    for lang in PENDING_HUMAN_REVIEW:
+        assert run("hello", "english", lang, root=root).alpha is True, lang

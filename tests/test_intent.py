@@ -665,7 +665,7 @@ def test_generate_python_matches_rules_shapes():
 
     assert generate(Intent("loop", start="1", end="3"), "brainfood") == (
         "# brainFOOD count from 1 to 3 (conceptual)\n"
-        "# [>] increments the tape cell in a loop"
+        "# [ ] repeats while the cell is non-zero; + adds one to the cell"
     )
     assert generate(Intent("assignment", name="x", start="3 + 5"), "brainfood") == (
         "# brainFOOD set x to 3 + 5"

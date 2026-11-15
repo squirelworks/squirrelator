@@ -435,7 +435,7 @@
     "source": "count from 1 to 5",
     "from": "english",
     "to": "brainfood",
-    "expected": "# brainFOOD count from 1 to 5 (conceptual)\n# [>] increments the tape cell in a loop"
+    "expected": "# brainFOOD count from 1 to 5 (conceptual)\n# [ ] repeats while the cell is non-zero; + adds one to the cell"
   },
   {
     "source": "count from 1 to 5",
@@ -507,7 +507,7 @@
     "source": "count from 1 to 5",
     "from": "pseudocode",
     "to": "brainfood",
-    "expected": "# brainFOOD count from 1 to 5 (conceptual)\n# [>] increments the tape cell in a loop"
+    "expected": "# brainFOOD count from 1 to 5 (conceptual)\n# [ ] repeats while the cell is non-zero; + adds one to the cell"
   },
   {
     "source": "count from 1 to 5",
@@ -579,7 +579,7 @@
     "source": "loop 3 through 7",
     "from": "english",
     "to": "brainfood",
-    "expected": "# brainFOOD count from 3 to 7 (conceptual)\n# [>] increments the tape cell in a loop"
+    "expected": "# brainFOOD count from 3 to 7 (conceptual)\n# [ ] repeats while the cell is non-zero; + adds one to the cell"
   },
   {
     "source": "loop 3 through 7",
@@ -651,7 +651,7 @@
     "source": "loop 3 through 7",
     "from": "pseudocode",
     "to": "brainfood",
-    "expected": "# brainFOOD count from 3 to 7 (conceptual)\n# [>] increments the tape cell in a loop"
+    "expected": "# brainFOOD count from 3 to 7 (conceptual)\n# [ ] repeats while the cell is non-zero; + adds one to the cell"
   },
   {
     "source": "loop 3 through 7",
@@ -1659,7 +1659,7 @@
     "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
     "from": "quickbasic",
     "to": "brainfood",
-    "expected": "# brainFOOD count from 1 to 3 (conceptual)\n# [>] increments the tape cell in a loop"
+    "expected": "# brainFOOD count from 1 to 3 (conceptual)\n# [ ] repeats while the cell is non-zero; + adds one to the cell"
   },
   {
     "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",

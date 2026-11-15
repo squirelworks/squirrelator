@@ -402,7 +402,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             ),
             "brainfood": (
                 f"# brainFOOD count from {start} to {end} (conceptual)\n"
-                f"# [>] increments the tape cell in a loop"
+                f"# [ ] repeats while the cell is non-zero; + adds one to the cell"
             ),
             "shell": f"for i in $(seq {start} {end}); do echo $i; done",
             "latin": (

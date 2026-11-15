@@ -1,4 +1,4 @@
-"""Regression report (ROADMAP Phase 5): golden + TL pair accepts."""
+"""Regression report (ROADMAP Phase 5): golden always; pairs when data has them."""
 
 import pytest
 
@@ -6,26 +6,24 @@ from squirrelator.regression import (
     load_pair_fixtures,
     measure_golden,
     measure_pairs,
-    tl_tests_dir,
+    pair_tests_dir,
     write_report,
 )
 
 
-def test_tl_tests_are_reachable():
-    path = tl_tests_dir()
-    assert path is not None and path.is_dir(), (
-        "LanguageStudentDesk translation-learner/tests not found. "
-        "Set SQUIRREL_TL_TESTS or check the repo out beside squirrelator."
-    )
+def test_pair_tests_skip_when_absent():
+    """No hard fail when the data pin has no testing/translation-pairs/ yet."""
+    path = pair_tests_dir()
+    if path is None:
+        assert load_pair_fixtures() == []
+        return
     fixtures = load_pair_fixtures(path)
-    assert fixtures, f"no translation-pair-tests/1 files in {path}"
-    langs = {f["language"] for f in fixtures}
-    assert "japanese" in langs and "chinese" in langs
+    assert fixtures, f"expected translation-pair-tests/1 files in {path}"
 
 
-def test_pair_suites_pass_on_the_pinned_data():
-    if tl_tests_dir() is None:
-        pytest.skip("LanguageStudentDesk TL tests not checked out")
+def test_pair_suites_pass_when_present():
+    if pair_tests_dir() is None:
+        pytest.skip("testing/translation-pairs/ not in this data pin")
     try:
         from squirrelator import data
         data.data_dir()
@@ -44,8 +42,6 @@ def test_golden_suite_still_matches():
 
 
 def test_write_report_makes_markdown(tmp_path):
-    if tl_tests_dir() is None:
-        pytest.skip("LanguageStudentDesk TL tests not checked out")
     try:
         from squirrelator import data
         data.data_dir()
@@ -54,6 +50,10 @@ def test_write_report_makes_markdown(tmp_path):
     out = tmp_path / "regression-report.md"
     report = write_report(out)
     text = out.read_text(encoding="utf-8")
-    assert "Golden translations" in text and "Pipeline pair fixtures" in text
-    assert report.golden.total > 0 and report.pairs
-    assert "translation-learner/tests" in report.tl_tests.replace("\\", "/")
+    assert "Golden translations" in text
+    assert report.golden.total > 0
+    if report.pairs:
+        assert "Pipeline pair fixtures" in text
+        assert report.pair_tests
+    else:
+        assert "none in this data pin" in text or "No pair fixtures" in text

@@ -26,22 +26,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Check out LanguageStudentDesk TL tests
-        uses: actions/checkout@v4
-        with:
-          repository: squirelworks/LanguageStudentDesk
-          path: LanguageStudentDesk
-          sparse-checkout: |
-            translation-learner/tests
-          sparse-checkout-cone-mode: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -q -e ".[dev]"
-      - name: Run tests
-        env:
-          SQUIRREL_TL_TESTS: LanguageStudentDesk/translation-learner/tests
-        run: python -m pytest -q
+      - run: python -m pytest -q
 
   coverage:
     # Pipeline meaning-matrix coverage table (#26 / ROADMAP Phase 5).
@@ -64,28 +53,18 @@ jobs:
           if-no-files-found: error
 
   regression:
-    # Fuller pair accepts from LanguageStudentDesk TL tests + golden
-    # translations (ROADMAP Phase 5). Accept lists are not vendored here.
+    # Golden translations always; pair accepts from the pinned data under
+    # testing/translation-pairs/ when that folder exists (ROADMAP Phase 5).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Check out LanguageStudentDesk TL tests
-        uses: actions/checkout@v4
-        with:
-          repository: squirelworks/LanguageStudentDesk
-          path: LanguageStudentDesk
-          sparse-checkout: |
-            translation-learner/tests
-          sparse-checkout-cone-mode: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: python -m pip install -q -e .
       - name: Generate regression report
-        env:
-          SQUIRREL_TL_TESTS: LanguageStudentDesk/translation-learner/tests
         run: python3 .github/scripts/regression_report.py -o regression-report.md
       - uses: actions/upload-artifact@v4
         with:

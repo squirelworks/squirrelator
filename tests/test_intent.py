@@ -24,6 +24,13 @@ def test_parse_unknown_is_none():
     assert parse_intent("") is None
 
 
+def test_parse_input():
+    assert parse_intent("ask for name") == Intent("input", name="name")
+    assert parse_intent("ask the user for age") == Intent("input", name="age")
+    assert parse_intent("input score") == Intent("input", name="score")
+    assert parse_intent("read line from the user") == Intent("input", name="line")
+
+
 def test_parse_if_then_print():
     got = parse_intent("if x > 5 print ready")
     assert got == Intent(
@@ -53,6 +60,10 @@ def test_generate_python_matches_rules_shapes():
         "for i in range(1, 6):\n    print(i)"
     )
     assert generate(Intent("assignment", name="total", start="42"), "python") == "total = 42"
+    assert generate(Intent("input", name="name"), "python") == "name = input()"
+    assert generate(Intent("input", name="name"), "javascript") == "let name = prompt();"
+    assert generate(Intent("input", name="name"), "shell") == "read name"
+    assert generate(Intent("input", name="name"), "cobol") is None
     assert generate(Intent("output", name="hi"), "cobol") is None
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
@@ -81,6 +92,7 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"
     assert _match_natural("set x to 1", "python") == ("assignment", "x = 1")
+    assert _match_natural("ask for name", "python") == ("input", "name = input()")
     assert _match_natural("sort the list", "python")[0] is None
     assert _match_natural("if x > 5 print ready", "python") == (
         "if",

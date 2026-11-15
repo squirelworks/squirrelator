@@ -129,6 +129,8 @@ def _match_natural(text: str, to_lang: str) -> tuple[str | None, str]:
             return None, f"# no loop mapping for {to_lang}"
         if intent.kind == "assignment":
             return None, f"# no assignment mapping for {to_lang}"
+        if intent.kind == "input":
+            return None, f"# no input mapping for {to_lang}"
         return None, f"# no mapping for {to_lang}"
     return intent.kind, code
 
@@ -303,6 +305,7 @@ _PATTERN_WHY = {
     "loop": "a loop counting from one number to another",
     "assignment": "setting a variable to a value",
     "if": "a condition that prints something when it is true",
+    "input": "reading a value from the user into a variable",
 }
 
 

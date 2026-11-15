@@ -40,13 +40,10 @@ class Token:
     kind: str                  # "word", "number", "punct" or "space"
     entries: tuple[Entry, ...] = ()
     affix: str = ""            # "prefix" or "suffix" for a split-off affix
-    support: bool = False      # a grammatical helper with no meaning of its own
-                               # (English do in "I do not understand"): kept
-                               # in the text, skipped when matching
 
     @property
     def known(self) -> bool:
-        return self.kind != "word" or self.support or bool(self.entries)
+        return self.kind != "word" or bool(self.entries)
 
 
 def _kind(ch: str, letters: frozenset[str] = frozenset()) -> str:
@@ -223,8 +220,6 @@ def _whole_utterance(text: str, tokens: list[Token], lex: Lexicon) -> list[Token
     utterance. 今日は is konnichiwa, the data's note for こんにちは, so on its
     own it says hello. Inside a sentence the parts keep their own meanings
     (今日は暑い is today, not hello)."""
-    if any(t.support for t in tokens):
-        return tokens
     words = [t for t in tokens if t.kind == "word"]
     if len(words) < 2:
         return tokens
@@ -265,7 +260,7 @@ def _column_utterance(text: str, tokens: list[Token], language: str, lex: Lexico
     row's tokens. 我吃饭 is 我+吃+饭 (eat-food), not 我+吃饭 (eat alone)."""
     from ..matrix import matrix
 
-    words = [t for t in tokens if t.kind == "word" and not t.support]
+    words = [t for t in tokens if t.kind == "word"]
     if not words:
         return tokens
     said = "".join(t.text for t in words) if not lex.spaced else " ".join(t.text for t in words)
@@ -300,31 +295,51 @@ def _column_utterance(text: str, tokens: list[Token], language: str, lex: Lexico
         built.append(Token(bare, start + at, start + at + len(bare), "word",
                            col or entries, affix))
         pos = at + len(bare)
-    # Keep every other token (spaces, punctuation, support words) where it is.
-    kept = [t for t in tokens if t.kind != "word" or t.support]
-    return sorted(kept + built, key=lambda t: t.start)
+    out, placed = [], False
+    for token in tokens:
+        if token.kind == "word":
+            if not placed:
+                out.extend(built)
+                placed = True
+            continue
+        out.append(token)
+    return out
 
 
 def _english_do_support(tokens: list[Token]) -> list[Token]:
-    """In "I do not understand", do is support, not content: it stays in the
-    tokens (so the text and offsets still give the source back) but is
-    marked support, so it doesn't count as an unknown word or head a phrase
-    and don't-style rows still match (jIyajbe'). The not after it, or a bare
-    not, prefers the 'not' meaning over 'none'."""
+    """Mark auxiliary do/does/did before not as known support (keep the text).
+
+    Leaving do unknown blocked don't-style matrix rows (jIyajbe'). Dropping
+    the token would break analyze()'s promise that joining every token's text
+    recovers the source. A known prefix with no content meaning waits on the
+    next head in parse(), so do attaches to not and the source stays intact.
+    Prefer the 'not' meaning over 'none' when the surface is bare not.
+    """
     out: list[Token] = []
-    for i, t in enumerate(tokens):
+    i = 0
+    while i < len(tokens):
+        t = tokens[i]
         if (t.kind == "word" and fold(t.text) in ("do", "does", "did")
                 and i + 2 < len(tokens)
                 and tokens[i + 1].kind == "space"
                 and tokens[i + 2].kind == "word"
                 and fold(tokens[i + 2].text) == "not"):
-            out.append(Token(t.text, t.start, t.end, "word", t.entries, t.affix, support=True))
+            support = (Entry(word=t.text, meaning="", source="support"),)
+            out.append(Token(t.text, t.start, t.end, "word", support, "prefix"))
+            out.append(tokens[i + 1])
+            not_tok = tokens[i + 2]
+            preferred = tuple(e for e in not_tok.entries if e.meaning == "not") or not_tok.entries
+            out.append(Token(not_tok.text, not_tok.start, not_tok.end, "word",
+                             preferred, not_tok.affix))
+            i += 3
             continue
         if t.kind == "word" and fold(t.text) == "not" and t.entries:
             preferred = tuple(e for e in t.entries if e.meaning == "not") or t.entries
             out.append(Token(t.text, t.start, t.end, "word", preferred, t.affix))
+            i += 1
             continue
         out.append(t)
+        i += 1
     return out
 
 

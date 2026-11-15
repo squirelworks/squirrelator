@@ -181,8 +181,7 @@ def _clause(tokens: list[Token], default: str | None, sides: dict, near: dict) -
     waiting: list[Token] = []    # prefixes and "before" markers for the next head
     last = None                  # the phrase the previous word joined, if any
 
-    # Support words (English do before not) carry no meaning; skip them.
-    words = [t for t in tokens if t.kind in ("word", "number") and not t.support]
+    words = [t for t in tokens if t.kind in ("word", "number")]
     for i, t in enumerate(words):
         if t.affix == "prefix" and (is_marker(t) or not meaning_of(t)):
             # A prefix with a content meaning (French j', I) falls through

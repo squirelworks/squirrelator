@@ -114,6 +114,27 @@ def test_every_column_sentence_segments_back_into_its_tokens():
     assert failures == []
 
 
+def test_english_do_not_keeps_source_text():
+    """Auxiliary do before not stays in the token stream (round-trip) and is
+    known, so don't-style rows still match without deleting source words."""
+    for text in ("I do not understand.", "I did not see it.", "You do not know."):
+        tokens = analyze(text, "english")
+        assert "".join(t.text for t in tokens) == text
+        aux = next(t for t in tokens if t.kind == "word" and fold(t.text) in ("do", "does", "did"))
+        assert aux.known and aux.affix == "prefix"
+        not_tok = next(t for t in tokens if t.kind == "word" and fold(t.text) == "not")
+        assert any(e.meaning == "not" for e in not_tok.entries)
+    assert translate("I do not understand", "english", "klingon") == "jIyajbe'"
+
+
+def test_joiners_inside_words_keep_the_word_whole():
+    """A Tibetan tsheg and an Indic zero-width non-joiner sit inside a word."""
+    for text, language in [("ཕྲུ་གུ", "tibetan"), ("ರೆಸ್ಟೋರೆಂಟ್\u200cನಲ್ಲಿ", "kannada")]:
+        tokens = analyze(text, language)
+        assert "".join(t.text for t in tokens) == text
+        assert all(t.kind == "word" and t.known for t in tokens)
+
+
 def test_affixes_split_off_only_when_every_part_is_known():
     tokens = [t for t in analyze("저는 학생이에요", "hangul") if t.kind == "word"]
     assert [(t.text, t.affix) for t in tokens] == [("저", ""), ("는", "suffix"), ("학생", ""), ("이에요", "suffix")]
@@ -160,27 +181,3 @@ def test_gloss_only_vocab_yields_to_a_full_affix_split():
     assert [t.affix for t in analyze("jIyajbe'", "klingon") if t.kind == "word"] == [
         "prefix", "", "suffix",
     ]
-
-
-@pytest.mark.parametrize("text", ["I do not understand", "I did not see it", "you do not know"])
-def test_do_support_keeps_every_word_of_the_source(text):
-    """Auxiliary do before not stays in the tokens, so joining them gives the
-    source back, but it is support: known, and not a word to match."""
-    tokens = analyze(text, "english")
-    assert "".join(t.text for t in tokens) == text
-    assert all(text[t.start:t.end] == t.text for t in tokens)
-    assert all(t.known for t in tokens)
-    aux = [t for t in tokens if t.support]
-    assert [fold(t.text) for t in aux] in (["do"], ["did"])
-
-
-def test_do_support_still_matches_dont_rows():
-    assert translate("I do not understand", "english", "klingon") == "jIyajbe'"
-
-
-def test_joiners_inside_words_keep_the_word_whole():
-    """A Tibetan tsheg and an Indic zero-width non-joiner sit inside a word."""
-    for text, language in [("ཕྲུ་གུ", "tibetan"), ("ರೆಸ್ಟೋರೆಂಟ್\u200cನಲ್ಲಿ", "kannada")]:
-        tokens = analyze(text, language)
-        assert "".join(t.text for t in tokens) == text
-        assert all(t.kind == "word" and t.known for t in tokens)

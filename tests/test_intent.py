@@ -40,6 +40,13 @@ def test_parse_function_that_prints():
     assert got.kind == "function" and got.name == "sayhi" and got.body.name == "hi"
 
 
+def test_parse_list():
+    got = parse_intent("make a list called items with a, b, c")
+    assert got == Intent("list", name="items", start="a,b,c")
+    got = parse_intent("create list nums of 1 2 3")
+    assert got == Intent("list", name="nums", start="1,2,3")
+
+
 def test_parse_if_then_print():
     got = parse_intent("if x > 5 print ready")
     assert got == Intent(
@@ -79,6 +86,11 @@ def test_generate_python_matches_rules_shapes():
     assert generate(fn, "javascript") == 'function greet() {\n  console.log("hello");\n}'
     assert generate(fn, "shell") == 'greet() {\n  echo "hello"\n}'
     assert generate(fn, "cobol") is None
+    lst = Intent("list", name="items", start="a,b,c")
+    assert generate(lst, "python") == 'items = ["a", "b", "c"]'
+    assert generate(lst, "javascript") == 'let items = ["a", "b", "c"];'
+    assert generate(Intent("list", name="nums", start="1,2,3"), "python") == "nums = [1, 2, 3]"
+    assert generate(lst, "cobol") is None
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
@@ -110,6 +122,10 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural(
         "define a function greet that prints hello", "python"
     ) == ("function", 'def greet():\n    print("hello")')
+    assert _match_natural("make a list called items with a b c", "python") == (
+        "list",
+        'items = ["a", "b", "c"]',
+    )
     assert _match_natural("sort the list", "python")[0] is None
     assert _match_natural("if x > 5 print ready", "python") == (
         "if",

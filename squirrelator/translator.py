@@ -113,64 +113,24 @@ def _from_natural(text: str, to_lang: str) -> str:
 
 def _match_natural(text: str, to_lang: str) -> tuple[str | None, str]:
     """Return (pattern, output). pattern names the rule that matched in plain
-    words, or is None when no rule produced code for to_lang."""
-    t = text.lower()
+    words, or is None when no rule produced code for to_lang.
 
-    # print / show / display
-    m = re.search(r"(?:print|show|display|output)\s+['\"]?(.+?)['\"]?$", t)
-    if m or "hello" in t:
-        msg = m.group(1).strip("\"'") if m else "Hello"
-        rules = {
-            "python": f'print("{msg}")',
-            "javascript": f'console.log("{msg}");',
-            "quickbasic": f'PRINT "{msg}"',
-            "lolcode": f'VISIBLE "{msg}"',
-            "brainfood": "# brainFOOD Hello (simplified)\n++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.",
-            "z80": f"    ; print \"{msg}\" (conceptual)\n    LD   HL, msg\n    CALL print_string\nmsg: DEFM \"{msg}\"\n     DEFB 0",
-            "shell": f'echo "{msg}"',
-            "sql": f"SELECT '{msg}' AS message;",
-            "latin": f"# Latin: Salve / {msg}\nprint(\"{msg}\")  # or: dic \"{msg}\"",
-            "klingon": f"# Klingon: {msg}\n# tlhIngan Hol: jatlh \"{msg}\"\nprint(\"{msg}\")",
-        }
-        if to_lang in rules:
-            return "output", rules[to_lang]
+    Parsing goes through squirrelator.intent (Phase 4); generators there
+    keep the same code shapes the golden tests record.
+    """
+    from .intent import generate, parse_intent
+
+    intent = parse_intent(text)
+    if intent is None:
+        return None, f"# Could not match a known pattern for {to_lang}\n# Source: {text}"
+    code = generate(intent, to_lang)
+    if code is None:
+        if intent.kind == "loop":
+            return None, f"# no loop mapping for {to_lang}"
+        if intent.kind == "assignment":
+            return None, f"# no assignment mapping for {to_lang}"
         return None, f"# no mapping for {to_lang}"
-
-    # loop 1 to N / count to N
-    m = re.search(r"(?:for|loop|count|repeat).*?(?:from\s+)?(\d+)\s+(?:to|through)\s+(\d+)", t)
-    if m:
-        start, end = m.group(1), m.group(2)
-        rules = {
-            "python": f"for i in range({start}, {int(end)+1}):\n    print(i)",
-            "javascript": f"for (let i = {start}; i <= {end}; i++) {{\n  console.log(i);\n}}",
-            "quickbasic": f"FOR i = {start} TO {end}\n  PRINT i\nNEXT i",
-            "lolcode": f"IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN {end}\n  VISIBLE i\nIM OUTTA YR loop",
-            "shell": f"for i in $(seq {start} {end}); do echo $i; done",
-            "latin": f"# Latin loop {start} to {end}\nfor i in range({start}, {int(end)+1}):\n    print(i)  # numerus",
-            "klingon": f"# Klingon loop {start} to {end}\n# wej (or appropriate number) logh\nfor i in range({start}, {int(end)+1}):\n    print(i)",
-        }
-        if to_lang in rules:
-            return "loop", rules[to_lang]
-        return None, f"# no loop mapping for {to_lang}"
-
-    # variable assignment
-    m = re.search(r"(?:set|let|make)\s+(\w+)\s+(?:to|=)\s+(.+)", t)
-    if m:
-        var, val = m.group(1), m.group(2).strip()
-        rules = {
-            "python": f"{var} = {val}",
-            "javascript": f"let {var} = {val};",
-            "quickbasic": f"{var} = {val}",
-            "lolcode": f"I HAS A {var} ITZ {val}",
-            "shell": f"{var}={val}",
-            "latin": f"# Latin: {var} est {val}\n{var} = {val}",
-            "klingon": f"# Klingon: {var} {val} 'oH\n{var} = {val}",
-        }
-        if to_lang in rules:
-            return "assignment", rules[to_lang]
-        return None, f"# no assignment mapping for {to_lang}"
-
-    return None, f"# Could not match a known pattern for {to_lang}\n# Source: {text}"
+    return intent.kind, code
 
 
 def _to_english(text: str, from_lang: str) -> str:

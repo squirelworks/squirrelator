@@ -116,8 +116,8 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("input", name="name"), "python") == "name = input()"
     assert generate(Intent("input", name="name"), "javascript") == "let name = prompt();"
     assert generate(Intent("input", name="name"), "shell") == "read name"
-    assert generate(Intent("input", name="name"), "cobol") is None
-    assert generate(Intent("output", name="hi"), "cobol") is None
+    assert generate(Intent("input", name="name"), "cobol") == "ACCEPT name"
+    assert generate(Intent("output", name="hi"), "cobol") == 'DISPLAY "hi"'
     assert generate(Intent("output", name="hi"), "c") == 'printf("hi\\n");'
     assert generate(Intent("output", name="hi"), "cpp") == (
         'std::cout << "hi" << std::endl;'
@@ -157,12 +157,12 @@ def test_generate_python_matches_rules_shapes():
     assert generate(fn, "java") == (
         'void greet() {\n  System.out.println("hello");\n}'
     )
-    assert generate(fn, "cobol") is None
+    assert generate(fn, "cobol") == 'GREET.\n  DISPLAY "hello"'
     assert generate(Intent("call", name="greet"), "python") == "greet()"
     assert generate(Intent("call", name="greet"), "javascript") == "greet();"
     assert generate(Intent("call", name="greet"), "c") == "greet();"
     assert generate(Intent("call", name="greet"), "cpp") == "greet();"
-    assert generate(Intent("call", name="greet"), "cobol") is None
+    assert generate(Intent("call", name="greet"), "cobol") == "PERFORM greet"
     lst = Intent("list", name="items", start="a,b,c")
     assert generate(lst, "python") == 'items = ["a", "b", "c"]'
     assert generate(lst, "javascript") == 'let items = ["a", "b", "c"];'
@@ -179,7 +179,7 @@ def test_generate_python_matches_rules_shapes():
     assert generate(lst, "java") == (
         'java.util.List<String> items = java.util.List.of("a", "b", "c");'
     )
-    assert generate(lst, "cobol") is None
+    assert generate(lst, "cobol") == '* list items: "a", "b", "c"'
     mp = Intent("map", name="ages", start="alice=30;bob=40")
     assert generate(mp, "python") == 'ages = {"alice": 30, "bob": 40}'
     assert generate(mp, "javascript") == 'let ages = {"alice": 30, "bob": 40};'
@@ -193,7 +193,7 @@ def test_generate_python_matches_rules_shapes():
     assert generate(mp, "csharp") == (
         'var ages = new Dictionary<string, int> { { "alice", 30 }, { "bob", 40 } };'
     )
-    assert generate(mp, "cobol") is None
+    assert generate(mp, "cobol") == '* map ages: "alice" => 30, "bob" => 40'
     assert generate(Intent("file", name="data.txt", start="read", end="text"), "python") == (
         'text = open("data.txt").read()'
     )
@@ -208,7 +208,7 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("file", name="out.txt", start="write", end="hi"), "cpp") == (
         'std::ofstream out("out.txt");\nout << "hi";'
     )
-    assert generate(Intent("file", name="data.txt", start="read", end="text"), "cobol") is None
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "cobol") == "* read data.txt into text"
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
@@ -468,6 +468,27 @@ def test_generate_python_matches_rules_shapes():
         "else\n"
         '  print *, "wait"\n'
         "end if"
+    )
+
+
+    assert generate(Intent("loop", start="1", end="3"), "cobol") == (
+        "PERFORM VARYING I FROM 1 BY 1 UNTIL I > 3\n"
+        "  DISPLAY I\n"
+        "END-PERFORM"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "cobol") == "MOVE 3 + 5 TO x"
+    assert generate(iff, "cobol") == (
+        'IF x > 5\n  DISPLAY "ready"\nEND-IF'
+    )
+    assert generate(ifelse, "cobol") == (
+        "IF x > 5\n"
+        '  DISPLAY "ready"\n'
+        "ELSE\n"
+        '  DISPLAY "wait"\n'
+        "END-IF"
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "cobol") == (
+        "* write out.txt: hi"
     )
 
 

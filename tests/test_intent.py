@@ -119,23 +119,37 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("input", name="name"), "cobol") is None
     assert generate(Intent("output", name="hi"), "cobol") is None
     assert generate(Intent("output", name="hi"), "c") == 'printf("hi\\n");'
+    assert generate(Intent("output", name="hi"), "cpp") == (
+        'std::cout << "hi" << std::endl;'
+    )
     assert generate(Intent("loop", start="1", end="3"), "c") == (
         'for (int i = 1; i <= 3; i++) {\n  printf("%d\\n", i);\n}'
+    )
+    assert generate(Intent("loop", start="1", end="3"), "cpp") == (
+        "for (int i = 1; i <= 3; i++) {\n  std::cout << i << std::endl;\n}"
     )
     assert generate(Intent("assignment", name="x", start="3 + 5"), "c") == "int x = 3 + 5;"
     assert generate(Intent("assignment", name="name", start='"ada"'), "c") == (
         'char *name = "ada";'
     )
+    assert generate(Intent("assignment", name="name", start='"ada"'), "cpp") == (
+        'std::string name = "ada";'
+    )
     assert generate(Intent("input", name="n"), "c") == 'int n;\nscanf("%d", &n);'
+    assert generate(Intent("input", name="n"), "cpp") == "int n;\nstd::cin >> n;"
     fn = Intent("function", name="greet", body=Intent("output", name="hello"))
     assert generate(fn, "python") == 'def greet():\n    print("hello")'
     assert generate(fn, "javascript") == 'function greet() {\n  console.log("hello");\n}'
     assert generate(fn, "shell") == 'greet() {\n  echo "hello"\n}'
     assert generate(fn, "c") == 'void greet(void) {\n  printf("hello\\n");\n}'
+    assert generate(fn, "cpp") == (
+        'void greet() {\n  std::cout << "hello" << std::endl;\n}'
+    )
     assert generate(fn, "cobol") is None
     assert generate(Intent("call", name="greet"), "python") == "greet()"
     assert generate(Intent("call", name="greet"), "javascript") == "greet();"
     assert generate(Intent("call", name="greet"), "c") == "greet();"
+    assert generate(Intent("call", name="greet"), "cpp") == "greet();"
     assert generate(Intent("call", name="greet"), "cobol") is None
     lst = Intent("list", name="items", start="a,b,c")
     assert generate(lst, "python") == 'items = ["a", "b", "c"]'
@@ -143,6 +157,10 @@ def test_generate_python_matches_rules_shapes():
     assert generate(Intent("list", name="nums", start="1,2,3"), "python") == "nums = [1, 2, 3]"
     assert generate(Intent("list", name="nums", start="1,2,3"), "c") == "int nums[] = {1, 2, 3};"
     assert generate(lst, "c") == 'const char *items[] = {"a", "b", "c"};'
+    assert generate(Intent("list", name="nums", start="1,2,3"), "cpp") == (
+        "std::vector<int> nums = {1, 2, 3};"
+    )
+    assert generate(lst, "cpp") == 'std::vector<std::string> items = {"a", "b", "c"};'
     assert generate(lst, "cobol") is None
     mp = Intent("map", name="ages", start="alice=30;bob=40")
     assert generate(mp, "python") == 'ages = {"alice": 30, "bob": 40}'
@@ -150,6 +168,9 @@ def test_generate_python_matches_rules_shapes():
     assert generate(mp, "c") == (
         'const char *ages_keys[] = {"alice", "bob"};\n'
         "int ages_vals[] = {30, 40};"
+    )
+    assert generate(mp, "cpp") == (
+        'std::map<std::string, int> ages = {{"alice", 30}, {"bob", 40}};'
     )
     assert generate(mp, "cobol") is None
     assert generate(Intent("file", name="data.txt", start="read", end="text"), "python") == (
@@ -163,11 +184,17 @@ def test_generate_python_matches_rules_shapes():
         'FILE *f = fopen("data.txt", "r");\n'
         "if (f) { fgets(text, sizeof text, f); fclose(f); }"
     )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "cpp") == (
+        'std::ofstream out("out.txt");\nout << "hi";'
+    )
     assert generate(Intent("file", name="data.txt", start="read", end="text"), "cobol") is None
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
     assert generate(iff, "c") == 'if (x > 5) {\n  printf("ready\\n");\n}'
+    assert generate(iff, "cpp") == (
+        'if (x > 5) {\n  std::cout << "ready" << std::endl;\n}'
+    )
     ifelse = Intent(
         "if",
         name="x",

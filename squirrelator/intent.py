@@ -273,6 +273,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             ),
             "shell": f'echo "{msg}"',
             "sql": f"SELECT '{msg}' AS message;",
+            "html": f'document.write("{msg}");',
             "latin": f'# Latin: Salve / {msg}\nprint("{msg}")  # or: dic "{msg}"',
             "klingon": (
                 f"# Klingon: {msg}\n"
@@ -310,6 +311,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"  SELECT i + 1 FROM seq WHERE i < {end}\n"
                 f")\n"
                 f"SELECT i FROM seq;"
+            ),
+            "html": (
+                f"for (let i = {start}; i <= {end}; i++) {{\n"
+                f"  document.write(i + '<br>');\n"
+                f"}}"
             ),
             "c": (
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
@@ -372,6 +378,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "php": f"${var} = {val};",
             "perl": f"my ${var} = {val};",
             "sql": f"-- set {var}\nSELECT {val} AS {var};",
+            "html": f"let {var} = {val};",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -407,6 +414,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "quickbasic": f"INPUT {var}",
             "lolcode": f"GIMMEH {var}",
             "shell": f"read {var}",
+            "html": f"let {var} = prompt();",
             "latin": f'# Latin: lege {var}\n{var} = input()',
             "klingon": f"# Klingon: yIlaD {var}\n{var} = input()",
         }
@@ -479,6 +487,13 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f"ELSE {alt_v} END AS result;"
                 )
             return f"SELECT CASE WHEN {var} {op} {val} THEN {then_v} END AS result;"
+        if to_lang == "html":
+            body = "\n".join(f"  {ln}" for ln in then_lines)
+            out = f"if ({var} {op} {val}) {{\n{body}\n}}"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f" else {{\n{alt}\n}}"
+            return out
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -519,6 +534,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "sql":
             body = "\n".join(body_lines)
             return f"-- function {fname}\n-- {body}"
+        if to_lang == "html":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"function {fname}() {{\n{body}\n}}"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -563,6 +581,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "php": f"{fname}();",
             "perl": f"{fname}();",
             "sql": f"SELECT {fname}();",
+            "html": f"{fname}();",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -601,6 +620,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f"\'{x}\'" for x in items
             )
             return f"-- list {var}\nSELECT * FROM (VALUES ({sql_items})) AS {var};"
+        if to_lang == "html":
+            return f"let {var} = [{py_items}];"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"int {var}[] = {{{py_items}}};"
@@ -662,6 +683,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f"'{x}'"
             rows = ", ".join(f"({_sql_lit(k)}, {_sql_lit(v)})" for k, v in pairs)
             return f"-- map {var}\nSELECT * FROM (VALUES {rows}) AS {var}(k, v);"
+        if to_lang == "html":
+            body = ", ".join(f"{_lit(k)}: {_lit(v)}" for k, v in pairs)
+            return f"let {var} = {{{body}}};"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -755,6 +779,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "sql":
                 return f"-- read {path} into {var}\n-- \\copy {var} FROM '{path}';"
+            if to_lang == "html":
+                return (
+                    f'// read {path}\n'
+                    f'fetch("{path}").then(r => r.text()).then(t => {{ {var} = t; }});'
+                )
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -804,6 +833,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 )
             if to_lang == "sql":
                 return f"-- write {path}\n-- \\copy (SELECT '{content}') TO '{path}';"
+            if to_lang == "html":
+                return f'// write {path}: {content}'
             if to_lang == "c":
                 return (
                     f'FILE *f = fopen("{path}", "w");\n'

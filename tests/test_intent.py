@@ -33,6 +33,20 @@ def test_parse_if_then_print():
     assert got.kind == "if" and got.start == ">" and got.body.name == "full"
 
 
+def test_parse_if_else_print():
+    got = parse_intent("if x > 5 print ready else print wait")
+    assert got == Intent(
+        "if",
+        name="x",
+        start=">",
+        end="5",
+        body=Intent("output", name="ready"),
+        alt=Intent("output", name="wait"),
+    )
+    got = parse_intent("if n is less than 3 then print small else print big")
+    assert got.alt is not None and got.alt.name == "big" and got.start == "<"
+
+
 def test_generate_python_matches_rules_shapes():
     assert generate(Intent("output", name="hello"), "python") == 'print("hello")'
     assert generate(Intent("loop", start="1", end="5"), "python") == (
@@ -43,6 +57,24 @@ def test_generate_python_matches_rules_shapes():
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
+    ifelse = Intent(
+        "if",
+        name="x",
+        start=">",
+        end="5",
+        body=Intent("output", name="ready"),
+        alt=Intent("output", name="wait"),
+    )
+    assert generate(ifelse, "python") == (
+        'if x > 5:\n    print("ready")\nelse:\n    print("wait")'
+    )
+    assert generate(ifelse, "javascript") == (
+        'if (x > 5) {\n  console.log("ready");\n}'
+        ' else {\n  console.log("wait");\n}'
+    )
+    assert generate(ifelse, "shell") == (
+        'if [ "$x" -gt 5 ]; then\n  echo "ready"\nelse\n  echo "wait"\nfi'
+    )
 
 
 def test_match_natural_uses_intent_without_changing_outputs():
@@ -53,4 +85,8 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("if x > 5 print ready", "python") == (
         "if",
         'if x > 5:\n    print("ready")',
+    )
+    assert _match_natural("if x > 5 print ready else print wait", "python") == (
+        "if",
+        'if x > 5:\n    print("ready")\nelse:\n    print("wait")',
     )

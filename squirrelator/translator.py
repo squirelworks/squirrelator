@@ -133,6 +133,8 @@ def _match_natural(text: str, to_lang: str) -> tuple[str | None, str]:
             return None, f"# no input mapping for {to_lang}"
         if intent.kind == "function":
             return None, f"# no function mapping for {to_lang}"
+        if intent.kind == "call":
+            return None, f"# no call mapping for {to_lang}"
         if intent.kind == "list":
             return None, f"# no list mapping for {to_lang}"
         if intent.kind == "map":
@@ -315,6 +317,7 @@ _PATTERN_WHY = {
     "if": "a condition that prints something when it is true",
     "input": "reading a value from the user into a variable",
     "function": "defining a function that prints something",
+    "call": "calling a function by name",
     "list": "making a list of values",
     "map": "making a map of keys to values",
     "file": "reading from or writing to a file",

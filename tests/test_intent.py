@@ -40,6 +40,12 @@ def test_parse_function_that_prints():
     assert got.kind == "function" and got.name == "sayhi" and got.body.name == "hi"
 
 
+def test_parse_call():
+    assert parse_intent("call greet") == Intent("call", name="greet")
+    assert parse_intent("run the function sayhi") == Intent("call", name="sayhi")
+    assert parse_intent("invoke total") == Intent("call", name="total")
+
+
 def test_parse_list():
     got = parse_intent("make a list called items with a, b, c")
     assert got == Intent("list", name="items", start="a,b,c")
@@ -105,6 +111,9 @@ def test_generate_python_matches_rules_shapes():
     assert generate(fn, "javascript") == 'function greet() {\n  console.log("hello");\n}'
     assert generate(fn, "shell") == 'greet() {\n  echo "hello"\n}'
     assert generate(fn, "cobol") is None
+    assert generate(Intent("call", name="greet"), "python") == "greet()"
+    assert generate(Intent("call", name="greet"), "javascript") == "greet();"
+    assert generate(Intent("call", name="greet"), "cobol") is None
     lst = Intent("list", name="items", start="a,b,c")
     assert generate(lst, "python") == 'items = ["a", "b", "c"]'
     assert generate(lst, "javascript") == 'let items = ["a", "b", "c"];'
@@ -152,6 +161,7 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural(
         "define a function greet that prints hello", "python"
     ) == ("function", 'def greet():\n    print("hello")')
+    assert _match_natural("call greet", "python") == ("call", "greet()")
     assert _match_natural("make a list called items with a b c", "python") == (
         "list",
         'items = ["a", "b", "c"]',

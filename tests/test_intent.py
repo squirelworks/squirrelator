@@ -335,6 +335,40 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "sql") == "SELECT 'hi' AS message;"
+    assert generate(Intent("loop", start="1", end="3"), "sql") == (
+        "-- count from 1 to 3\n"
+        "WITH RECURSIVE seq(i) AS (\n"
+        "  SELECT 1\n"
+        "  UNION ALL\n"
+        "  SELECT i + 1 FROM seq WHERE i < 3\n"
+        ")\n"
+        "SELECT i FROM seq;"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "sql") == (
+        "-- set x\nSELECT 3 + 5 AS x;"
+    )
+    assert generate(Intent("input", name="n"), "sql") is None
+    assert generate(fn, "sql") == "-- function greet\n-- SELECT 'hello' AS message;"
+    assert generate(Intent("call", name="greet"), "sql") == "SELECT greet();"
+    assert generate(lst, "sql") == (
+        "-- list items\nSELECT * FROM (VALUES ('a', 'b', 'c')) AS items;"
+    )
+    assert generate(mp, "sql") == (
+        "-- map ages\nSELECT * FROM (VALUES ('alice', 30), ('bob', 40)) AS ages(k, v);"
+    )
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "sql") == (
+        "-- read data.txt into text\n-- \\copy text FROM 'data.txt';"
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "sql") == (
+        "-- write out.txt\n-- \\copy (SELECT 'hi') TO 'out.txt';"
+    )
+    assert generate(iff, "sql") == "SELECT CASE WHEN x > 5 THEN 'ready' END AS result;"
+    assert generate(ifelse, "sql") == (
+        "SELECT CASE WHEN x > 5 THEN 'ready' ELSE 'wait' END AS result;"
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

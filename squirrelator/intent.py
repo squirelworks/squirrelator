@@ -302,6 +302,15 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"for (my $i = {start}; $i <= {end}; $i++) {{\n"
                 f'  print "$i\\n";\n}}'
             ),
+            "sql": (
+                f"-- count from {start} to {end}\n"
+                f"WITH RECURSIVE seq(i) AS (\n"
+                f"  SELECT {start}\n"
+                f"  UNION ALL\n"
+                f"  SELECT i + 1 FROM seq WHERE i < {end}\n"
+                f")\n"
+                f"SELECT i FROM seq;"
+            ),
             "c": (
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
                 f'  printf("%d\\n", i);\n}}'
@@ -362,6 +371,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "typescript": f"let {var} = {val};",
             "php": f"${var} = {val};",
             "perl": f"my ${var} = {val};",
+            "sql": f"-- set {var}\nSELECT {val} AS {var};",
             "c": _c_assignment(var, val),
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
@@ -445,6 +455,30 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f" else {{\n{alt}\n}}"
             return out
+        if to_lang == "sql":
+            # Teaching fragment: CASE over scalar results (output → quoted text).
+            def _sql_case_val(node: Intent | None) -> str | None:
+                if node is None:
+                    return None
+                if node.kind == "output" and node.name is not None:
+                    return f"'{node.name}'"
+                code = generate(node, "sql")
+                if code is None:
+                    return None
+                return f"({code.rstrip(';')})"
+
+            then_v = _sql_case_val(intent.body)
+            if then_v is None:
+                return None
+            if intent.alt is not None:
+                alt_v = _sql_case_val(intent.alt)
+                if alt_v is None:
+                    return None
+                return (
+                    f"SELECT CASE WHEN {var} {op} {val} THEN {then_v} "
+                    f"ELSE {alt_v} END AS result;"
+                )
+            return f"SELECT CASE WHEN {var} {op} {val} THEN {then_v} END AS result;"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -482,6 +516,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "perl":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"sub {fname} {{\n{body}\n}}"
+        if to_lang == "sql":
+            body = "\n".join(body_lines)
+            return f"-- function {fname}\n-- {body}"
         if to_lang == "c":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}(void) {{\n{body}\n}}"
@@ -525,6 +562,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "typescript": f"{fname}();",
             "php": f"{fname}();",
             "perl": f"{fname}();",
+            "sql": f"SELECT {fname}();",
             "c": f"{fname}();",
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
@@ -558,6 +596,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             return f"${var} = [{py_items}];"
         if to_lang == "perl":
             return f"my @{var} = ({py_items});"
+        if to_lang == "sql":
+            sql_items = ", ".join(
+                x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f"\'{x}\'" for x in items
+            )
+            return f"-- list {var}\nSELECT * FROM (VALUES ({sql_items})) AS {var};"
         if to_lang == "c":
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"int {var}[] = {{{py_items}}};"
@@ -614,6 +657,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "perl":
             body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
             return f"my %{var} = ({body});"
+        if to_lang == "sql":
+            def _sql_lit(x: str) -> str:
+                return x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f"'{x}'"
+            rows = ", ".join(f"({_sql_lit(k)}, {_sql_lit(v)})" for k, v in pairs)
+            return f"-- map {var}\nSELECT * FROM (VALUES {rows}) AS {var}(k, v);"
         if to_lang == "c":
             keys = ", ".join(_lit(k) for k, _ in pairs)
             vals = ", ".join(_lit(v) for _, v in pairs)
@@ -705,6 +753,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f'local $/; my ${var} = <$fh>;\n'
                     f"close $fh;"
                 )
+            if to_lang == "sql":
+                return f"-- read {path} into {var}\n-- \\copy {var} FROM '{path}';"
             if to_lang == "c":
                 return (
                     f'char {var}[1024];\n'
@@ -752,6 +802,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f'print $fh "{content}";\n'
                     f"close $fh;"
                 )
+            if to_lang == "sql":
+                return f"-- write {path}\n-- \\copy (SELECT '{content}') TO '{path}';"
             if to_lang == "c":
                 return (
                     f'FILE *f = fopen("{path}", "w");\n'

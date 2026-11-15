@@ -251,6 +251,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cpp": f'std::cout << "{msg}" << std::endl;',
             "csharp": f'Console.WriteLine("{msg}");',
             "java": f'System.out.println("{msg}");',
+            "rust": f'println!("{msg}");',
             "quickbasic": f'PRINT "{msg}"',
             "lolcode": f'VISIBLE "{msg}"',
             "brainfood": (
@@ -299,6 +300,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"for (int i = {start}; i <= {end}; i++) {{\n"
                 f"  System.out.println(i);\n}}"
             ),
+            "rust": (
+                f"for i in {start}..={end} {{\n"
+                f"  println!(\"{{}}\", i);\n}}"
+            ),
             "quickbasic": f"FOR i = {start} TO {end}\n  PRINT i\nNEXT i",
             "lolcode": (
                 f"IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN {end}\n"
@@ -328,6 +333,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cpp": _cpp_assignment(var, val),
             "csharp": _csharp_assignment(var, val),
             "java": _java_assignment(var, val),
+            "rust": _rust_assignment(var, val),
             "quickbasic": f"{var} = {val}",
             "lolcode": f"I HAS A {var} ITZ {val}",
             "shell": f"{var}={val}",
@@ -345,6 +351,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cpp": f"int {var};\nstd::cin >> {var};",
             "csharp": f"int {var} = int.Parse(Console.ReadLine());",
             "java": f"int {var} = new java.util.Scanner(System.in).nextInt();",
+            "rust": f"let mut {var} = String::new();\nstd::io::stdin().read_line(&mut {var}).unwrap();",
             "quickbasic": f"INPUT {var}",
             "lolcode": f"GIMMEH {var}",
             "shell": f"read {var}",
@@ -375,7 +382,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f" else {{\n{alt}\n}}"
             return out
-        if to_lang in ("c", "cpp", "csharp", "java"):
+        if to_lang in ("c", "cpp", "csharp", "java", "rust"):
             body = "\n".join(f"  {ln}" for ln in then_lines)
             out = f"if ({var} {op} {val}) {{\n{body}\n}}"
             if else_lines is not None:
@@ -425,6 +432,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "java":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"void {fname}() {{\n{body}\n}}"
+        if to_lang == "rust":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"fn {fname}() {{\n{body}\n}}"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"SUB {fname}\n{body}\nEND SUB"
@@ -445,6 +455,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "cpp": f"{fname}();",
             "csharp": f"{fname}();",
             "java": f"{fname}();",
+            "rust": f"{fname}();",
             "quickbasic": f"CALL {fname}",
             "shell": f"{fname}",
             "lolcode": f"I IZ {fname} MKAY",
@@ -479,6 +490,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"java.util.List<{_java_elem_type(items)}> {var} = "
                 f"java.util.List.of({py_items});"
             )
+        if to_lang == "rust":
+            return f"let {var} = vec![{py_items}];"
         if to_lang == "shell":
             return f"{var}=({sh_items})"
         if to_lang == "quickbasic":
@@ -550,6 +563,12 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"java.util.Map<{k_ty}, {v_ty}> {var} = new java.util.HashMap<>();\n"
                 f"{puts};"
             )
+        if to_lang == "rust":
+            body = ", ".join(f"({_lit(k)}, {_lit(v)})" for k, v in pairs)
+            return (
+                f"let {var}: std::collections::HashMap<_, _> = "
+                f"[{body}].into_iter().collect();"
+            )
         if to_lang == "shell":
             # declare associative array when bash is available
             assigns = " ".join(f"[{_lit(k)}]={_lit(v)}" for k, v in pairs)
@@ -584,6 +603,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f'string {var} = File.ReadAllText("{path}");'
             if to_lang == "java":
                 return f'String {var} = java.nio.file.Files.readString(java.nio.file.Path.of("{path}"));'
+            if to_lang == "rust":
+                return f'let {var} = std::fs::read_to_string("{path}").unwrap();'
             if to_lang == "shell":
                 return f'{var}=$(cat "{path}")'
             return None
@@ -610,6 +631,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f'File.WriteAllText("{path}", "{content}");'
             if to_lang == "java":
                 return f'java.nio.file.Files.writeString(java.nio.file.Path.of("{path}"), "{content}");'
+            if to_lang == "rust":
+                return f'std::fs::write("{path}", "{content}").unwrap();'
             if to_lang == "shell":
                 return f'printf "%s" "{content}" > "{path}"'
             return None
@@ -662,3 +685,10 @@ def _java_elem_type(items: list[str]) -> str:
     if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
         return "Integer"
     return "String"
+
+
+def _rust_assignment(var: str, val: str) -> str:
+    """Pick a simple Rust binding for an assignment teaching fragment."""
+    if re.fullmatch(r"'[^']*'|\"[^\"]*\"", val):
+        return f"let {var} = {val};"
+    return f"let {var} = {val};"

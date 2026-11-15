@@ -124,6 +124,7 @@ def test_generate_python_matches_rules_shapes():
     )
     assert generate(Intent("output", name="hi"), "csharp") == 'Console.WriteLine("hi");'
     assert generate(Intent("output", name="hi"), "java") == 'System.out.println("hi");'
+    assert generate(Intent("output", name="hi"), "rust") == 'println!("hi");'
     assert generate(Intent("loop", start="1", end="3"), "c") == (
         'for (int i = 1; i <= 3; i++) {\n  printf("%d\\n", i);\n}'
     )

@@ -37,13 +37,13 @@ own PR, after LanguageStudentDesk's pin bump.
 ## Phase 2: Human-language translation
 
 - [ ] Pairs with the most data first. Status per pair is in #26 and the CI coverage report (numbers are generated, not copied here):
-  - [ ] English↔Japanese (full column; alpha follows the coverage bar)
-  - [ ] English↔Chinese (full column; alpha follows the coverage bar; #51 closed the known matrix misses)
-  - [ ] English↔Korean (full column; alpha follows the coverage bar)
-  - [ ] English↔Latin (declension and conjugation from the data, #36; full column since data v0.1.5, #49; alpha follows the coverage bar)
-  - [ ] English↔Klingon (full small column; #51 closed the known matrix misses; alpha follows the coverage bar)
-  - [ ] English↔French, German, Italian, Greek and Russian (full columns since data v0.1.5; alpha follows the coverage bar)
-  - [ ] English↔Taiwanese (no matrix column yet; stays alpha)
+  - [x] English↔Japanese (full column; matrix coverage bar met; alpha follows the report)
+  - [x] English↔Chinese (full column; #51 closed the known matrix misses; bar met)
+  - [x] English↔Korean (full column; matrix coverage bar met)
+  - [x] English↔Latin (declension and conjugation from the data, #36; full column since data v0.1.5, #49; bar met)
+  - [x] English↔Klingon (full column on data main; #51 closed the known matrix misses; bar met on the pin's rows)
+  - [x] English↔French, German, Italian, Greek and Russian (full columns since data v0.1.5; bar met)
+  - [ ] English↔Taiwanese (full column on data main since #123; pin and free-sentence tests still open)
   - [ ] The rest of the languages, as their matrix columns arrive in squirrel-lang-data
 - [ ] Language-to-language pairs go through the interlingua, not through English strings
 - [ ] For each pair: dropped subjects and objects, tense and aspect, particles and case, counters and measure words, politeness level, word order

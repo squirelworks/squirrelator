@@ -92,7 +92,9 @@ Depends on LanguageStudentDesk#188: only scripts whose stroke data passes the fi
 
 ## Phase 4: Prose to code
 
-- [x] An **intent grammar** from English for output, loops, assignment and if→print; later: else branches, functions, lists and maps, input, files, and other languages through the interlingua
+- [x] An **intent grammar** from English for output, loops, assignment,
+  if / if→else, input, function define/call, lists, maps and file
+  read/write; later: other languages through the interlingua
 - [ ] Generators in LSD's order: modern (Python, C, C++, C#, JavaScript, Rust, Go, BASIC and Visual Basic, modern Delphi and Pascal, SQL, shell), then older (QuickBASIC, COBOL, Fortran, Z80), then joke (brainFOOD, LOLCODE). Keyword maps live as data in squirrel-lang-data.
 - [ ] Code back to prose, and code to code through the intent graph, replacing today's regex mapping
 - [x] **Code explained in your language:** Rules explains code in English, the Pipeline takes it into any language with a column, using the code pack's English rows (#46, closes squirrel-lang-data#56). Klingon has no code-pack column yet (#26).

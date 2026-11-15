@@ -47,6 +47,13 @@ def test_parse_list():
     assert got == Intent("list", name="nums", start="1,2,3")
 
 
+def test_parse_map():
+    got = parse_intent("make a map called ages with alice 30 bob 40")
+    assert got == Intent("map", name="ages", start="alice=30;bob=40")
+    got = parse_intent("create dictionary scores of math:90, english:85")
+    assert got == Intent("map", name="scores", start="math=90;english=85")
+
+
 def test_parse_if_then_print():
     got = parse_intent("if x > 5 print ready")
     assert got == Intent(
@@ -91,6 +98,10 @@ def test_generate_python_matches_rules_shapes():
     assert generate(lst, "javascript") == 'let items = ["a", "b", "c"];'
     assert generate(Intent("list", name="nums", start="1,2,3"), "python") == "nums = [1, 2, 3]"
     assert generate(lst, "cobol") is None
+    mp = Intent("map", name="ages", start="alice=30;bob=40")
+    assert generate(mp, "python") == 'ages = {"alice": 30, "bob": 40}'
+    assert generate(mp, "javascript") == 'let ages = {"alice": 30, "bob": 40};'
+    assert generate(mp, "cobol") is None
     iff = Intent("if", name="x", start=">", end="5", body=Intent("output", name="ready"))
     assert generate(iff, "python") == 'if x > 5:\n    print("ready")'
     assert generate(iff, "javascript") == 'if (x > 5) {\n  console.log("ready");\n}'
@@ -125,6 +136,10 @@ def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("make a list called items with a b c", "python") == (
         "list",
         'items = ["a", "b", "c"]',
+    )
+    assert _match_natural("make a map called ages with alice 30 bob 40", "python") == (
+        "map",
+        'ages = {"alice": 30, "bob": 40}',
     )
     assert _match_natural("sort the list", "python")[0] is None
     assert _match_natural("if x > 5 print ready", "python") == (

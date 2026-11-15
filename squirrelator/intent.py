@@ -4,6 +4,7 @@ parse_intent() turns a short English instruction into an Intent. Generators
 read the Intent and emit code. The Rules engine's English→code path uses
 this so the regex patterns and the generators stay in one place; later
 intents (functions, lists, …) grow here without new ad-hoc matchers.
+if→print already supports an optional else→print branch via Intent.alt.
 """
 
 from __future__ import annotations
@@ -43,6 +44,8 @@ class Intent:
     end: str = ""
     # if: then-branch (usually output)
     body: Intent | None = None
+    # if: else-branch (usually output)
+    alt: Intent | None = None
 
 
 def parse_intent(text: str) -> Intent | None:
@@ -50,6 +53,31 @@ def parse_intent(text: str) -> Intent | None:
     t = text.strip().lower()
     if not t:
         return None
+
+    # if x > 5 print hi else print bye  /  if x is greater than 5 then print hi else print bye
+    m = re.search(
+        r"if\s+(\w+)\s*(>=|<=|==|!=|>|<|=)\s*(\S+)\s+"
+        r"(?:then\s+)?(?:print|show|display|output)\s+['\"]?(.+?)['\"]?\s+"
+        r"else\s+(?:print|show|display|output)\s+['\"]?(.+?)['\"]?$",
+        t,
+    )
+    if not m:
+        m = re.search(
+            r"if\s+(\w+)\s+is\s+(greater than|less than|equal to|equals)\s+(\S+)\s+"
+            r"(?:then\s+)?(?:print|show|display|output)\s+['\"]?(.+?)['\"]?\s+"
+            r"else\s+(?:print|show|display|output)\s+['\"]?(.+?)['\"]?$",
+            t,
+        )
+    if m:
+        op = _OPS[m.group(2)]
+        return Intent(
+            "if",
+            name=m.group(1),
+            start=op,
+            end=m.group(3).strip("\"'"),
+            body=Intent("output", name=m.group(4).strip("\"'")),
+            alt=Intent("output", name=m.group(5).strip("\"'")),
+        )
 
     # if x > 5 print hi  /  if x is greater than 5 then print hi
     m = re.search(
@@ -170,14 +198,27 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if then is None:
             return None
         then_lines = then.splitlines()
+        else_code = generate(intent.alt, to_lang) if intent.alt is not None else None
+        else_lines = else_code.splitlines() if else_code else None
         if to_lang == "python":
             body = "\n".join(f"    {ln}" for ln in then_lines)
-            return f"if {var} {op} {val}:\n{body}"
+            out = f"if {var} {op} {val}:\n{body}"
+            if else_lines is not None:
+                alt = "\n".join(f"    {ln}" for ln in else_lines)
+                out += f"\nelse:\n{alt}"
+            return out
         if to_lang == "javascript":
             body = "\n".join(f"  {ln}" for ln in then_lines)
-            return f"if ({var} {op} {val}) {{\n{body}\n}}"
+            out = f"if ({var} {op} {val}) {{\n{body}\n}}"
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f" else {{\n{alt}\n}}"
+            return out
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                return f"IF {var} {op} {val} THEN\n{body}\nELSE\n{alt}\nEND IF"
             return f"IF {var} {op} {val} THEN\n{body}\nEND IF"
         if to_lang == "shell":
             body = "\n".join(f"  {ln}" for ln in then_lines)
@@ -185,7 +226,11 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             sh_op = sh_ops.get(op)
             if sh_op is None:
                 return None
-            return f'if [ "${var}" {sh_op} {val} ]; then\n{body}\nfi'
+            out = f'if [ "${var}" {sh_op} {val} ]; then\n{body}'
+            if else_lines is not None:
+                alt = "\n".join(f"  {ln}" for ln in else_lines)
+                out += f"\nelse\n{alt}"
+            return out + "\nfi"
         return None
 
     return None

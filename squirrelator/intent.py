@@ -400,6 +400,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN {end}\n"
                 f"  VISIBLE i\nIM OUTTA YR loop"
             ),
+            "brainfood": (
+                f"# brainFOOD count from {start} to {end} (conceptual)\n"
+                f"# [>] increments the tape cell in a loop"
+            ),
             "shell": f"for i in $(seq {start} {end}); do echo $i; done",
             "latin": (
                 f"# Latin loop {start} to {end}\n"
@@ -442,6 +446,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "swift": _swift_assignment(var, val),
             "quickbasic": f"{var} = {val}",
             "lolcode": f"I HAS A {var} ITZ {val}",
+            "brainfood": f"# brainFOOD set {var} to {val}",
             "shell": f"{var}={val}",
             "latin": f"# Latin: {var} est {val}\n{var} = {val}",
             "klingon": f"# Klingon: {var} {val} 'oH\n{var} = {val}",
@@ -466,6 +471,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "swift": f'let {var} = readLine() ?? ""',
             "quickbasic": f"INPUT {var}",
             "lolcode": f"GIMMEH {var}",
+            "brainfood": f"# brainFOOD read {var} (,)",
             "shell": f"read {var}",
             "html": f"let {var} = prompt();",
             "vbnet": f"Dim {var} = Console.ReadLine()",
@@ -635,6 +641,13 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"    {ln}" for ln in else_lines)
                 out += f"\n  NO WAI\n{alt}"
             return out + "\nOIC"
+        if to_lang == "brainfood":
+            body = "\n".join(f"#   {ln}" for ln in then_lines)
+            out = f"# brainFOOD if {var} {op} {val}\n{body}"
+            if else_lines is not None:
+                alt = "\n".join(f"#   {ln}" for ln in else_lines)
+                out += f"\n# else\n{alt}"
+            return out
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in then_lines)
             if else_lines is not None:
@@ -732,6 +745,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "lolcode":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"HOW IZ I {fname}\n{body}\nIF U SAY SO"
+        if to_lang == "brainfood":
+            body = "\n".join(f"#   {ln}" for ln in body_lines)
+            return f"# brainFOOD def {fname}\n{body}"
         return None
 
     if intent.kind == "call":
@@ -762,6 +778,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "quickbasic": f"CALL {fname}",
             "shell": f"{fname}",
             "lolcode": f"I IZ {fname} MKAY",
+            "brainfood": f"# brainFOOD call {fname}",
         }
         return rules.get(to_lang)
 
@@ -858,6 +875,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 x if re.fullmatch(r"-?\d+(?:\.\d+)?", x) else f'"{x}"' for x in items
             )
             return f"I HAS A {var} ITZ A BUKKIT\nBTW items: {joined}"
+        if to_lang == "brainfood":
+            joined = ", ".join(items)
+            return f"# brainFOOD list {var}: {joined}"
         if to_lang == "quickbasic":
             joined = ", ".join(items)
             return f"' list {var}: {joined}\nDIM {var}({len(items) - 1})"
@@ -990,6 +1010,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "lolcode":
             body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
             return f"I HAS A {var} ITZ A BUKKIT\nBTW map: {body}"
+        if to_lang == "brainfood":
+            body = ", ".join(f"{_lit(k)} => {_lit(v)}" for k, v in pairs)
+            return f"# brainFOOD map {var}: {body}"
         return None
 
     if intent.kind == "file":
@@ -1078,6 +1101,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f'{var}=$(cat "{path}")'
             if to_lang == "lolcode":
                 return f'BTW read {path} into {var}'
+            if to_lang == "brainfood":
+                return f"# brainFOOD read {path} into {var}"
             return None
         if mode == "write":
             content = intent.end or ""
@@ -1157,6 +1182,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f'printf "%s" "{content}" > "{path}"'
             if to_lang == "lolcode":
                 return f'BTW write "{content}" to {path}'
+            if to_lang == "brainfood":
+                return f'# brainFOOD write "{content}" to {path}'
             return None
         return None
 

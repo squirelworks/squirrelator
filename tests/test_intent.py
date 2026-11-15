@@ -663,6 +663,16 @@ def test_generate_python_matches_rules_shapes():
         'BTW write "hi" to out.txt'
     )
 
+    assert generate(Intent("loop", start="1", end="3"), "brainfood") == (
+        "# brainFOOD count from 1 to 3 (conceptual)\n"
+        "# [ ] repeats while the cell is non-zero; + adds one to the cell"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "brainfood") == (
+        "# brainFOOD set x to 3 + 5"
+    )
+    assert generate(iff, "brainfood").startswith("# brainFOOD if x > 5")
+    assert generate(lst, "brainfood") == "# brainFOOD list items: a, b, c"
+
     assert "CALL print_string" in generate(Intent("output", name="hi"), "z80")
     assert generate(Intent("loop", start="1", end="3"), "z80") == (
         "    ; count from 1 to 3\n"

@@ -42,9 +42,11 @@ are never moved, reused or deleted.
       (#133, #134).
 - [x] Release notes refreshed for data **v0.1.6** and those engine fixes.
 - [x] CI green on `main`.
-- [ ] **Actions → Draft release → Run workflow** with `v0.1.2` (refreshes
-      the existing draft onto current `main`), then the owner publishes.
-      Do not publish the older draft that still named data v0.1.5.
+- [x] **v0.1.2 draft** refreshed onto current `main` (data **v0.1.6** /
+      `73b5ace`, do-support #133/#134). Prefer **Actions → Draft release →
+      Run workflow** with `v0.1.2` if the draft needs another refresh.
+- [ ] The owner publishes. Do not publish any older draft that still named
+      data v0.1.5.
 
 This is also the phone app's first Google Play build. Once it's published,
 LanguageStudentDesk's **squirrelator Play testing** workflow sends it to

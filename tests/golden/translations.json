@@ -495,7 +495,7 @@
   "source": "count from 1 to 5",
   "from": "english",
   "to": "sql",
-  "expected": "# no loop mapping for sql"
+  "expected": "-- count from 1 to 5\nWITH RECURSIVE seq(i) AS (\n  SELECT 1\n  UNION ALL\n  SELECT i + 1 FROM seq WHERE i < 5\n)\nSELECT i FROM seq;"
  },
  {
   "source": "count from 1 to 5",
@@ -567,7 +567,7 @@
   "source": "count from 1 to 5",
   "from": "pseudocode",
   "to": "sql",
-  "expected": "# no loop mapping for sql"
+  "expected": "-- count from 1 to 5\nWITH RECURSIVE seq(i) AS (\n  SELECT 1\n  UNION ALL\n  SELECT i + 1 FROM seq WHERE i < 5\n)\nSELECT i FROM seq;"
  },
  {
   "source": "count from 1 to 5",
@@ -639,7 +639,7 @@
   "source": "loop 3 through 7",
   "from": "english",
   "to": "sql",
-  "expected": "# no loop mapping for sql"
+  "expected": "-- count from 3 to 7\nWITH RECURSIVE seq(i) AS (\n  SELECT 3\n  UNION ALL\n  SELECT i + 1 FROM seq WHERE i < 7\n)\nSELECT i FROM seq;"
  },
  {
   "source": "loop 3 through 7",
@@ -711,7 +711,7 @@
   "source": "loop 3 through 7",
   "from": "pseudocode",
   "to": "sql",
-  "expected": "# no loop mapping for sql"
+  "expected": "-- count from 3 to 7\nWITH RECURSIVE seq(i) AS (\n  SELECT 3\n  UNION ALL\n  SELECT i + 1 FROM seq WHERE i < 7\n)\nSELECT i FROM seq;"
  },
  {
   "source": "loop 3 through 7",
@@ -783,7 +783,7 @@
   "source": "set total to 42",
   "from": "english",
   "to": "sql",
-  "expected": "# no assignment mapping for sql"
+  "expected": "-- set total\nSELECT 42 AS total;"
  },
  {
   "source": "set total to 42",
@@ -855,7 +855,7 @@
   "source": "set total to 42",
   "from": "pseudocode",
   "to": "sql",
-  "expected": "# no assignment mapping for sql"
+  "expected": "-- set total\nSELECT 42 AS total;"
  },
  {
   "source": "set total to 42",
@@ -927,7 +927,7 @@
   "source": "make name = 'Ada'",
   "from": "english",
   "to": "sql",
-  "expected": "# no assignment mapping for sql"
+  "expected": "-- set name\nSELECT 'ada' AS name;"
  },
  {
   "source": "make name = 'Ada'",
@@ -999,7 +999,7 @@
   "source": "make name = 'Ada'",
   "from": "pseudocode",
   "to": "sql",
-  "expected": "# no assignment mapping for sql"
+  "expected": "-- set name\nSELECT 'ada' AS name;"
  },
  {
   "source": "make name = 'Ada'",
@@ -1719,7 +1719,7 @@
   "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",
   "from": "quickbasic",
   "to": "sql",
-  "expected": "# no loop mapping for sql"
+  "expected": "-- count from 1 to 3\nWITH RECURSIVE seq(i) AS (\n  SELECT 1\n  UNION ALL\n  SELECT i + 1 FROM seq WHERE i < 3\n)\nSELECT i FROM seq;"
  },
  {
   "source": "FOR i = 1 TO 3\n  PRINT i\nNEXT i",

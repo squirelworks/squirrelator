@@ -87,7 +87,7 @@ jobs:
             if [ "$HAS_KEY" = true ]; then
               echo "The APK is signed with the squirrelator APK signing key."
             else
-              echo "The APK is signed with a one-off debug key, so uninstall an earlier squirrelator APK before installing this one."
+              echo "The APK is signed with LanguageStudentDesk's shared debug key, so it installs over earlier builds."
             fi
             echo
             PREV=$(git tag --list 'v*' --sort=-v:refname | head -1)
@@ -115,8 +115,10 @@ jobs:
   # The phone app (native/android) as a signed release APK, attached to the
   # draft. With the APK signing key in secrets (APK_KEYSTORE_BASE64,
   # APK_STORE_PASSWORD, APK_KEY_ALIAS, APK_KEY_PASSWORD) it's release-signed;
-  # without it, native/android/build.gradle.kts falls back to the runner's
-  # debug key. The Play upload key is never used here.
+  # without it, the build fetches LanguageStudentDesk's shared debug
+  # keystore (SquirrelGo-Apps/lsd-suite/android/app/debug.keystore on main)
+  # and signs with the same key as the SquirrelGo release APKs, so a newer
+  # APK installs over an older one. The Play upload key is never used here.
   apk:
     needs: draft
     runs-on: ubuntu-latest
@@ -181,9 +183,21 @@ jobs:
               echo "UPLOAD_KEY_ALIAS=$KEY_ALIAS"
               echo "UPLOAD_KEY_PASSWORD=$KEY_PW"
             } >> "$GITHUB_ENV"
+            echo "signing=apk-secret" >> "$GITHUB_ENV"
             echo "signing with the APK signing key"
           else
-            echo "::warning::APK_KEYSTORE_BASE64 is not set in this repo's secrets; the APK is signed with the runner's debug key"
+            # Same shared debug key as LanguageStudentDesk's release APKs.
+            curl -fsSL --retry 5 -o "$RUNNER_TEMP/apk.keystore" \
+              https://raw.githubusercontent.com/squirelworks/LanguageStudentDesk/main/SquirrelGo-Apps/lsd-suite/android/app/debug.keystore
+            keytool -list -keystore "$RUNNER_TEMP/apk.keystore" -storepass android -alias androiddebugkey > /dev/null
+            {
+              echo "UPLOAD_STORE_FILE=$RUNNER_TEMP/apk.keystore"
+              echo "UPLOAD_STORE_PASSWORD=android"
+              echo "UPLOAD_KEY_ALIAS=androiddebugkey"
+              echo "UPLOAD_KEY_PASSWORD=android"
+            } >> "$GITHUB_ENV"
+            echo "signing=lsd-debug" >> "$GITHUB_ENV"
+            echo "no APK signing key in secrets; signing with LanguageStudentDesk's shared debug key"
           fi
       - name: Build the release APK
         working-directory: native
@@ -195,7 +209,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/apk"
           cp android/build/outputs/apk/release/android-release.apk "$RUNNER_TEMP/apk/Squirrelator.apk"
           APKSIGNER=$(printf '%s\n' "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
-          "$APKSIGNER" verify --print-certs "$RUNNER_TEMP/apk/Squirrelator.apk" | grep -E 'Signer #1 certificate (DN|SHA-256)'
+          "$APKSIGNER" verify --print-certs "$RUNNER_TEMP/apk/Squirrelator.apk" | tee "$RUNNER_TEMP/apk-certs.txt"
+          grep -E 'certificate (DN|SHA-256 digest):' "$RUNNER_TEMP/apk-certs.txt"
+          # LanguageStudentDesk shared debug cert (squirrelgo-v0.1.5 APKs).
+          if [ "$signing" = lsd-debug ]; then
+            grep -qiE 'SHA-256 digest: cdec9f5cd92ed1608c0c9457699a25ad2101bd1e52accd11197beaf672ddb369' "$RUNNER_TEMP/apk-certs.txt" \
+              || { echo "release APK cert does not match LanguageStudentDesk's shared debug key"; exit 1; }
+          fi
       - name: Remove the signing key
         if: always()
         run: rm -f "$RUNNER_TEMP/apk.keystore"

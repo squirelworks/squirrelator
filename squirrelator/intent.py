@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-Kind = Literal["output", "loop", "assignment", "if"]
+Kind = Literal["output", "loop", "assignment", "if", "input"]
 
 _OPS = {
     ">": ">",
@@ -36,7 +36,7 @@ class Intent:
     """One recognised English instruction."""
 
     kind: Kind
-    # output: message; loop: unused; assignment/if: variable name
+    # output: message; loop: unused; assignment/if/input: variable name
     name: str = ""
     # loop: start; assignment: value; if: comparison operator
     start: str = ""
@@ -53,6 +53,15 @@ def parse_intent(text: str) -> Intent | None:
     t = text.strip().lower()
     if not t:
         return None
+
+    # ask for name / ask the user for name / input name / read name from the user
+    m = re.search(
+        r"(?:ask(?:\s+the\s+user)?\s+for|input|read|get)\s+(\w+)"
+        r"(?:\s+from\s+(?:the\s+)?user)?$",
+        t,
+    )
+    if m and m.group(1) not in {"for", "the", "a", "an", "user"}:
+        return Intent("input", name=m.group(1))
 
     # if x > 5 print hi else print bye  /  if x is greater than 5 then print hi else print bye
     m = re.search(
@@ -189,6 +198,19 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "shell": f"{var}={val}",
             "latin": f"# Latin: {var} est {val}\n{var} = {val}",
             "klingon": f"# Klingon: {var} {val} 'oH\n{var} = {val}",
+        }
+        return rules.get(to_lang)
+
+    if intent.kind == "input":
+        var = intent.name
+        rules = {
+            "python": f'{var} = input()',
+            "javascript": f'let {var} = prompt();',
+            "quickbasic": f"INPUT {var}",
+            "lolcode": f"GIMMEH {var}",
+            "shell": f"read {var}",
+            "latin": f'# Latin: lege {var}\n{var} = input()',
+            "klingon": f"# Klingon: yIlaD {var}\n{var} = input()",
         }
         return rules.get(to_lang)
 

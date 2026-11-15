@@ -253,6 +253,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "java": f'System.out.println("{msg}");',
             "rust": f'println!("{msg}");',
             "go": f'fmt.Println("{msg}")',
+            "kotlin": f'println("{msg}")',
             "quickbasic": f'PRINT "{msg}"',
             "lolcode": f'VISIBLE "{msg}"',
             "brainfood": (
@@ -309,6 +310,10 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 f"for i := {start}; i <= {end}; i++ {{\n"
                 f"  fmt.Println(i)\n}}"
             ),
+            "kotlin": (
+                f"for (i in {start}..{end}) {{\n"
+                f"  println(i)\n}}"
+            ),
             "quickbasic": f"FOR i = {start} TO {end}\n  PRINT i\nNEXT i",
             "lolcode": (
                 f"IM IN YR loop UPPIN YR i TIL BOTH SAEM i AN {end}\n"
@@ -340,6 +345,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "java": _java_assignment(var, val),
             "rust": _rust_assignment(var, val),
             "go": _go_assignment(var, val),
+            "kotlin": _kotlin_assignment(var, val),
             "quickbasic": f"{var} = {val}",
             "lolcode": f"I HAS A {var} ITZ {val}",
             "shell": f"{var}={val}",
@@ -359,6 +365,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "java": f"int {var} = new java.util.Scanner(System.in).nextInt();",
             "rust": f"let mut {var} = String::new();\nstd::io::stdin().read_line(&mut {var}).unwrap();",
             "go": f"var {var} int\nfmt.Scan(&{var})",
+            "kotlin": f"val {var} = readln()",
             "quickbasic": f"INPUT {var}",
             "lolcode": f"GIMMEH {var}",
             "shell": f"read {var}",
@@ -389,7 +396,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 alt = "\n".join(f"  {ln}" for ln in else_lines)
                 out += f" else {{\n{alt}\n}}"
             return out
-        if to_lang in ("c", "cpp", "csharp", "java", "rust", "go"):
+        if to_lang in ("c", "cpp", "csharp", "java", "rust", "go", "kotlin"):
             body = "\n".join(f"  {ln}" for ln in then_lines)
             out = f"if ({var} {op} {val}) {{\n{body}\n}}"
             if else_lines is not None:
@@ -445,6 +452,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
         if to_lang == "go":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"func {fname}() {{\n{body}\n}}"
+        if to_lang == "kotlin":
+            body = "\n".join(f"  {ln}" for ln in body_lines)
+            return f"fun {fname}() {{\n{body}\n}}"
         if to_lang == "quickbasic":
             body = "\n".join(f"  {ln}" for ln in body_lines)
             return f"SUB {fname}\n{body}\nEND SUB"
@@ -467,6 +477,7 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             "java": f"{fname}();",
             "rust": f"{fname}();",
             "go": f"{fname}()",
+            "kotlin": f"{fname}()",
             "quickbasic": f"CALL {fname}",
             "shell": f"{fname}",
             "lolcode": f"I IZ {fname} MKAY",
@@ -507,6 +518,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
             if all(re.fullmatch(r"-?\d+(?:\.\d+)?", x) for x in items):
                 return f"{var} := []int{{{py_items}}}"
             return f"{var} := []string{{{py_items}}}"
+        if to_lang == "kotlin":
+            return f"val {var} = listOf({py_items})"
         if to_lang == "shell":
             return f"{var}=({sh_items})"
         if to_lang == "quickbasic":
@@ -593,6 +606,9 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 re.fullmatch(r"-?\d+(?:\.\d+)?", v) for _, v in pairs
             ) else "string"
             return f"{var} := map[{k_ty}]{v_ty}{{{body}}}"
+        if to_lang == "kotlin":
+            body = ", ".join(f"{_lit(k)} to {_lit(v)}" for k, v in pairs)
+            return f"val {var} = mapOf({body})"
         if to_lang == "shell":
             # declare associative array when bash is available
             assigns = " ".join(f"[{_lit(k)}]={_lit(v)}" for k, v in pairs)
@@ -634,6 +650,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                     f'{var}Bytes, _ := os.ReadFile("{path}")\n'
                     f'{var} := string({var}Bytes)'
                 )
+            if to_lang == "kotlin":
+                return f'val {var} = java.io.File("{path}").readText()'
             if to_lang == "shell":
                 return f'{var}=$(cat "{path}")'
             return None
@@ -664,6 +682,8 @@ def generate(intent: Intent, to_lang: str) -> str | None:
                 return f'std::fs::write("{path}", "{content}").unwrap();'
             if to_lang == "go":
                 return f'_ = os.WriteFile("{path}", []byte("{content}"), 0644)'
+            if to_lang == "kotlin":
+                return f'java.io.File("{path}").writeText("{content}")'
             if to_lang == "shell":
                 return f'printf "%s" "{content}" > "{path}"'
             return None

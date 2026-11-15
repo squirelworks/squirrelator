@@ -28,27 +28,25 @@ are never moved, reused or deleted.
       jatlh as third person (#45), Cloud Agent setup notes (#44), the v0.1.5
       pin (#49), and the coverage report plus Chinese/Klingon miss fixes
       (#51).
-- [x] Draft created by **Draft release** (against older `main`; refresh it
-      after the notes PR merges).
-- [ ] Re-run **Actions → Draft release → Run workflow** with `v0.1.1` so the
-      draft targets current `main`.
-- [ ] The owner publishes. Nothing is published without the owner's
-      "release".
+- [x] Draft created by **Draft release** (against older `main`).
+- [x] `v0.1.1` published (on the older release-PR commit). Further ship work
+      moved to **v0.1.2**.
 
 ## Next (open): publish v0.1.2 from current main
 
 `v0.1.1` is published on the wrong commit. Remaining steps for **v0.1.2**:
 
+- [x] Version raised to 0.1.2 and `release-notes/v0.1.2.md` added (#129).
 - [x] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk
-      (LanguageStudentDesk moves with this pin to **v0.1.6**).
-- [ ] CI green on `main`.
-- [ ] **Actions → Draft release → Run workflow** with `v0.1.1` (refreshes
-      the existing draft to the new `main` commit), then the owner publishes.
-
-If the owner prefers a new version number instead (v0.1.2), leave the
-v0.1.1 draft unpublished and open a release PR that raises the version in
-`pyproject.toml` and `squirrelator.__version__` and adds
-`release-notes/v0.1.2.md`.
+      (**v0.1.6**, #131), with English do-support / segmentation follow-ups
+      (#133, #134).
+- [x] Release notes refreshed for data **v0.1.6** and those engine fixes.
+- [x] CI green on `main`.
+- [x] **v0.1.2 draft** refreshed onto current `main` (data **v0.1.6** /
+      `73b5ace`, do-support #133/#134). Prefer **Actions → Draft release →
+      Run workflow** with `v0.1.2` if the draft needs another refresh.
+- [ ] The owner publishes. Do not publish any older draft that still named
+      data v0.1.5.
 
 This is also the phone app's first Google Play build. Once it's published,
 LanguageStudentDesk's **squirrelator Play testing** workflow sends it to

@@ -522,6 +522,49 @@ def test_generate_python_matches_rules_shapes():
     )
 
 
+    assert generate(Intent("output", name="hi"), "delphi") == "WriteLn('hi');"
+    assert generate(Intent("loop", start="1", end="3"), "delphi") == (
+        "for i := 1 to 3 do\n  WriteLn(i);"
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "delphi") == (
+        "x := 3 + 5;"
+    )
+    assert generate(Intent("input", name="n"), "delphi") == "ReadLn(n);"
+    assert generate(fn, "delphi") == (
+        "procedure greet;\nbegin\n  WriteLn('hello');\nend;"
+    )
+    assert generate(Intent("call", name="greet"), "delphi") == "greet;"
+    assert generate(lst, "delphi") == (
+        "var items: array[0..2] of string = ('a', 'b', 'c');"
+    )
+    assert generate(mp, "delphi") == '// map ages: "alice" => 30, "bob" => 40'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "delphi") == (
+        "AssignFile(f, 'data.txt');\n"
+        "Reset(f);\n"
+        "ReadLn(f, text);\n"
+        "CloseFile(f);"
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "delphi") == (
+        "AssignFile(f, 'out.txt');\n"
+        "Rewrite(f);\n"
+        "WriteLn(f, 'hi');\n"
+        "CloseFile(f);"
+    )
+    assert generate(iff, "delphi") == (
+        "if x > 5 then\nbegin\n  WriteLn('ready');\nend;"
+    )
+    assert generate(ifelse, "delphi") == (
+        "if x > 5 then\n"
+        "begin\n"
+        "  WriteLn('ready');\n"
+        "end\n"
+        "else\n"
+        "begin\n"
+        "  WriteLn('wait');\n"
+        "end;"
+    )
+
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"

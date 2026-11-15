@@ -18,7 +18,7 @@ are never moved, reused or deleted.
 ## Was: drafted v0.1.1
 
 - [x] `data/` moved to squirrel-lang-data **v0.1.4** (#41), then **v0.1.5**
-      (#49).
+      (#49), then **v0.1.6**.
 - [x] Release PR: `release-notes/v0.1.1.md` and the version raised (#42).
 - [x] Phone app ready for Google Play: store listing, launcher icon, signed
       bundle (#43).
@@ -40,7 +40,7 @@ are never moved, reused or deleted.
 `v0.1.1` is published on the wrong commit. Remaining steps for **v0.1.2**:
 
 - [x] `data/` pins the same squirrel-lang-data tag as LanguageStudentDesk
-      (both v0.1.5 today).
+      (LanguageStudentDesk moves with this pin to **v0.1.6**).
 - [ ] CI green on `main`.
 - [ ] **Actions → Draft release → Run workflow** with `v0.1.1` (refreshes
       the existing draft to the new `main` commit), then the owner publishes.

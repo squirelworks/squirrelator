@@ -104,7 +104,7 @@ def test_write_report_produces_every_column(root, tmp_path):
     for c in report.columns:
         assert f"| {c.language} |" in text
     assert report.data_pin
-    assert "v0.1.5" in report.data_pin or len(report.data_pin) >= 7
+    assert report.data_pin.startswith("v") or len(report.data_pin) >= 7
     # Product alpha for a passing column follows the same measurement.
     for c in report.passing():
         assert not pair_is_alpha("english", c.language, report=report)

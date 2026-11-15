@@ -302,6 +302,7 @@ _PATTERN_WHY = {
     "output": "an instruction to print or show something",
     "loop": "a loop counting from one number to another",
     "assignment": "setting a variable to a value",
+    "if": "a condition that prints something when it is true",
 }
 
 

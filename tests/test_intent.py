@@ -285,6 +285,28 @@ def test_generate_python_matches_rules_shapes():
         ' else {\n  console.log("wait");\n}'
     )
 
+    assert generate(Intent("output", name="hi"), "php") == 'echo "hi\n";'
+    assert generate(Intent("loop", start="1", end="3"), "php") == (
+        'for ($i = 1; $i <= 3; $i++) {\n  echo "$i\n";\n}'
+    )
+    assert generate(Intent("assignment", name="x", start="3 + 5"), "php") == "$x = 3 + 5;"
+    assert generate(Intent("input", name="n"), "php") == "$n = trim(fgets(STDIN));"
+    assert generate(fn, "php") == 'function greet() {\n  echo "hello\n";\n}'
+    assert generate(Intent("call", name="greet"), "php") == "greet();"
+    assert generate(lst, "php") == '$items = ["a", "b", "c"];'
+    assert generate(mp, "php") == '$ages = ["alice" => 30, "bob" => 40];'
+    assert generate(Intent("file", name="data.txt", start="read", end="text"), "php") == (
+        '$text = file_get_contents("data.txt");'
+    )
+    assert generate(Intent("file", name="out.txt", start="write", end="hi"), "php") == (
+        'file_put_contents("out.txt", "hi");'
+    )
+    assert generate(iff, "php") == 'if ($x > 5) {\n  echo "ready\n";\n}'
+    assert generate(ifelse, "php") == (
+        'if ($x > 5) {\n  echo "ready\n";\n}'
+        ' else {\n  echo "wait\n";\n}'
+    )
+
 def test_match_natural_uses_intent_without_changing_outputs():
     assert _match_natural("print hello", "python") == ("output", 'print("hello")')
     assert _match_natural("count from 1 to 5", "python")[0] == "loop"
